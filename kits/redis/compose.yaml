@@ -1,0 +1,49 @@
+services:
+  redis:
+    image: redis:alpine
+    container_name: rd
+    command: ["redis-server", "--appendonly", "yes", "--save", "900", "1", "--save", "300", "10", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - ../../.rd:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    mem_limit: 256m
+    cpus: 1.0
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 2
+
+  api:
+    build:
+      context: ../..
+      dockerfile: kits/redis/Dockerfile
+    container_name: ra
+    volumes:
+      - ../../.rd/server.js:/app/server.js:ro
+      - ../../.rd/data:/conf-data:ro
+    depends_on:
+      - redis
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - G41_DOMAIN=${G41_DOMAIN}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5800/data/tiles || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    mem_limit: 256m
+    cpus: 1.0
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: 2

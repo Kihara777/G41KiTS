@@ -1,0 +1,25 @@
+services:
+  aria2:
+    build:
+      context: ../..
+      dockerfile: kits/aria2/Dockerfile
+    container_name: ad
+    volumes:
+      - webroot:/webroot
+      - ../../.ad/rpc.daemon:/aria2/rpc.daemon
+    depends_on:
+      - hako
+    healthcheck:
+      test: ["CMD-SHELL", "nc -zw1 127.0.0.1 6800 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    mem_limit: 512m
+    cpus: 2.0
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 2

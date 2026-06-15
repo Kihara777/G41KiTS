@@ -1,0 +1,25 @@
+{
+  "name": "Redis",
+  "desc": "Redis config store + Node.js HTTP API bridge",
+  "depends": [
+    "core",
+    "nginx"
+  ],
+  "docker": [
+    {"service": "redis", "container": "rd"},
+    {"service": "api", "container": "ra"}
+  ],
+  "compose": "file",
+  "provides": [
+    {"dir": ".rd/data", "accepts": ["data"], "file": "data", "check": false}
+  ],
+  "store": {
+    "dir": ".rd",
+    "items": {
+      "server.js": "hardlink",
+      "data": {
+        "method": "mkdir"
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "File Browser",
+  "desc": "Web file manager with public WebDAV share",
+  "depends": [
+    "tile_apps",
+    "nginx"
+  ],
+  "docker": {"service": "hako", "container": "fb"},
+  "compose": "hub",
+  "webroot": {
+    "target": "hako",
+    "method": "mkdir",
+    "dirs": ["Public"]
+  },
+  "local": [
+    {"file": "settings.json", "to": "settings.json"},
+    {"file": "branding", "to": "branding", "dir": "copy"},
+    {"file": "filebrowser.db", "to": "filebrowser.db"}
+  ],
+  "persist": ".fb"
+}

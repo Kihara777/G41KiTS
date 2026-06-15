@@ -1,0 +1,1 @@
+{"tile_dns":["dns","域名解析"],"dns_h":"DNS 代理","dns_p":"支持 DNSSEC 验证的递归 DNS 代理","dns_firefox":"启用 DoH:","dns_h2":"Firefox","dns_h3":"systemd-resolved","dns_note":"以上配置使用注重隐私的 DNS 提供商，绕过 ISP DNS"}

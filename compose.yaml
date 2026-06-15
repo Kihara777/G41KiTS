@@ -1,0 +1,29 @@
+name: g41
+
+include:
+  - kits/acme/compose.yaml
+  - kits/aria2/compose.yaml
+  - kits/autoheal/compose.yaml
+  - kits/blc/compose.yaml
+  - kits/bt/compose.yaml
+  - kits/dns/compose.yaml
+  - kits/dsock/compose.yaml
+  - kits/hako/compose.yaml
+  - kits/hexo/compose.yaml
+  - kits/hy2/compose.yaml
+  - kits/nginx/compose.yaml
+  - kits/redis/compose.yaml
+  - kits/tracker/compose.yaml
+volumes:
+  certs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: .ca
+  webroot:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: .wr

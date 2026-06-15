@@ -1,0 +1,8 @@
+{
+  "name": "Visual Studio",
+  "desc": "Visual Studio Community IDE",
+  "depends": [
+    "tile_links"
+  ],
+  "compose": "none"
+}

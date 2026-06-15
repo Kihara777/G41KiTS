@@ -1,0 +1,8 @@
+{
+  "short": "/vscode",
+  "target": "https://code.visualstudio.com/download",
+  "icon": "<img src=\"https://code.visualstudio.com/favicon.ico\" alt=\"\" onerror=\"this.style.display='none'\">",
+  "desc": [
+    "lvscode"
+  ]
+}

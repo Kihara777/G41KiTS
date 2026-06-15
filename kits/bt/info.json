@@ -1,0 +1,17 @@
+{
+  "name": "Transmission",
+  "desc": "BitTorrent client with WebUI and WebDAV share",
+  "depends": [
+    "tile_apps",
+    "hako",
+    "nginx"
+  ],
+  "docker": {"service": "bt", "container": "tr"},
+  "compose": "file",
+  "webroot": {
+    "target": "hako/Transmission",
+    "method": "mkdir"
+  },
+  "local": [{"file": "settings.json", "to": "settings.json"}],
+  "persist": ".tr"
+}

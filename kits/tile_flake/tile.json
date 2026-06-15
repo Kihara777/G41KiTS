@@ -1,0 +1,29 @@
+{
+  "id": "tile_flake",
+  "icon": "❄",
+  "label": "tile_flake",
+  "type": "guide",
+  "sections": [
+    {"p": "flake_desc"},
+    {"p": "<a href=\"https://github.com/Kihara777/NixKits\" style=\"color:var(--wp-amber)\">github.com/Kihara777/NixKits</a>"},
+    {"h": "flake_h"},
+    {"pre": "{ inputs.nix-kits.url = \"github:Kihara777/NixKits\"; }"},
+    {"pre": "nixpkgs.overlays = [ inputs.nix-kits.overlays.default ];"},
+    {"h": "flake_h2"},
+    {"p": "flake_item_codewhale"},
+    {"p": "flake_item_kitsfmt"},
+    {"p": "flake_item_mcp_searxng"},
+    {"p": "flake_item_obs"},
+    {"p": "flake_item_opencode"},
+    {"h": "flake_h3"},
+    {"p": "flake_item_comfyui"},
+    {"p": "flake_item_llama"},
+    {"p": "flake_item_rcc"},
+    {"h": "flake_h4"},
+    {"p": "flake_item_skill_updates"},
+    {"p": "flake_item_skill_installer"},
+    {"p": "flake_item_skill_nixos"},
+    {"p": "flake_item_skill_recover"},
+    {"p": "flake_item_skill_docs"}
+  ]
+}

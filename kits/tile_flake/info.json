@@ -1,0 +1,8 @@
+{
+  "name": "Nix Flake",
+  "desc": "Personal Nix flake repository — custom packages, overlays, NixOS modules",
+  "depends": [
+    "home"
+  ],
+  "compose": "none"
+}

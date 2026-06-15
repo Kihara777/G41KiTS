@@ -1,0 +1,13 @@
+{
+  "name": "DNS Proxy",
+  "desc": "AdGuard recursive DNS with DoT/DoH/DoQ",
+  "depends": [
+    "acme",
+    "home",
+    "nginx"
+  ],
+  "docker": {"service": "dns", "container": "ns"},
+  "compose": "hub",
+  "local": [{"file": "config.yaml", "to": "config.yaml"}],
+  "persist": ".ns"
+}

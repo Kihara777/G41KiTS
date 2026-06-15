@@ -1,0 +1,9 @@
+{
+  "name": "Docker Socket Proxy",
+  "desc": "Restricted Docker API proxy — replaces direct docker.sock mounts",
+  "depends": [
+    "core"
+  ],
+  "docker": {"service": "dsock", "container": "ds"},
+  "compose": "hub"
+}

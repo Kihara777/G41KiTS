@@ -1,0 +1,1 @@
+{"tile_dns":["dns","resolve"],"dns_h":"DNS Proxy","dns_p":"Recursive DNS proxy with DNSSEC validation","dns_firefox":"Enable DoH:","dns_h2":"Firefox","dns_h3":"systemd-resolved","dns_note":"The above config uses privacy-focused DNS providers, bypassing ISP DNS"}

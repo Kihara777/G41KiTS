@@ -1,0 +1,12 @@
+{
+  "name": "BLiveChat",
+  "desc": "Bilibili live chat with AI translation",
+  "depends": [
+    "tile_apps",
+    "nginx"
+  ],
+  "docker": {"service": "blc", "container": "lc"},
+  "compose": "hub",
+  "local": [{"file": "config.ini", "to": "config.ini"}],
+  "persist": ".lc"
+}

@@ -1,0 +1,28 @@
+services:
+  bt:
+    build:
+      context: ../..
+      dockerfile: kits/bt/Dockerfile
+    container_name: tr
+    ports:
+      - "51413:51413"
+      - "51413:51413/udp"
+    volumes:
+      - webroot:/webroot
+      - ../../.tr/settings.json:/bt/settings.json
+    depends_on:
+      - hako
+    healthcheck:
+      test: ["CMD-SHELL", "nc -zw1 127.0.0.1 9091 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    mem_limit: 512m
+    cpus: 2.0
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 3

@@ -1,0 +1,6 @@
+{
+  "name": "Bilibili",
+  "desc": "My Bilibili space — videos, live streams, and community",
+  "depends": ["home"],
+  "compose": "none"
+}

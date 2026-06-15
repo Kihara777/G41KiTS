@@ -1,0 +1,11 @@
+{
+  "name": "BT Tracker",
+  "desc": "Lightweight HTTPS BitTorrent tracker",
+  "depends": [
+    "hako",
+    "home",
+    "nginx"
+  ],
+  "docker": {"service": "tracker", "container": "wt"},
+  "compose": "file"
+}

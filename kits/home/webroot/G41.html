@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="theme-color" content="#000">
+<meta name="color-scheme" content="dark">
+<title>G41 — キツのり箱</title>
+<link rel="icon" type="image/webp" href="/img/H_Accessory.webp">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/tiles.css">
+<link rel="stylesheet" href="/css/hc.css">
+<style>#g41-app{opacity:0}</style>
+</head>
+<body>
+
+<div id="g41-bg"><img id="g41-bg-img" src="/img/Pic_G41.png" alt=""></div>
+
+<div id="g41-app">
+
+  <div id="g41-view-main" class="g41-view g41-view--active">
+    <header id="g41-header">
+      <div class="h-title" id="g41-title">G41</div>
+      <div class="h-controls">
+        <div class="lang-drop">
+          <button id="g41-lang" class="h-btn" title="Language">JA</button>
+          <div id="g41-lang-menu" class="lang-menu"></div>
+        </div>
+        <button id="g41-contrast" class="h-btn" title="Contrast">&#9681;</button>
+      </div>
+    </header>
+    <div class="h-sub" id="g41-greet"></div>
+    <figure id="g41-character">
+      <img id="g41-char-img" src="/img/Pic_G41.png" alt="G41">
+      <figcaption id="g41-char-msg"></figcaption>
+    </figure>
+    <main id="g41-tiles" class="tile-grid"></main>
+  </div>
+
+  <div id="g41-view-detail" class="g41-view">
+    <div class="detail-header">
+      <button id="g41-back" class="d-back">&#x276e;</button>
+      <span id="g41-detail-title" class="d-title"></span>
+    </div>
+    <div id="g41-detail-body" class="detail-body"></div>
+  </div>
+
+</div>
+
+<footer id="g41-footer">
+  <p>Powered by I.O.P. Manufacturing Company</p>
+  <p>&copy;2053-2064&#12539;克鲁格和格里芬军事承包与安全顾问服务公司&#12539;&#1043;&#1088;&#1080;&#1092;&#1086;&#1085; &amp; &#1050;&#1088;&#1102;&#1075;&#1077;&#1088;&#12539;&#12464;&#12522;&#12501;&#12451;&#12531;</p>
+</footer>
+
+<script src="/js/G41.js"></script>
+<script src="/js/tiles.js"></script>
+</body>
+</html>

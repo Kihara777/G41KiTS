@@ -1,0 +1,35 @@
+{
+  "name": "Home",
+  "desc": "Site core data — character messages, theme colors, status codes, i18n",
+  "depends": [
+    "core",
+    "nginx",
+    "redis"
+  ],
+  "compose": "none",
+  "provides": [
+    {
+      "dir": "i18n",
+      "accepts": ["i18n"],
+      "file": "i18n",
+      "ext": "json"
+    },
+    {
+      "dir": "tiles",
+      "accepts": ["tile"],
+      "file": "tile.json",
+      "ext": "json"
+    },
+    {
+      "dir": "home"
+    },
+    {
+      "dir": ".gx/conf.d",
+      "prefix": 0
+    }
+  ],
+  "webroot": {
+    "target": "G41",
+    "method": "hardlink"
+  }
+}

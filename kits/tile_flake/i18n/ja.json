@@ -1,0 +1,21 @@
+{
+  "flake_desc": "個人 NixOS flake リポジトリ — カスタムパッケージ、overlay、NixOS モジュール",
+  "flake_h": "クイックスタート",
+  "flake_h2": "パッケージ",
+  "flake_h3": "パッチ",
+  "flake_h4": "スキル",
+  "tile_flake": ["flake","Nix リポジトリ"],
+  "flake_item_codewhale": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/codewhale.md\" target=\"_blank\">codewhale</a></b> — DeepSeek V4 端末コーディングエージェント",
+  "flake_item_kitsfmt": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/kitsfmt.md\" target=\"_blank\">kitsfmt</a></b> — Nix フォーマッター（AST ソート + ベストプラクティス自動修正）",
+  "flake_item_mcp_searxng": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/mcp-searxng.md\" target=\"_blank\">mcp-searxng</a></b> — SearXNG の MCP サーバー",
+  "flake_item_obs": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/obs-bilibili-stream.md\" target=\"_blank\">obs-bilibili-stream</a></b> — OBS の Bilibili 配信プラグイン",
+  "flake_item_opencode": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/opencode-telegram.md\" target=\"_blank\">opencode-telegram</a></b> — OpenCode の Telegram Bot クライアント",
+  "flake_item_comfyui": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/comfyui-strix-halo.md\" target=\"_blank\">comfyui-strix-halo</a></b> — AMD Strix Halo に ComfyUI ROCm サポートを提供",
+  "flake_item_llama": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/llama-cpp-rocm.md\" target=\"_blank\">llama-cpp-rocm</a></b> — アップストリーム最新リリースを動的追跡する ROCm ビルド",
+  "flake_item_rcc": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/rcc-fix.md\" target=\"_blank\">rcc-fix</a></b> — asusctl の 2-in-1 体験を修正",
+  "flake_item_skill_updates": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/skills/nixkits-check-updates.md\" target=\"_blank\">nixkits-check-updates</a></b> — アップストリーム更新を確認し自動アップグレード",
+  "flake_item_skill_installer": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/skills/nixkits-skills.md\" target=\"_blank\">nixkits-skills</a></b> — NixKits スキルインストーラー（ローカル / オンライン）",
+  "flake_item_skill_nixos": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/skills/nixos-modern-cli.md\" target=\"_blank\">nixos-modern-cli</a></b> — NixOS モダン CLI ガイド（AI モデル向け）",
+  "flake_item_skill_recover": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/skills/recover-nixos-config.md\" target=\"_blank\">recover-nixos-config</a></b> — Nix store から削除された /etc/nixos 設定を復元",
+  "flake_item_skill_docs": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/ja/skills/write-project-docs.md\" target=\"_blank\">write-project-docs</a></b> — NixKits スタイルで多言語ドキュメントを作成"
+}

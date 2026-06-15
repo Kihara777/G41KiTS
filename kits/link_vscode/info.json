@@ -1,0 +1,8 @@
+{
+  "name": "VS Code",
+  "desc": "Visual Studio Code editor",
+  "depends": [
+    "tile_links"
+  ],
+  "compose": "none"
+}

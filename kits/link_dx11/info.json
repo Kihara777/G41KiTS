@@ -1,0 +1,8 @@
+{
+  "name": "DirectX 11",
+  "desc": "Legacy DirectX End-User Runtime",
+  "depends": [
+    "tile_links"
+  ],
+  "compose": "none"
+}

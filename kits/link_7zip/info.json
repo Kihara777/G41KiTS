@@ -1,0 +1,8 @@
+{
+  "name": "7-Zip",
+  "desc": "File archiver with high compression ratio",
+  "depends": [
+    "tile_links"
+  ],
+  "compose": "none"
+}

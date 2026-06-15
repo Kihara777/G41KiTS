@@ -1,0 +1,15 @@
+{
+  "id": "tile_gh-proxy",
+  "icon": "🐙",
+  "label": "tile_github",
+  "type": "guide",
+  "sections": [
+    {
+      "h": "ghp_h",
+      "p": "ghp_p"
+    },
+    {
+      "p": "ghp_use"
+    }
+  ]
+}

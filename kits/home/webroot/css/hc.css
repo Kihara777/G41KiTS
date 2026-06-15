@@ -1,0 +1,29 @@
+/* ═══════════ CSS: high contrast ═══════════ */
+/* tile colors computed dynamically from --wp-* vars */
+.g41-hc .tile{border:3px solid #fff;font-weight:700;text-shadow:0 0 4px rgba(0,0,0,.8)}
+.g41-hc .tile-label{font-size:1.8rem}.g41-hc .tile-desc{opacity:1;color:rgba(255,255,255,.85)}
+.g41-hc .h-btn{color:#fff;border-color:#fff}
+.g41-hc .lang-menu{background:#000;border-color:#fff}
+.g41-hc .lang-opt{color:#fff;border-color:#fff}.g41-hc .lang-opt.active{background:#fff;color:#000}
+.g41-hc .h-sub{color:#fff;font-weight:600}
+.g41-hc #g41-character figcaption{color:#fff;font-weight:600;text-shadow:0 0 4px #000}
+.g41-hc .d-back{border-color:#fff;color:#fff}
+.g41-hc .d-title{color:#fff;font-weight:600}
+.g41-hc .detail-body h3{color:#ff0;border-bottom-color:rgba(255,255,255,.5)}
+.g41-hc .detail-body pre{background:#000;border:2px solid #fff;color:#0f0}
+.g41-hc .detail-body code{color:#0f0}.g41-hc .detail-body a{color:#ff0;font-weight:700}
+.g41-hc .app-row{border-bottom-color:rgba(255,255,255,.3)}.g41-hc .app-desc{color:rgba(255,255,255,.8)}
+.g41-hc .detail-body p,.g41-hc .detail-body li{color:#fff}
+.g41-hc .tracker-embed{background:#000;border:2px solid #fff}
+.g41-hc .tracker-embed h1{color:#0f0}
+.g41-hc .tracker-embed h2,.g41-hc .tracker-embed h3,.g41-hc .tracker-embed strong{color:#fff}
+.g41-hc .tracker-embed li{color:rgba(255,255,255,.8)}
+.g41-hc #g41-footer{color:#fff;background:#000;border-top:2px solid #fff}
+.g41-hc #g41-bg img{opacity:.12;filter:none}
+@media(max-width:500px){
+  .h-title{font-size:2.2rem;letter-spacing:4px;padding:1rem 1rem 0}
+  .tile-grid{grid-template-columns:repeat(2,1fr);padding:.3rem 1rem .5rem}
+  .d-title{font-size:1.2rem}#g41-view-detail{padding:1rem}#g41-header{padding:.8rem 1rem .3rem}
+  #g41-character{padding:0 1rem}
+  .tile-label{font-size:1.4rem}.tile-desc{font-size:.9rem}.tile-icon{font-size:2.4rem}
+}

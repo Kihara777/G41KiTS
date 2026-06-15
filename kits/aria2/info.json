@@ -1,0 +1,17 @@
+{
+  "name": "Aria2",
+  "desc": "Parallel download manager with WebUI and WebDAV share",
+  "depends": [
+    "tile_apps",
+    "hako",
+    "nginx"
+  ],
+  "docker": {"service": "aria2", "container": "ad"},
+  "compose": "file",
+  "webroot": {
+    "target": "hako/Aria2",
+    "method": "mkdir"
+  },
+  "local": [{"file": "rpc.daemon", "to": "rpc.daemon"}],
+  "persist": ".ad"
+}

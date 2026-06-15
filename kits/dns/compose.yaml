@@ -1,0 +1,27 @@
+services:
+  dns:
+    image: adguard/dnsproxy:v0.81.3
+    container_name: ns
+    ports:
+      - "53:53/tcp"
+      - "853:853/tcp"
+      - "853:853/udp"
+    volumes:
+      - certs:/certs
+      - ../../.ns/config.yaml:/opt/dnsproxy/config.yaml
+    depends_on:
+      - acme
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo | nc -zw1 127.0.0.1 53 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    mem_limit: 256m
+    cpus: 1.0
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 3

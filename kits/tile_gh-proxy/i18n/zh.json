@@ -1,0 +1,1 @@
+{"tile_github":["github","反向代理"],"ghp_h":"GitHub Raw 代理","ghp_p":"G41 提供 raw.githubusercontent.com 的反向代理，加速 GitHub 静态文件（如 Release 资源）的下载。","ghp_use":"使用方法: 将原始链接中的 <code>https://raw.githubusercontent.com/</code> 替换为 <code>https://__HOST__/gr/</code>"}

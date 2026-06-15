@@ -1,0 +1,8 @@
+{
+  "name": "Short Links",
+  "desc": "Dynamic short links proxied through Redis API",
+  "depends": [
+    "nginx"
+  ],
+  "compose": "none"
+}

@@ -1,0 +1,1 @@
+{"tile_dns":["dns","ネームサーバー"],"dns_h":"DNS プロキシ","dns_p":"DNSSEC 検証付きの再帰 DNS プロキシ","dns_firefox":"DoH を有効化:","dns_h2":"Firefox","dns_h3":"systemd-resolved","dns_note":"上記の設定はプライバシー重視の DNS プロバイダーを使用し、ISP の DNS をバイパスします"}

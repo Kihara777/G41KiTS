@@ -1,0 +1,8 @@
+{
+  "short": "/vcredist",
+  "target": "https://docs.microsoft.com/cpp/windows/latest-supported-vc-redist",
+  "icon": "<img src=\"https://learn.microsoft.com/favicon.ico\" alt=\"\" onerror=\"this.style.display='none'\">",
+  "desc": [
+    "lvcredist"
+  ]
+}

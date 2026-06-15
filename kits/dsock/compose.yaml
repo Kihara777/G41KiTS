@@ -1,0 +1,24 @@
+services:
+  dsock:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: ds
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CONTAINERS=1
+      - EXEC=1
+      - POST=1
+    healthcheck:
+      test: ["CMD", "sh", "-c", "kill -0 1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    mem_limit: 128m
+    cpus: 0.5
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: 2

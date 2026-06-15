@@ -1,0 +1,23 @@
+{
+  "id": "tile_nix-cache",
+  "icon": "❄",
+  "label": "tile_nix",
+  "type": "guide",
+  "sections": [
+    {
+      "h": "nix_h",
+      "p": "nix_p"
+    },
+    {
+      "p": "<a href=\"/nichan/\" style=\"color:var(--wp-amber)\">/nichan/</a> → channels.nixos.org<br><a href=\"/nica/\" style=\"color:var(--wp-amber)\">/nica/</a> → cache.nixos.org<br><a href=\"/nira/\" style=\"color:var(--wp-amber)\">/nira/</a> → releases.nixos.org"
+    },
+    {
+      "h": "nix_h2",
+      "pre": "{ config, ... }: {<br>  nix.settings.substituters = [ \"https://__HOST__/nica\" ];<br>  nix.settings.trusted-public-keys = [<br>    \"cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=\"<br>  ];<br>}"
+    },
+    {
+      "h": "nix_h3",
+      "pre": "substituters = https://__HOST__/nica<br>trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+    }
+  ]
+}

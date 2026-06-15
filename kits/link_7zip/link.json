@@ -1,0 +1,8 @@
+{
+  "short": "/7z",
+  "target": "https://www.7-zip.org/download.html",
+  "icon": "<img src=\"https://www.7-zip.org/favicon.ico\" alt=\"\" onerror=\"this.style.display='none'\">",
+  "desc": [
+    "l7z"
+  ]
+}

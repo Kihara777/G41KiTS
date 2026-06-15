@@ -1,0 +1,12 @@
+[
+  {
+    "icon": "📁",
+    "label": "tile_hako",
+    "href": "/hako"
+  },
+  {
+    "icon": "📤",
+    "label": "tile_share",
+    "href": "/share"
+  }
+]

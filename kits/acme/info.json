@@ -1,0 +1,11 @@
+{
+  "name": "ACME",
+  "desc": "SSL certificate management via acme.sh — ZeroSSL/Cloudflare DNS",
+  "depends": [
+    "core",
+    "dsock"
+  ],
+  "docker": {"service": "acme", "container": "ca"},
+  "compose": "file",
+  "persist": {"dir": ".ca", "survive": true}
+}

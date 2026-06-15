@@ -1,0 +1,1 @@
+{"tile_github":["github","proxy"],"ghp_h":"GitHub Raw Proxy","ghp_p":"G41 provides a reverse proxy for raw.githubusercontent.com, accelerating access to GitHub static files such as release assets.","ghp_use":"Usage: replace <code>https://raw.githubusercontent.com/</code> in the original URL with <code>https://__HOST__/gr/</code>"}

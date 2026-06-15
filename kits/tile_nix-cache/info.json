@@ -1,0 +1,9 @@
+{
+  "name": "Nix Cache",
+  "desc": "NixOS binary cache mirror — channels, cache, releases",
+  "depends": [
+    "home",
+    "nginx"
+  ],
+  "compose": "none"
+}

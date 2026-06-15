@@ -1,0 +1,10 @@
+{
+  "name": "Autoheal",
+  "desc": "Auto-restart unhealthy Docker containers",
+  "depends": [
+    "core",
+    "dsock"
+  ],
+  "docker": {"service": "autoheal", "container": "ah"},
+  "compose": "hub"
+}

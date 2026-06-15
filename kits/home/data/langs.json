@@ -1,0 +1,17 @@
+[
+  {
+    "id": "ja",
+    "name": "日本語",
+    "idx": "ja"
+  },
+  {
+    "id": "zh",
+    "name": "中文",
+    "idx": "zh"
+  },
+  {
+    "id": "en",
+    "name": "English",
+    "idx": "en"
+  }
+]

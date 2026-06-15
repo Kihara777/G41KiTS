@@ -1,0 +1,15 @@
+{
+  "name": "Hysteria2",
+  "desc": "Proxy sharing port 443 with nginx via port reuse",
+  "depends": [
+    "nginx"
+  ],
+  "docker": {"service": "hy2", "container": "hq"},
+  "compose": "hub",
+  "webroot": {
+    "target": "hako",
+    "method": "hardlink"
+  },
+  "local": [{"file": "hysteria.yaml", "to": "hysteria.yaml"}],
+  "persist": ".hq"
+}

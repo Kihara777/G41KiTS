@@ -1,0 +1,1 @@
+{"tile_github":["github","プロキシ"],"ghp_h":"GitHub Raw プロキシ","ghp_p":"G41 は raw.githubusercontent.com のリバースプロキシを提供し、GitHub の静的ファイル（リリースアセットなど）へのアクセスを高速化します。","ghp_use":"使い方: 元のリンクの <code>https://raw.githubusercontent.com/</code> を <code>https://__HOST__/gr/</code> に置き換えてください"}

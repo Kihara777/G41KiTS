@@ -1,0 +1,9 @@
+{
+  "name": "GitHub Proxy",
+  "desc": "Reverse proxy for raw.githubusercontent.com",
+  "depends": [
+    "home",
+    "nginx"
+  ],
+  "compose": "none"
+}

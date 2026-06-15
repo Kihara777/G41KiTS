@@ -1,0 +1,8 @@
+{
+  "short": "/vs",
+  "target": "https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&channel=Release",
+  "icon": "<img src=\"https://visualstudio.microsoft.com/favicon.ico\" alt=\"\" onerror=\"this.style.display='none'\">",
+  "desc": [
+    "lvs"
+  ]
+}

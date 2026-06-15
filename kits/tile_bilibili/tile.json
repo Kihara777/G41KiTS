@@ -1,0 +1,12 @@
+{
+  "id": "tile_bilibili",
+  "icon": "🦊",
+  "label": "tile_bilibili",
+  "type": "guide",
+  "sections": [
+    {"p": "bili_desc"},
+    {"p": "<a href=\"https://space.bilibili.com/1907051\" target=\"_blank\" style=\"color:var(--wp-amber)\">space.bilibili.com/1907051</a>"},
+    {"h": "bili_h"},
+    {"p": "bili_bio"}
+  ]
+}

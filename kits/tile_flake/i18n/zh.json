@@ -1,0 +1,21 @@
+{
+  "flake_desc": "个人 NixOS flake 仓库 — 自定义包、overlay、NixOS 模块",
+  "flake_h": "快速开始",
+  "flake_h2": "软件包",
+  "flake_h3": "补丁",
+  "flake_h4": "技能",
+  "tile_flake": ["flake","Nix 仓库"],
+  "flake_item_codewhale": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/codewhale.md\" target=\"_blank\">codewhale</a></b> — DeepSeek V4 终端编码代理",
+  "flake_item_kitsfmt": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/kitsfmt.md\" target=\"_blank\">kitsfmt</a></b> — Nix 格式化器（AST 排序 + Best-Practice 自动修正）",
+  "flake_item_mcp_searxng": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/mcp-searxng.md\" target=\"_blank\">mcp-searxng</a></b> — SearXNG 的 MCP Server",
+  "flake_item_obs": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/obs-bilibili-stream.md\" target=\"_blank\">obs-bilibili-stream</a></b> — OBS 的 Bilibili 直播插件",
+  "flake_item_opencode": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/opencode-telegram.md\" target=\"_blank\">opencode-telegram</a></b> — OpenCode 的 Telegram Bot 客户端",
+  "flake_item_comfyui": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/comfyui-strix-halo.md\" target=\"_blank\">comfyui-strix-halo</a></b> — 为 AMD Strix Halo 提供 ComfyUI ROCm 支持",
+  "flake_item_llama": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/llama-cpp-rocm.md\" target=\"_blank\">llama-cpp-rocm</a></b> — 动态追踪上游最新 Release 的 ROCm 加速构建",
+  "flake_item_rcc": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/rcc-fix.md\" target=\"_blank\">rcc-fix</a></b> — 修补 asusctl 的二合一设备体验",
+  "flake_item_skill_updates": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/skills/nixkits-check-updates.md\" target=\"_blank\">nixkits-check-updates</a></b> — 检查上游软件更新并自动升级",
+  "flake_item_skill_installer": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/skills/nixkits-skills.md\" target=\"_blank\">nixkits-skills</a></b> — NixKits 技能安装器（本地/在线）",
+  "flake_item_skill_nixos": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/skills/nixos-modern-cli.md\" target=\"_blank\">nixos-modern-cli</a></b> — NixOS 现代 CLI 操作指南（面向 AI 模型）",
+  "flake_item_skill_recover": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/skills/recover-nixos-config.md\" target=\"_blank\">recover-nixos-config</a></b> — 从 Nix store 恢复误删的 /etc/nixos 配置",
+  "flake_item_skill_docs": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/zh/skills/write-project-docs.md\" target=\"_blank\">write-project-docs</a></b> — 按 NixKits 风格为任意项目编写多语言文档"
+}

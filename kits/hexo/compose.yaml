@@ -1,0 +1,26 @@
+services:
+  hexo:
+    build:
+      context: ../..
+      dockerfile: kits/hexo/Dockerfile
+    container_name: hx
+    volumes:
+      - ../../.hx/source:/blog/source
+      - ../../.hx/themes:/blog/themes
+      - ../../.hx/scaffolds:/blog/scaffolds
+    depends_on:
+      - hako
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:4000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    mem_limit: 256m
+    cpus: 1.0
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 2

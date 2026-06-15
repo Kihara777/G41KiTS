@@ -1,0 +1,16 @@
+{
+  "name": "Short Links",
+  "desc": "Dynamic short links proxied through Redis API",
+  "depends": [
+    "home"
+  ],
+  "compose": "none",
+  "provides": [
+    {
+      "dir": "tile_links",
+      "accepts": ["link"],
+      "file": "link.json",
+      "ext": "json"
+    }
+  ]
+}

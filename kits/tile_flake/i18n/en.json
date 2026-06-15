@@ -1,0 +1,21 @@
+{
+  "flake_desc": "Personal NixOS flake repo — custom packages, overlays, and NixOS modules",
+  "flake_h": "Quick Start",
+  "flake_h2": "Packages",
+  "flake_h3": "Patches",
+  "flake_h4": "Skills",
+  "tile_flake": ["flake","Nix Repo"],
+  "flake_item_codewhale": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/codewhale.md\" target=\"_blank\">codewhale</a></b> — DeepSeek V4 terminal coding agent",
+  "flake_item_kitsfmt": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/kitsfmt.md\" target=\"_blank\">kitsfmt</a></b> — Nix formatter (AST sorting + best-practice auto-fix)",
+  "flake_item_mcp_searxng": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/mcp-searxng.md\" target=\"_blank\">mcp-searxng</a></b> — SearXNG MCP Server",
+  "flake_item_obs": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/obs-bilibili-stream.md\" target=\"_blank\">obs-bilibili-stream</a></b> — OBS Bilibili streaming plugin",
+  "flake_item_opencode": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/opencode-telegram.md\" target=\"_blank\">opencode-telegram</a></b> — OpenCode Telegram Bot client",
+  "flake_item_comfyui": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/comfyui-strix-halo.md\" target=\"_blank\">comfyui-strix-halo</a></b> — AMD Strix Halo ComfyUI ROCm support",
+  "flake_item_llama": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/llama-cpp-rocm.md\" target=\"_blank\">llama-cpp-rocm</a></b> — Dynamically tracks upstream ROCm builds",
+  "flake_item_rcc": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/rcc-fix.md\" target=\"_blank\">rcc-fix</a></b> — Fixes asusctl 2-in-1 experience",
+  "flake_item_skill_updates": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/skills/nixkits-check-updates.md\" target=\"_blank\">nixkits-check-updates</a></b> — Checks upstream updates and auto-upgrades",
+  "flake_item_skill_installer": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/skills/nixkits-skills.md\" target=\"_blank\">nixkits-skills</a></b> — NixKits skill installer (local / online)",
+  "flake_item_skill_nixos": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/skills/nixos-modern-cli.md\" target=\"_blank\">nixos-modern-cli</a></b> — NixOS modern CLI guide (for AI models)",
+  "flake_item_skill_recover": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/skills/recover-nixos-config.md\" target=\"_blank\">recover-nixos-config</a></b> — Recover deleted /etc/nixos config from Nix store",
+  "flake_item_skill_docs": "• <b><a href=\"https://github.com/Kihara777/NixKits/blob/main/docs/en/skills/write-project-docs.md\" target=\"_blank\">write-project-docs</a></b> — Write multi-language docs in NixKits style"
+}

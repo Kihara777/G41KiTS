@@ -1,0 +1,8 @@
+{
+  "name": "VC++ Redist",
+  "desc": "Visual C++ Redistributable",
+  "depends": [
+    "tile_links"
+  ],
+  "compose": "none"
+}

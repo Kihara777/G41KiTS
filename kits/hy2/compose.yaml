@@ -1,0 +1,25 @@
+services:
+  hy2:
+    image: tobyxdd/hysteria
+    container_name: hq
+    network_mode: "host"
+    volumes:
+      - certs:/certs
+      - ../../.hq/hysteria.yaml:/etc/hysteria.yaml
+    command: ["server", "-c", "/etc/hysteria.yaml"]
+    depends_on:
+      - nginx
+    healthcheck:
+      test: ["CMD", "sh", "-c", "kill -0 1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    mem_limit: 512m
+    cpus: 2.0
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 3

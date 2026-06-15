@@ -1,0 +1,8 @@
+{
+  "short": "/dotnet",
+  "target": "https://dotnet.microsoft.com/download",
+  "icon": "<img src=\"https://dotnet.microsoft.com/favicon.ico\" alt=\"\" onerror=\"this.style.display='none'\">",
+  "desc": [
+    "ldotnet"
+  ]
+}

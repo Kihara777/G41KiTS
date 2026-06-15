@@ -1,0 +1,12 @@
+{
+  "name": "Hexo",
+  "desc": "Personal blog engine",
+  "depends": [
+    "tile_apps",
+    "hako",
+    "nginx"
+  ],
+  "docker": {"service": "hexo", "container": "hx"},
+  "compose": "file",
+  "persist": {"dir": ".hx", "survive": true}
+}
