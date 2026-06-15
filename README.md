@@ -1,6 +1,6 @@
 # G41KiTS
 
-[中文](README.md) | [English](README.en.md) | [日本語](README.ja.md)
+[中文](README.md) | [English](docs/README.en.md) | [日本語](docs/README.ja.md)
 
 模块化自托管 Docker Compose 技术栈 — Metro/WP8.1 风格首页、Redis 配置 API、多语言 i18n、KITS 模块系统。
 
@@ -48,8 +48,8 @@ cp .env.example .env
 
 | 模块 | 说明 | 文档 |
 |------|------|------|
-| gh-proxy | raw.githubusercontent.com 反向代理 | [docs/zh/gh-proxy.md](docs/zh/gh-proxy.md) |
-| nix-cache | NixOS 二进制缓存镜像 — channels、cache、releases | [docs/zh/nix-cache.md](docs/zh/nix-cache.md) |
+| tile_gh-proxy | raw.githubusercontent.com 反向代理 | [docs/zh/tile_gh-proxy.md](docs/zh/tile_gh-proxy.md) |
+| tile_nix-cache | NixOS 二进制缓存镜像 — channels、cache、releases | [docs/zh/tile_nix-cache.md](docs/zh/tile_nix-cache.md) |
 
 ## 导航与入口
 
@@ -57,8 +57,8 @@ cp .env.example .env
 
 | 模块 | 说明 | 文档 |
 |------|------|------|
-| apps | 应用列表磁贴 — 全部服务的首页入口 | [docs/zh/apps.md](docs/zh/apps.md) |
-| links | 短链接系统，通过 Redis API 代理 | [docs/zh/links.md](docs/zh/links.md) |
+| tile_apps | 应用列表磁贴 — 全部服务的首页入口 | [docs/zh/tile_apps.md](docs/zh/tile_apps.md) |
+| tile_links | 短链接系统，通过 Redis API 代理 | [docs/zh/tile_links.md](docs/zh/tile_links.md) |
 | shortlinks | 动态短链接，通过 Redis API 代理 | [docs/zh/shortlinks.md](docs/zh/shortlinks.md) |
 
 ## 外部工具链接
@@ -67,23 +67,19 @@ cp .env.example .env
 
 | 模块 | 说明 | 文档 |
 |------|------|------|
-| 7zip | 高压缩比文件归档工具 | [docs/zh/7zip.md](docs/zh/7zip.md) |
-| dotnet | Microsoft .NET 开发框架 | [docs/zh/dotnet.md](docs/zh/dotnet.md) |
-| dx11 | 旧版 DirectX 最终用户运行时 | [docs/zh/dx11.md](docs/zh/dx11.md) |
-| vcredist | Visual C++ 可再发行组件包 | [docs/zh/vcredist.md](docs/zh/vcredist.md) |
-| vs | Visual Studio Community IDE | [docs/zh/vs.md](docs/zh/vs.md) |
-| vscode | Visual Studio Code 编辑器 | [docs/zh/vscode.md](docs/zh/vscode.md) |
+| link_7zip | 高压缩比文件归档工具 | [docs/zh/link_7zip.md](docs/zh/link_7zip.md) |
+| link_dotnet | Microsoft .NET 开发框架 | [docs/zh/link_dotnet.md](docs/zh/link_dotnet.md) |
+| link_dx11 | 旧版 DirectX 最终用户运行时 | [docs/zh/link_dx11.md](docs/zh/link_dx11.md) |
+| link_vcredist | Visual C++ 可再发行组件包 | [docs/zh/link_vcredist.md](docs/zh/link_vcredist.md) |
+| link_vs | Visual Studio Community IDE | [docs/zh/link_vs.md](docs/zh/link_vs.md) |
+| link_vscode | Visual Studio Code 编辑器 | [docs/zh/link_vscode.md](docs/zh/link_vscode.md) |
 
 ## 展示
 
 | 模块 | 说明 | 文档 |
 |------|------|------|
-| flake | 个人 Nix flake 仓库 — 自定义包、overlay、NixOS 模块 | [docs/zh/flake.md](docs/zh/flake.md) |
-
-## 技能
-
-供 AI 编码助手使用的操作指南。
-
+| tile_flake | 个人 Nix flake 仓库 — 自定义包、overlay、NixOS 模块 | [docs/zh/tile_flake.md](docs/zh/tile_flake.md) |
+| tile_bilibili | Bilibili 个人主页 — 虚拟主播介绍 | [docs/zh/tile_bilibili.md](docs/zh/tile_bilibili.md) |
 
 ## 作者
 
