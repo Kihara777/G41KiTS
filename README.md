@@ -113,6 +113,7 @@ EOF
 | 文档 | 说明 |
 |------|------|
 | [docs/zh/module-spec.md](docs/zh/module-spec.md) | KITS 模块系统格式定义 |
+| [MAINTENANCE.md](MAINTENANCE.md) | 维护记录 |
 
 ## 作者
 
