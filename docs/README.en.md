@@ -112,6 +112,7 @@ Static link tiles on the homepage pointing to external downloads (no Docker serv
 
 | Description | Doc |
 |-------------|-----|
+| KITS module system full definition | [kits/README.md](../kits/README.md) |
 | Third-party assets notice | [NOTICE.md](NOTICE.en.md) |
 | Maintenance log | [MAINTENANCE.md](MAINTENANCE.en.md) |
 | KITS module system format reference | [docs/en/module-spec.md](en/module-spec.md) |
