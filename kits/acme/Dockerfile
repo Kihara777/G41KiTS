@@ -1,4 +1,4 @@
-FROM neilpang/acme.sh:3.1.3
+FROM neilpang/acme.sh
 RUN apk add --no-cache docker-cli
 ENTRYPOINT [ "/entry.sh" ]
 CMD ["daemon"]

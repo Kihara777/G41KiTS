@@ -1,6 +1,6 @@
 services:
   dns:
-    image: adguard/dnsproxy:v0.81.3
+    image: adguard/dnsproxy
     container_name: ns
     ports:
       - "53:53/tcp"

@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:alpine
+    image: redis
     container_name: rd
     command: ["redis-server", "--appendonly", "yes", "--save", "900", "1", "--save", "300", "10", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:

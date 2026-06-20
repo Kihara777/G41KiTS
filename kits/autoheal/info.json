@@ -6,5 +6,5 @@
     "dsock"
   ],
   "docker": {"service": "autoheal", "container": "ah"},
-  "compose": "hub"
+  "compose": "file"
 }

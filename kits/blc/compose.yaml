@@ -1,6 +1,6 @@
 services:
   blc:
-    image: xfgryujk/blivechat:v1.10.3
+    image: xfgryujk/blivechat
     container_name: lc
     volumes:
       - ../../.lc/config.ini:/mnt/data/data/config.ini

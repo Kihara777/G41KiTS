@@ -1,6 +1,6 @@
 services:
   hako:
-    image: filebrowser/filebrowser:v2.63.14-s6
+    image: filebrowser/filebrowser
     container_name: fb
     volumes:
       - webroot:/srv

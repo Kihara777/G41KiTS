@@ -1,6 +1,6 @@
 services:
   autoheal:
-    image: willfarrell/autoheal:1.1.0
+    build: .
     container_name: ah
     mem_limit: 128m
     cpus: 0.5

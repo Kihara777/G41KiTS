@@ -1,5 +1,5 @@
-FROM node:24.16.0-alpine
-RUN npm install -g hexo-cli@4.3.2
+FROM node
+RUN npm install -g hexo-cli
 RUN mkdir -p /blog /hexo-init
 WORKDIR /hexo-init
 RUN hexo init . --no-install 2>/dev/null || true

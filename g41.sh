@@ -862,7 +862,7 @@ kits_pack() {
   [ -n "$add_docs" ] && git add -f docs/ README.md 2>/dev/null
 
   # --agents: add docs excluded by .gitignore
-  [ -n "$add_agents" ] && git add -f AGENTS.md skills/ 2>/dev/null
+  [ -n "$add_agents" ] && { git add -f AGENTS.md 2>/dev/null; [ -d skills ] && git add -f skills/ 2>/dev/null || true; }
 
   # --local: add deployment secrets and module-local files
   [ -n "$add_local" ] && { git add -f .env kits/*/.local/ 2>/dev/null; }
@@ -888,28 +888,52 @@ kits_pack() {
 }
 
 kits_list() {
-  local mods=()
+  local mods=() list_height
   for d in kits/*/; do [ -d "$d" ] && mods+=("$(basename "$d")"); done
   if [ ${#mods[@]} -eq 0 ]; then echo "No modules in kits/"; return; fi
-  local i=0 sel=0
-  while true; do
-    clear 2>/dev/null || printf '\n\n\n'
-    echo "=== Kits === (j/k:nav  a:add  d:del  q:quit)"
-    for i in $(seq 0 $((${#mods[@]}-1))); do
-      local mark=" "
-      kits_installed "${mods[$i]}" && mark="*"
-      [ $i -eq $sel ] && printf ' > [%s] %s\n' "$mark" "${mods[$i]}" || printf '   [%s] %s\n' "$mark" "${mods[$i]}"
+  list_height=${#mods[@]}
+  local i=0 sel=0 prev=-1
+
+  _draw_screen() {
+    printf '\e[2J\e[H'
+    printf "=== Kits === (j/k:nav  a:add  d:del  q:quit)\n"
+    for i in $(seq 0 $((list_height-1))); do
+      local mark=" "; kits_installed "${mods[$i]}" && mark="*"
+      [ $i -eq $sel ] && printf ' \e[7m [%s] %s \e[0m\n' "$mark" "${mods[$i]}" || printf '   [%s] %s\n' "$mark" "${mods[$i]}"
     done
-    [ -f "kits/${mods[$sel]}/info.json" ] && { echo "---"; jq -r '"\(.desc)\nDepends: \(.depends | join(","))"' "kits/${mods[$sel]}/info.json" 2>/dev/null; echo "---"; }
+    if [ -f "kits/${mods[$sel]}/info.json" ]; then
+      printf '\e[2m---\e[0m\n'
+      jq -r '"\(.desc)\nDepends: \(.depends | join(","))"' "kits/${mods[$sel]}/info.json" 2>/dev/null
+      printf '\e[2m---\e[0m\n'
+    fi
+    prev=$sel
+  }
+
+  _redraw_footer() {
+    local footer_start=$((list_height+3))
+    printf '\e[s'
+    printf '\e[%d;0H\e[J' $footer_start
+    if [ -f "kits/${mods[$sel]}/info.json" ]; then
+      printf '\e[2m---\e[0m\n'
+      jq -r '"\(.desc)\nDepends: \(.depends | join(","))"' "kits/${mods[$sel]}/info.json" 2>/dev/null
+      printf '\e[2m---\e[0m\n'
+    fi
+    printf '\e[u'
+  }
+
+  printf '\e[?25l'
+  _draw_screen
+  while true; do
     read -rsn1 key
     case "$key" in
-      j|J) [ $sel -lt $((${#mods[@]}-1)) ] && sel=$((sel+1));;
-      k|K) [ $sel -gt 0 ] && sel=$((sel-1));;
-      a|A) kits_add "${mods[$sel]}"; read -rsn1 key < /dev/tty;;
-      d|D) kits_del "${mods[$sel]}"; read -rsn1 key < /dev/tty;;
+      j|J) [ $sel -lt $((list_height-1)) ] && { sel=$((sel+1)); _redraw_footer; };;
+      k|K) [ $sel -gt 0 ] && { sel=$((sel-1)); _redraw_footer; };;
+      a|A) printf '\e[?25h'; kits_add "${mods[$sel]}"; read -rsn1 key < /dev/tty; printf '\e[?25l'; _draw_screen;;
+      d|D) printf '\e[?25h'; kits_del "${mods[$sel]}"; read -rsn1 key < /dev/tty; printf '\e[?25l'; _draw_screen;;
       q|Q) break;;
     esac
   done
+  printf '\e[?25h\n'
 }
 
 main() {

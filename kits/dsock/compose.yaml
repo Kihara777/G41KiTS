@@ -1,6 +1,6 @@
 services:
   dsock:
-    image: tecnativa/docker-socket-proxy:latest
+    image: tecnativa/docker-socket-proxy
     container_name: ds
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
