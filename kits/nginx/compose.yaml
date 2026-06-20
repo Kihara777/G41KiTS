@@ -1,6 +1,6 @@
 services:
   nginx:
-    image: nginx
+    image: nginx:alpine
     container_name: gx
     ports:
       - "80:80/tcp"
