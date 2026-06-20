@@ -14,6 +14,33 @@ cp .env.example .env
 ./g41.sh kits add -y all
 ```
 
+### Local Init
+
+`./g41.sh init` supports injecting deployer-specific host config via `.local/`, avoiding committing VPS details to the repo.
+
+**Directory mode** (recommended):
+```bash
+mkdir -p .local
+cat <<'EOF' > .local/install.sh
+do_init_local() {
+  hostnamectl set-hostname myserver
+  timedatectl set-timezone Asia/Tokyo
+  # UFW, netplan, crontab, etc.
+}
+EOF
+```
+
+**File mode** (legacy):
+```bash
+cat <<'EOF' > .local.sh
+do_init_local() {
+  hostnamectl set-hostname myserver
+}
+EOF
+```
+
+Both modes are optional. If neither exists, `init` skips host setup, only installing Docker and deploying containers.
+
 ## Infrastructure
 
 Core services providing gateway, storage, certs, and site skeleton.
@@ -91,7 +118,7 @@ Static link tiles on the homepage pointing to external downloads (no Docker serv
 
 - **Kitsunori (キツのり)** — Creator and maintainer
 - **Kitsunome (キツのめ)** — Design & development feat. deepseek-v4-pro (Max)
-- **Kitsunome Jr. (キツのめ)** — Hardware inference infra feat. llama-cpp-rocm: Qwen3.6-27B-MTP · Qwen3.6-35B-A3B-MTP · Qwen3.5-122B-A10B-MTP · Qwen3-Coder-Next · MiniMax-M2.7
+
 
 ## License
 

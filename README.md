@@ -14,6 +14,33 @@ cp .env.example .env
 ./g41.sh kits add -y all
 ```
 
+### 本地初始化
+
+`./g41.sh init` 支持通过 `.local/` 目录注入部署专属的主机配置，避免将 VPS 信息提交到仓库。
+
+**目录模式**（推荐）：
+```bash
+mkdir -p .local
+cat <<'EOF' > .local/install.sh
+do_init_local() {
+  hostnamectl set-hostname myserver
+  timedatectl set-timezone Asia/Tokyo
+  # UFW、netplan、crontab 等其他初始化步骤
+}
+EOF
+```
+
+**文件模式**（兼容旧版）：
+```bash
+cat <<'EOF' > .local.sh
+do_init_local() {
+  hostnamectl set-hostname myserver
+}
+EOF
+```
+
+两种模式都可选。若均不存在，`init` 将跳过主机初始化，仅安装 Docker 和部署容器。
+
 ## 基础设施
 
 核心服务，提供网关、存储、证书与站点骨架。
@@ -91,7 +118,7 @@ cp .env.example .env
 
 - **狐莉 (キツのり)** — 创建和维护
 - **小爪 (キツのめ)** — 设计、开发 feat. deepseek-v4-pro (Max)
-- **小小爪 (キツのめ)** — 硬件推理基础设施 feat. llama-cpp-rocm: Qwen3.6-27B-MTP · Qwen3.6-35B-A3B-MTP · Qwen3.5-122B-A10B-MTP · Qwen3-Coder-Next · MiniMax-M2.7
+
 
 ## 许可
 
