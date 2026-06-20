@@ -2,7 +2,7 @@
 
 [中文](../zh/link_dotnet.md) | [English](link_dotnet.md) | [日本語](../ja/link_dotnet.md)
 
-Microsoft .NET development framework
+.NET SDK.
 
 ## Info
 
@@ -11,14 +11,8 @@ Microsoft .NET development framework
 | Type | link |
 | Depends | tile_links |
 
-
-
 ## Install
 
 ```bash
 ./g41.sh kits add link_dotnet
 ```
-
-## Notes
-
-- compose: none

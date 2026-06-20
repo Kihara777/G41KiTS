@@ -2,7 +2,7 @@
 
 [中文](tile_links.md) | [English](../en/tile_links.md) | [日本語](../ja/tile_links.md)
 
-短链接系统，通过 Redis API 代理
+短链接磁贴。
 
 ## 基本信息
 
@@ -11,14 +11,8 @@
 | 类型 | tile |
 | 依赖 | home |
 
-
-
 ## 安装
 
 ```bash
 ./g41.sh kits add tile_links
 ```
-
-## 注意
-
-- 收集所有 link.json 条目\n- compose: none

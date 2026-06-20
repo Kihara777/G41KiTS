@@ -2,7 +2,7 @@
 
 [中文](link_dotnet.md) | [English](../en/link_dotnet.md) | [日本語](../ja/link_dotnet.md)
 
-Microsoft .NET 开发框架
+.NET SDK。
 
 ## 基本信息
 
@@ -11,14 +11,8 @@ Microsoft .NET 开发框架
 | 类型 | link |
 | 依赖 | tile_links |
 
-
-
 ## 安装
 
 ```bash
 ./g41.sh kits add link_dotnet
 ```
-
-## 注意
-
-- compose: none

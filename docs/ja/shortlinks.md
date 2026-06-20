@@ -2,7 +2,7 @@
 
 [中文](../zh/shortlinks.md) | [English](../en/shortlinks.md) | [日本語](shortlinks.md)
 
-Redis API 経由の動的短縮リンク
+Redis API 経由の動的短縮リンク。
 
 ## 基本情報
 
@@ -10,8 +10,6 @@ Redis API 経由の動的短縮リンク
 |------|-----|
 | 種類 | link |
 | 依存 | nginx |
-
-
 
 ## インストール
 
@@ -21,4 +19,4 @@ Redis API 経由の動的短縮リンク
 
 ## 注意
 
-- nginx location 正则匹配 20+ 字符的路径\n- compose: none
+- nginx location の正規表現で長いトークンをマッチ、Redis API に転送

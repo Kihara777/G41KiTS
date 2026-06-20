@@ -2,7 +2,7 @@
 
 [中文](shortlinks.md) | [English](../en/shortlinks.md) | [日本語](../ja/shortlinks.md)
 
-动态短链接，通过 Redis API 代理
+动态短链接，通过 Redis API 代理。
 
 ## 基本信息
 
@@ -10,8 +10,6 @@
 |------|-----|
 | 类型 | link |
 | 依赖 | nginx |
-
-
 
 ## 安装
 
@@ -21,4 +19,4 @@
 
 ## 注意
 
-- nginx location 正则匹配 20+ 字符的路径\n- compose: none
+- nginx location 正则匹配长 token，转发至 Redis API

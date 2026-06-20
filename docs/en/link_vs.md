@@ -2,7 +2,7 @@
 
 [中文](../zh/link_vs.md) | [English](link_vs.md) | [日本語](../ja/link_vs.md)
 
-Visual Studio Community IDE
+Visual Studio IDE.
 
 ## Info
 
@@ -11,14 +11,8 @@ Visual Studio Community IDE
 | Type | link |
 | Depends | tile_links |
 
-
-
 ## Install
 
 ```bash
 ./g41.sh kits add link_vs
 ```
-
-## Notes
-
-- compose: none

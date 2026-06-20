@@ -2,7 +2,7 @@
 
 [中文](../zh/shortlinks.md) | [English](shortlinks.md) | [日本語](../ja/shortlinks.md)
 
-Dynamic short links proxied through Redis API
+Dynamic short links proxied through Redis API.
 
 ## Info
 
@@ -10,8 +10,6 @@ Dynamic short links proxied through Redis API
 |------|-------|
 | Type | link |
 | Depends | nginx |
-
-
 
 ## Install
 
@@ -21,4 +19,4 @@ Dynamic short links proxied through Redis API
 
 ## Notes
 
-- nginx location 正则匹配 20+ 字符的路径\n- compose: none
+- nginx location regex matches long tokens, forwards to Redis API
