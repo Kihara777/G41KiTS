@@ -1,6 +1,6 @@
 # KITS Module Specification
 
-[中文](README.md) | [English](../docs/en/kits-spec.md) | [日本語](../docs/ja/kits-spec.md)
+[中文](README.md)
 
 单个模块是一个目录，包含一个 `info.json` 清单以及可选的服务定义、静态文件、nginx 配置和翻译。所有模块都位于 `kits/<module>/` 下。
 
