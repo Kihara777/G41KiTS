@@ -1,17 +1,17 @@
 # autoheal
 
-[中文](autoheal.md) | [English](../en/autoheal.md) | [日本語](../ja/autoheal.md)
+[中文](../zh/autoheal.md) | [English](../en/autoheal.md) | [日本語](autoheal.md)
 
-異常コンテナの自動再起動（ローカル Dockerfile）
+異常な Docker コンテナの自動再起動
 
 ## 基本情報
 
 | 項目 | 値 |
 |------|-----|
-| 类型 | service |
-| 依赖 | core, dsock |
+| 種類 | service |
+| 依存 | core,dsock |
 | 容器 | ah |
-| 镜像 | ローカルビルド |
+| 镜像 | 本地构建 |
 
 ## インストール
 
@@ -21,5 +21,4 @@
 
 ## 注意
 
-- willfarrell/autoheal をベースにローカルビルド
-- dsock プロキシへの TCP ソケット接続をサポート
+- 自定义 Dockerfile（基于 willfarrell/autoheal），支持 TCP socket\n- 通过 DOCKER_SOCK=tcp://ds:2375 连接 dsock\n- 每 5 秒检查一次容器健康状态

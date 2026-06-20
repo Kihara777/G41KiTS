@@ -1,17 +1,17 @@
 # redis
 
-[中文](redis.md) | [English](../en/redis.md) | [日本語](../ja/redis.md)
+[中文](../zh/redis.md) | [English](../en/redis.md) | [日本語](redis.md)
 
-Redis 設定ストア + Node.js API ブリッジ
+Redis 設定ストア + Node.js HTTP API ブリッジ
 
 ## 基本情報
 
 | 項目 | 値 |
 |------|-----|
-| 类型 | service |
-| 依赖 | core, nginx |
+| 種類 | service |
+| 依存 | core,nginx |
 | 容器 | rd |
-| 镜像 | ローカルビルド |
+| 镜像 | redis |
 
 ## インストール
 
@@ -21,5 +21,4 @@ Redis 設定ストア + Node.js API ブリッジ
 
 ## 注意
 
-- インメモリ DB + Node.js API（server.js）
-- REDIS_PASSWORD 環境変数で認証
+- 需要 REDIS_PASSWORD 环境变量\n- API 在 5800 端口，通过 /data/ 端点提供数据\n- 健康检查：redis-cli -a ${REDIS_PASSWORD} ping

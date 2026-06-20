@@ -1,0 +1,24 @@
+# shortlinks
+
+[中文](shortlinks.md) | [English](../en/shortlinks.md) | [日本語](../ja/shortlinks.md)
+
+动态短链接，通过 Redis API 代理
+
+## 基本信息
+
+| 项目 | 值 |
+|------|-----|
+| 类型 | link |
+| 依赖 | nginx |
+
+
+
+## 安装
+
+```bash
+./g41.sh kits add shortlinks
+```
+
+## 注意
+
+- nginx location 正则匹配 20+ 字符的路径\n- compose: none

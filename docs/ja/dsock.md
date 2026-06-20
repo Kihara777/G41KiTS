@@ -1,15 +1,15 @@
 # dsock
 
-[中文](dsock.md) | [English](../en/dsock.md) | [日本語](../ja/dsock.md)
+[中文](../zh/dsock.md) | [English](../en/dsock.md) | [日本語](dsock.md)
 
-Docker API セキュリティプロキシ
+Docker API セキュリティプロキシ、docker.sock 直接マウントの代替
 
 ## 基本情報
 
 | 項目 | 値 |
 |------|-----|
-| 类型 | service |
-| 依赖 | core |
+| 種類 | service |
+| 依存 | core |
 | 容器 | ds |
 | 镜像 | tecnativa/docker-socket-proxy |
 
@@ -21,5 +21,4 @@ Docker API セキュリティプロキシ
 
 ## 注意
 
-- docker.sock を読み取り専用でマウント
-- API を CONTAINERS+EXEC+POST に制限
+- 挂载 /var/run/docker.sock 只读（:ro）\n- 限制 API 端点为 CONTAINERS + EXEC + POST

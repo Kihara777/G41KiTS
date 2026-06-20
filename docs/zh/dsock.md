@@ -2,7 +2,7 @@
 
 [中文](dsock.md) | [English](../en/dsock.md) | [日本語](../ja/dsock.md)
 
-Docker API 安全代理（替代 docker.sock 直接挂载）
+Docker API 安全代理，替代 docker.sock 直接挂载
 
 ## 基本信息
 
@@ -21,5 +21,4 @@ Docker API 安全代理（替代 docker.sock 直接挂载）
 
 ## 注意
 
-- 只读挂载 docker.sock
-- 限制 API 为 CONTAINERS+EXEC+POST
+- 挂载 /var/run/docker.sock 只读（:ro）\n- 限制 API 端点为 CONTAINERS + EXEC + POST

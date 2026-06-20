@@ -1,0 +1,18 @@
+# tile_bilibili
+
+[中文](tile_bilibili.md) | [English](../en/tile_bilibili.md) | [日本語](../ja/tile_bilibili.md)
+
+Bilibili 主页磁贴。
+
+## 基本信息
+
+| 项目 | 值 |
+|------|-----|
+| 类型 | tile |
+| 依赖 | home |
+
+## 安装
+
+```bash
+./g41.sh kits add tile_bilibili
+```

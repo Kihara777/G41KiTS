@@ -1,13 +1,17 @@
 # tile_apps
 
-全部服务的首页入口
+[中文](tile_apps.md) | [English](../en/tile_apps.md) | [日本語](../ja/tile_apps.md)
 
-## 类型 
+应用列表磁贴 — 全部服务的首页入口
+
+## 基本信息
 
 | 项目 | 值 |
 |------|-----|
-| 类型 | 磁贴 |
-| 依赖 | core, home, nginx |
+| 类型 | tile |
+| 依赖 | core,home,nginx |
+
+
 
 ## 安装
 
@@ -17,4 +21,4 @@
 
 ## 注意
 
-- 首页磁贴，聚合所有已安装服务的入口
+- 收集所有 app.json 条目\n- compose: none，纯磁贴

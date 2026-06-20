@@ -1,6 +1,6 @@
 # acme
 
-[中文](acme.md) | [English](../en/acme.md) | [日本語](../ja/acme.md)
+[中文](../zh/acme.md) | [English](../en/acme.md) | [日本語](acme.md)
 
 SSL 証明書管理（acme.sh + ZeroSSL/Cloudflare DNS）
 
@@ -8,10 +8,10 @@ SSL 証明書管理（acme.sh + ZeroSSL/Cloudflare DNS）
 
 | 項目 | 値 |
 |------|-----|
-| 类型 | service |
-| 依赖 | core, dsock |
+| 種類 | service |
+| 依存 | core,dsock |
 | 容器 | ca |
-| 镜像 | ローカルビルド |
+| 镜像 | neilpang/acme.sh |
 
 ## インストール
 
@@ -21,5 +21,4 @@ SSL 証明書管理（acme.sh + ZeroSSL/Cloudflare DNS）
 
 ## 注意
 
-- dsock プロキシ経由で Docker API にアクセス
-- Cloudflare DNS 検証で証明書を発行
+- 通过 DOCKER_HOST=tcp://ds:2375 连接 dsock\n- 环境变量：CF_Key、CF_Email、ACME_EMAIL\n- 证书存储在 .ca/ 目录

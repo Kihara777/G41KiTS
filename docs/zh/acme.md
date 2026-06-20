@@ -9,9 +9,9 @@ SSL 证书管理（acme.sh + ZeroSSL/Cloudflare DNS）
 | 项目 | 值 |
 |------|-----|
 | 类型 | service |
-| 依赖 | core, dsock |
+| 依赖 | core,dsock |
 | 容器 | ca |
-| 镜像 | 本地构建 |
+| 镜像 | neilpang/acme.sh |
 
 ## 安装
 
@@ -21,5 +21,4 @@ SSL 证书管理（acme.sh + ZeroSSL/Cloudflare DNS）
 
 ## 注意
 
-- 通过 dsock 代理访问 Docker API
-- 使用 Cloudflare DNS 验证签发证书
+- 通过 DOCKER_HOST=tcp://ds:2375 连接 dsock\n- 环境变量：CF_Key、CF_Email、ACME_EMAIL\n- 证书存储在 .ca/ 目录

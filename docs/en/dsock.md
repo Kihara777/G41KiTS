@@ -1,15 +1,15 @@
 # dsock
 
-[中文](dsock.md) | [English](../en/dsock.md) | [日本語](../ja/dsock.md)
+[中文](../zh/dsock.md) | [English](dsock.md) | [日本語](../ja/dsock.md)
 
-Docker API security proxy
+Restricted Docker API proxy, replaces direct docker.sock mounts
 
 ## Info
 
 | Item | Value |
-|------|-----|
-| 类型 | service |
-| 依赖 | core |
+|------|-------|
+| Type | service |
+| Depends | core |
 | 容器 | ds |
 | 镜像 | tecnativa/docker-socket-proxy |
 
@@ -21,5 +21,4 @@ Docker API security proxy
 
 ## Notes
 
-- Mounts docker.sock read-only
-- Restricts API to CONTAINERS+EXEC+POST
+- 挂载 /var/run/docker.sock 只读（:ro）\n- 限制 API 端点为 CONTAINERS + EXEC + POST

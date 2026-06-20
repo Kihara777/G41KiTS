@@ -21,5 +21,4 @@ TLS 1.3 / HTTP/3 网关，反向代理全部后端
 
 ## 注意
 
-- 443 端口复用、HTTP/3、QUIC BPF 可选
-- 反向代理所有后端服务
+- 端口 80/443，HTTP/3 QUIC\n- 所有 location 通过 include 加载\n- 安全头：HSTS、CSP、X-Frame、Referrer

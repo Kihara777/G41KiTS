@@ -1,17 +1,17 @@
 # redis
 
-[中文](redis.md) | [English](../en/redis.md) | [日本語](../ja/redis.md)
+[中文](../zh/redis.md) | [English](redis.md) | [日本語](../ja/redis.md)
 
 Redis config store + Node.js HTTP API bridge
 
 ## Info
 
 | Item | Value |
-|------|-----|
-| 类型 | service |
-| 依赖 | core, nginx |
+|------|-------|
+| Type | service |
+| Depends | core,nginx |
 | 容器 | rd |
-| 镜像 | local build |
+| 镜像 | redis |
 
 ## Install
 
@@ -21,5 +21,4 @@ Redis config store + Node.js HTTP API bridge
 
 ## Notes
 
-- In-memory DB with Node.js API (server.js)
-- Auth via REDIS_PASSWORD env var
+- 需要 REDIS_PASSWORD 环境变量\n- API 在 5800 端口，通过 /data/ 端点提供数据\n- 健康检查：redis-cli -a ${REDIS_PASSWORD} ping

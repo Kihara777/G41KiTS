@@ -1,15 +1,15 @@
 # nginx
 
-[中文](nginx.md) | [English](../en/nginx.md) | [日本語](../ja/nginx.md)
+[中文](../zh/nginx.md) | [English](nginx.md) | [日本語](../ja/nginx.md)
 
 TLS 1.3 / HTTP/3 gateway, reverse proxy to all backends
 
 ## Info
 
 | Item | Value |
-|------|-----|
-| 类型 | service |
-| 依赖 | core |
+|------|-------|
+| Type | service |
+| Depends | core |
 | 容器 | gx |
 | 镜像 | nginx |
 
@@ -21,5 +21,4 @@ TLS 1.3 / HTTP/3 gateway, reverse proxy to all backends
 
 ## Notes
 
-- Port 443 with HTTP/3 and QUIC BPF support
-- Reverse proxy to all backend services
+- 端口 80/443，HTTP/3 QUIC\n- 所有 location 通过 include 加载\n- 安全头：HSTS、CSP、X-Frame、Referrer

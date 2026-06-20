@@ -1,17 +1,17 @@
 # autoheal
 
-[中文](autoheal.md) | [English](../en/autoheal.md) | [日本語](../ja/autoheal.md)
+[中文](../zh/autoheal.md) | [English](autoheal.md) | [日本語](../ja/autoheal.md)
 
-Auto-restart unhealthy containers
+Auto-restart unhealthy Docker containers
 
 ## Info
 
 | Item | Value |
-|------|-----|
-| 类型 | service |
-| 依赖 | core, dsock |
+|------|-------|
+| Type | service |
+| Depends | core,dsock |
 | 容器 | ah |
-| 镜像 | local build |
+| 镜像 | 本地构建 |
 
 ## Install
 
@@ -21,5 +21,4 @@ Auto-restart unhealthy containers
 
 ## Notes
 
-- Local build based on willfarrell/autoheal
-- Supports TCP socket connection to dsock proxy
+- 自定义 Dockerfile（基于 willfarrell/autoheal），支持 TCP socket\n- 通过 DOCKER_SOCK=tcp://ds:2375 连接 dsock\n- 每 5 秒检查一次容器健康状态

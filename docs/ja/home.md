@@ -2,14 +2,16 @@
 
 [中文](../zh/home.md) | [English](../en/home.md) | [日本語](home.md)
 
-サイトコアデータ — キャラクターメッセージ、テーマカラー、ステータスコード、i18n。
+サイトコアデータ — キャラクターメッセージ、テーマカラー、ステータスコード、i18n
 
 ## 基本情報
 
 | 項目 | 値 |
 |------|-----|
 | 種類 | data |
-| 依存 | core, nginx, redis |
+| 依存 | core,nginx,redis |
+
+
 
 ## インストール
 
@@ -19,7 +21,4 @@
 
 ## 注意
 
-- compose:none — Docker サービスなし
-- グローバル i18n 翻訳を提供（ja/zh/en）
-- tiles/apps/links の provides ターゲットディレクトリ
-- データファイル（chars.json 等）を Redis にロード
+- compose: none，无 Docker 服务\n- 提供 chars.json、colors.json、langs.json、status.json\n- 全局 i18n 提供者

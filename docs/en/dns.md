@@ -2,15 +2,16 @@
 
 [中文](../zh/dns.md) | [English](dns.md) | [日本語](../ja/dns.md)
 
-AdGuard recursive DNS with DoT/DoH/DoQ.
+AdGuard recursive DNS with DoT/DoH/DoQ
 
 ## Info
 
 | Item | Value |
 |------|-------|
 | Type | service |
-| Depends | acme, home, nginx |
+| Depends | acme,home,nginx |
 | Container | ns |
+| Image | adguard/dnsproxy |
 
 ## Install
 
@@ -20,7 +21,8 @@ AdGuard recursive DNS with DoT/DoH/DoQ.
 
 ## Notes
 
-- Listens 53/TCP+UDP, 853/TCP(DoT), 443/UDP(QUIC/DoQ)
-- DoH path `/dns-query` (through nginx proxy)
-- Uses TLS certs (shares `.ca/` with nginx)
-- Config deployed via `.local/config.yaml`
+- 53/TCP+UDP (plain DNS)
+- 853/TCP (DoT)
+- 443/UDP (DoQ)
+- DoH: /dns-query
+- Health check: nc -zw1 127.0.0.1 53

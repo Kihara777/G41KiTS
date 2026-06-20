@@ -1,13 +1,17 @@
 # tile_apps
 
-Homepage entry for all services
+[中文](../zh/tile_apps.md) | [English](tile_apps.md) | [日本語](../ja/tile_apps.md)
 
-## Type 
+Application list tile — homepage entry for all services
+
+## Info
 
 | Item | Value |
-|------|-----|
+|------|-------|
 | Type | tile |
-| Depends | core, home, nginx |
+| Depends | core,home,nginx |
+
+
 
 ## Install
 
@@ -17,4 +21,4 @@ Homepage entry for all services
 
 ## Notes
 
-- 首页磁贴，聚合所有已安装服务的入口
+- 收集所有 app.json 条目\n- compose: none，纯磁贴

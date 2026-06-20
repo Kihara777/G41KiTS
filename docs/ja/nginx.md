@@ -1,15 +1,15 @@
 # nginx
 
-[中文](nginx.md) | [English](../en/nginx.md) | [日本語](../ja/nginx.md)
+[中文](../zh/nginx.md) | [English](../en/nginx.md) | [日本語](nginx.md)
 
-TLS 1.3 / HTTP/3 ゲートウェイ
+TLS 1.3 / HTTP/3 ゲートウェイ、全バックエンドへのリバースプロキシ
 
 ## 基本情報
 
 | 項目 | 値 |
 |------|-----|
-| 类型 | service |
-| 依赖 | core |
+| 種類 | service |
+| 依存 | core |
 | 容器 | gx |
 | 镜像 | nginx |
 
@@ -21,5 +21,4 @@ TLS 1.3 / HTTP/3 ゲートウェイ
 
 ## 注意
 
-- 443 ポートで HTTP/3 と QUIC BPF をサポート
-- 全バックエンドサービスへのリバースプロキシ
+- 端口 80/443，HTTP/3 QUIC\n- 所有 location 通过 include 加载\n- 安全头：HSTS、CSP、X-Frame、Referrer
