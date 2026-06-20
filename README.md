@@ -110,12 +110,12 @@ EOF
 
 ## 规范
 
-| 文档 | 说明 |
+| 说明 | 文档 |
 |------|------|
-| [NOTICE.md](NOTICE.md) | 第三方资产声明 |
-| [MAINTENANCE.md](MAINTENANCE.md) | 维护记录 |
-| [docs/zh/module-spec.md](docs/zh/module-spec.md) | KITS 模块系统格式定义 |
-| [AGENTS.md](AGENTS.md) | 代理开发指南（架构、模块系统、开发工作流） |
+| 第三方资产声明 | [NOTICE.md](NOTICE.md) |
+| 维护记录 | [MAINTENANCE.md](MAINTENANCE.md) |
+| KITS 模块系统格式定义 | [docs/zh/module-spec.md](docs/zh/module-spec.md) |
+| 代理开发指南（架构、模块系统、开发工作流） | [AGENTS.md](AGENTS.md) |
 
 ## 作者
 
