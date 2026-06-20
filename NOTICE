@@ -1,26 +1,28 @@
 # NOTICE
 
-## Third-Party Assets
+[中文](NOTICE) | [English](docs/NOTICE.en.md) | [日本語](docs/NOTICE.ja.md)
 
-This project includes character artwork and assets from the game **Dolls' Frontline** (Girls' Frontline), copyright Sunborn Network Technology Co., Ltd.
+## 第三方资产
 
-### Affected Files
+本项目包含来自游戏 **Dolls' Frontline**（少女前线）的角色美术和资产，版权归属 Sunborn Network Technology Co., Ltd.。
 
-The following files in `.wr/G41/img/` are derivative or direct assets from or inspired by Dolls' Frontline, used solely as fan content for non-commercial purposes:
+### 涉及文件
 
-| File | Description |
-|------|-------------|
-| `Pic_G41.png` | G41 character artwork |
-| `Pic_G41_Dhx.png` | G41 character artwork (variant) |
-| `H_Accessory.webp` | G41 accessory icon |
-| `GK_Logo_EN.png` | Griffin & Kryuger logo |
+`.wr/G41/img/` 中的以下文件为源自或受 Dolls' Frontline 启发的衍生或直接资产，仅作为非商业性质的粉丝内容使用：
 
-These assets remain the intellectual property of their respective copyright holders. If you are the copyright owner and wish for these assets to be removed, please contact the project maintainer.
+| 文件 | 说明 |
+|------|------|
+| `Pic_G41.png` | G41 角色美术 |
+| `Pic_G41_Dhx.png` | G41 角色美术（变体） |
+| `H_Accessory.webp` | G41 配件图标 |
+| `GK_Logo_EN.png` | 格里芬与克鲁格徽标 |
 
-### Fictional References
+这些资产归各自版权持有人所有。如您是版权所有者并希望移除这些资产，请联系项目维护者。
 
-The page footer references fictional in-universe entities from Dolls' Frontline, including I.O.P. Manufacturing Company, Griffin & Kryuger Military Contractor and Security Consultant Services Company, among others. These names are part of the Dolls' Frontline intellectual property owned by Sunborn Network Technology Co., Ltd.
+### 虚构引用
 
-## License
+页面页脚引用了 Dolls' Frontline 中的虚构组织，包括 I.O.P. Manufacturing Company、Griffin & Kryuger Military Contractor and Security Consultant Services Company 等。这些名称是 Sunborn Network Technology Co., Ltd. 拥有的 Dolls' Frontline 知识产权的一部分。
 
-All other code and configuration in this repository is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+## 许可
+
+本仓库中所有其他代码和配置均采用 MIT 许可。详见 [LICENSE](LICENSE)。

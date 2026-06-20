@@ -113,6 +113,8 @@ Static link tiles on the homepage pointing to external downloads (no Docker serv
 | Doc | Description |
 |-----|-------------|
 | [docs/en/module-spec.md](en/module-spec.md) | KITS module system format reference |
+| [MAINTENANCE.md](MAINTENANCE.en.md) | Maintenance log |
+| [NOTICE](NOTICE.en.md) | Third-party assets notice |
 
 ## Author
 
