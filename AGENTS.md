@@ -74,58 +74,6 @@ Every service, tile, and site component is a module under `kits/`. Each module d
 - `persist` — runtime data dir (required if module has `local`; survive flag preserves across cycles)
 - `local` — deployment file installs (merged from former `local.json`)
 
-### Module naming conventions
-
-- **`tile_*`** — `compose: "none"` pure tile modules (e.g., `tile_apps`, `tile_flake`, `tile_gh-proxy`)
-- **`link_*`** — `compose: "none"` pure short-link modules (e.g., `link_7zip`, `link_vscode`)
-- **bare name** — Docker service modules (e.g., `nginx`, `redis`, `aria2`, `hy2`)
-
-The prefix is part of the module directory name and must match `tile.json` / `link.json` `id` field.
-
-### compose modes
-
-| mode | description | examples |
-|------|-------------|---------|
-| `none` | no Docker service; tile/link/data only | tile_*, link_*, home, nix-cache |
-| `hub` | pull image from Docker Hub | blc, dns, hako, hy2, dsock |
-| `file` | local Dockerfile build | redis, bt, aria2, acme, autoheal, hexo, tracker |
-
-`compose: "file"` modules require a `Dockerfile` + `compose.yaml` with `build: .` instead of `image:`.
-
-### `.local/` deployment pattern
-
-Modules may ship gitignored `.local/` directories for deployer-specific files that must **not** be committed:
-
-| `.local/` path | install target | example |
-|----------------|----------------|---------|
-| `.local/site/*.conf` | `.gx/conf.d/` (nginx) | hy2 hidden location |
-| `.local/webroot/*` | `.wr/` (web assets) | hy2 subscription file |
-| `.local/<config>` | persist dir | `hysteria.yaml`, `settings.json` |
-
-`g41.sh` treats `.local/` files identically to their public counterparts (same hardlink + provides resolution). The only difference is `.gitignore` exclusion.
-
-### Health check standards
-
-Health checks declared in `compose.yaml` must follow this priority:
-
-| priority | pattern | when to use |
-|----------|---------|-------------|
-| 1 | `wget -q -O /dev/null http://127.0.0.1:<port>/` | HTTP services (blc, hako, redis API, tracker) |
-| 2 | `nc -zw1 127.0.0.1 <port>` | TCP-only services (dns, aria2, bt) |
-| 3 | `kill -0 1` | Go services with no TCP endpoint (last resort) |
-
-Never use `kill -0 1` for Node.js services (event loop can block without crashing).
-
-### Image version locking
-
-All images and base images must be pinned to **exact version tags**:
-
-- `FROM alpine:3.23.4` — never `FROM alpine` or `FROM alpine:latest`
-- `FROM node:24.16.0-alpine` — never `FROM node:lts-alpine`  
-- `image: adguard/dnsproxy:v0.81.3` in compose.yaml — never floating tags
-- `ADD --checksum=sha256:...` for remote URL downloads in Dockerfiles
-- `npm install -g <pkg>@<version>` for global npm packages
-
 ### `provides` system
 Modules declare what data directories they offer and what file types they accept. The installer recursively resolves all `provides` through the full dependency tree. No paths are hardcoded — every target directory is discovered from `info.json` at install time via `kit_resolve`.
 
@@ -181,19 +129,6 @@ Modules with `persist: {"dir": "<dir>", "survive": true}` preserve their data ac
 ```
 
 ## Development workflow
-
-### Git repository
-
-```bash
-cd G41KiTS
-git init
-git remote add origin https://github.com/<user>/G41KiTS.git
-git add -A
-git commit -m "Initial commit"
-git push -u origin main
-```
-
-The `.gitignore` excludes `.env`, `.*/` (persistent directories), `.local.sh`, and backup files. All source code lives under `kits/` and is safe to commit.
 
 ### Push changes (rsync — mandatory safety protocol)
 
