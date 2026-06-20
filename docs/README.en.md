@@ -112,10 +112,10 @@ Static link tiles on the homepage pointing to external downloads (no Docker serv
 
 | Doc | Description |
 |-----|-------------|
-| [AGENTS.md](../AGENTS.md) | Agent guide — architecture, module system, development workflow |
-| [docs/en/module-spec.md](en/module-spec.md) | KITS module system format reference |
+| [NOTICE.md](NOTICE.en.md) | Third-party assets notice |
 | [MAINTENANCE.md](MAINTENANCE.en.md) | Maintenance log |
-| [NOTICE](NOTICE.en.md) | Third-party assets notice |
+| [docs/en/module-spec.md](en/module-spec.md) | KITS module system format reference |
+| [AGENTS.md](../AGENTS.md) | Agent guide — architecture, module system, development workflow |
 
 ## Author
 
