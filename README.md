@@ -114,7 +114,7 @@ EOF
 |------|------|
 | [docs/zh/module-spec.md](docs/zh/module-spec.md) | KITS 模块系统格式定义 |
 | [MAINTENANCE.md](MAINTENANCE.md) | 维护记录 |
-| [NOTICE](NOTICE) | 第三方资产声明 |
+| [NOTICE](NOTICE.md) | 第三方资产声明 |
 
 ## 作者
 
