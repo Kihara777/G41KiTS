@@ -1,17 +1,17 @@
 # redis
 
-[中文](../zh/redis.md) | [English](redis.md) | [日本語](../ja/redis.md)
+[中文](redis.md) | [English](../en/redis.md) | [日本語](../ja/redis.md)
 
-Redis config store + Node.js HTTP API bridge.
+Redis config store + Node.js HTTP API bridge
 
 ## Info
 
 | Item | Value |
-|------|-------|
-| Type | service |
-| Depends | core, nginx |
-| Container | rd (Redis), ra (API) |
-| Image | local build |
+|------|-----|
+| 类型 | service |
+| 依赖 | core, nginx |
+| 容器 | rd |
+| 镜像 | local build |
 
 ## Install
 
@@ -21,8 +21,5 @@ Redis config store + Node.js HTTP API bridge.
 
 ## Notes
 
-- Redis authenticated via `REDIS_PASSWORD` (`--requirepass`)
-- API serves `/data/` and `/link/` endpoints on port 5800
-- Data loaded from `.rd/data/` into Redis, gated by `data:loaded` flag
-- Load phase uses `multi()` pipeline for batch writes
-- Other containers cannot access Redis directly
+- In-memory DB with Node.js API (server.js)
+- Auth via REDIS_PASSWORD env var

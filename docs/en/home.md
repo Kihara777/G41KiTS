@@ -19,8 +19,7 @@ Site core data — character messages, theme colors, status codes, i18n.
 
 ## Notes
 
-- No Docker service — pure data module
-- JSON files in `data/` loaded into Redis on API startup
-- `webroot/` provides homepage HTML/JS/CSS and site icons
-- `i18n/` provides global multi-language translations
-- Host field in chars.json injected by API from `G41_DOMAIN` env var
+- compose:none — no Docker service
+- Provides global i18n translations (ja/zh/en)
+- Provides tiles/apps/links target directories
+- Data files (chars.json, colors.json, etc.) loaded into Redis

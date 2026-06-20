@@ -19,8 +19,7 @@
 
 ## 注意
 
-- 无 Docker 服务，纯数据模块
-- `data/` 目录中的 JSON 文件在 API 启动时加载至 Redis
-- `webroot/` 目录提供首页 HTML/JS/CSS 和站点图标
-- `i18n/` 目录提供全局多语言翻译
-- 角色消息（chars.json）的 host 字段由 API 从 `G41_DOMAIN` 环境变量动态注入
+- compose:none — 无 Docker 服务
+- 提供全局 i18n 翻译（ja/zh/en）
+- 提供 tiles/apps/links 的 provides 目标目录
+- 数据文件（chars.json、colors.json 等）加载至 Redis

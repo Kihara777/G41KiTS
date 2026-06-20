@@ -19,8 +19,7 @@
 
 ## 注意
 
-- Docker サービスなし、純粋なデータモジュール
-- `data/` の JSON ファイルは API 起動時に Redis に読み込み
-- `webroot/` はホームページ HTML/JS/CSS とサイトアイコンを提供
-- `i18n/` はグローバル多言語翻訳を提供
-- chars.json の host フィールドは API が `G41_DOMAIN` 環境変数から動的注入
+- compose:none — Docker サービスなし
+- グローバル i18n 翻訳を提供（ja/zh/en）
+- tiles/apps/links の provides ターゲットディレクトリ
+- データファイル（chars.json 等）を Redis にロード

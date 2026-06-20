@@ -81,6 +81,12 @@ cp .env.example .env
 | flake | Nix flake 仓库 | [docs/zh/tile_flake.md](docs/zh/tile_flake.md) |
 | bilibili | Bilibili 主页 | [docs/zh/tile_bilibili.md](docs/zh/tile_bilibili.md) |
 
+## 规范
+
+| 文档 | 说明 |
+|------|------|
+| [docs/zh/module-spec.md](docs/zh/module-spec.md) | KITS 模块系统格式定义 |
+
 ## 作者
 
 - **狐莉 (キツのり)** — 创建和维护
