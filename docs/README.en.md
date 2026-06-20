@@ -10,68 +10,89 @@ Modular self-hosted Docker Compose stack — Metro/WP8.1 style homepage, Redis-b
 git clone https://github.com/Kihara777/G41KiTS.git
 cd G41KiTS
 cp .env.example .env
+# Edit .env with your domain and Cloudflare credentials
 ./g41.sh kits add -y all
 ```
 
 ## Infrastructure
+
+Core services providing gateway, storage, certs, and site skeleton.
+
 | Module | Description | Docs |
 |--------|-------------|------|
-| nginx | TLS 1.3 / HTTP/3 gateway | [docs/en/nginx.md](en/nginx.md) |
+| nginx | TLS 1.3 / HTTP/3 gateway, reverse proxy to all backends | [docs/en/nginx.md](en/nginx.md) |
 | redis | Redis config store + Node.js HTTP API bridge | [docs/en/redis.md](en/redis.md) |
-| acme | SSL certificate management | [docs/en/acme.md](en/acme.md) |
-| autoheal | Auto-restart unhealthy containers | [docs/en/autoheal.md](en/autoheal.md) |
-| dsock | Docker API security proxy | [docs/en/dsock.md](en/dsock.md) |
-| home | Site core data — messages, theme, status codes, i18n | [docs/en/home.md](en/home.md) |
+| acme | SSL certificate management (acme.sh + ZeroSSL/Cloudflare DNS) | [docs/en/acme.md](en/acme.md) |
+| autoheal | Auto-restart unhealthy Docker containers | [docs/en/autoheal.md](en/autoheal.md) |
+| dsock | Docker API security proxy (replaces direct docker.sock mounts) | [docs/en/dsock.md](en/dsock.md) |
+| home | Site core data — character messages, theme colors, status codes, i18n | [docs/en/home.md](en/home.md) |
 
 ## Site Services
+
+User-facing services exposed through nginx reverse proxy.
+
 | Module | Description | Docs |
 |--------|-------------|------|
-| aria2 | Download manager with WebUI and WebDAV | [docs/en/aria2.md](en/aria2.md) |
+| aria2 | Parallel download manager with WebUI and WebDAV share | [docs/en/aria2.md](en/aria2.md) |
 | blc | Bilibili live chat with AI translation | [docs/en/blc.md](en/blc.md) |
-| bt | BitTorrent client with WebUI and WebDAV | [docs/en/bt.md](en/bt.md) |
-| dns | AdGuard recursive DNS (DoT/DoH/DoQ) | [docs/en/dns.md](en/dns.md) |
-| hako | Web file manager with public WebDAV | [docs/en/hako.md](en/hako.md) |
+| bt | BitTorrent client with WebUI and WebDAV share | [docs/en/bt.md](en/bt.md) |
+| dns | AdGuard recursive DNS with DoT/DoH/DoQ | [docs/en/dns.md](en/dns.md) |
+| hako | Web file manager with public WebDAV share | [docs/en/hako.md](en/hako.md) |
 | hexo | Personal blog engine | [docs/en/hexo.md](en/hexo.md) |
 | hy2 | Hysteria2 proxy sharing port 443 with nginx | [docs/en/hy2.md](en/hy2.md) |
 | tracker | Lightweight HTTPS BitTorrent tracker | [docs/en/tracker.md](en/tracker.md) |
 
 ## Proxy & Mirror
+
+Reverse proxy and cache acceleration services.
+
 | Module | Description | Docs |
 |--------|-------------|------|
-| gh-proxy | Reverse proxy for raw.githubusercontent.com | [docs/en/gh-proxy.md](en/gh-proxy.md) |
-| nix-cache | NixOS binary cache mirror | [docs/en/nix-cache.md](en/nix-cache.md) |
+| gh-proxy | Reverse proxy for raw.githubusercontent.com | [docs/en/tile_gh-proxy.md](en/tile_gh-proxy.md) |
+| nix-cache | NixOS binary cache mirror — channels, cache, releases | [docs/en/tile_nix-cache.md](en/tile_nix-cache.md) |
 
 ## Navigation
+
+Homepage tiles, app list, short link system.
+
 | Module | Description | Docs |
 |--------|-------------|------|
-| apps | Application list tile | [docs/en/apps.md](en/apps.md) |
-| links | Short link system | [docs/en/links.md](en/links.md) |
-| shortlinks | Dynamic short links | [docs/en/shortlinks.md](en/shortlinks.md) |
+| apps | Application list tile — homepage entry for all services | [docs/en/tile_apps.md](en/tile_apps.md) |
+| links | Short link system proxied through Redis API | [docs/en/tile_links.md](en/tile_links.md) |
+| shortlinks | Dynamic short links proxied through Redis API | [docs/en/shortlinks.md](en/shortlinks.md) |
 
 ## External Tool Links
+
+Static link tiles on the homepage pointing to external downloads (no Docker services).
+
 | Module | Description | Docs |
 |--------|-------------|------|
-| 7zip | High-compression file archiver | [docs/en/7zip.md](en/7zip.md) |
-| dotnet | Microsoft .NET framework | [docs/en/dotnet.md](en/dotnet.md) |
-| dx11 | Legacy DirectX Runtime | [docs/en/dx11.md](en/dx11.md) |
-| vcredist | Visual C++ Redistributable | [docs/en/vcredist.md](en/vcredist.md) |
-| vs | Visual Studio IDE | [docs/en/vs.md](en/vs.md) |
-| vscode | Visual Studio Code editor | [docs/en/vscode.md](en/vscode.md) |
+| 7zip | File archiver with high compression ratio | [docs/en/link_7zip.md](en/link_7zip.md) |
+| dotnet | Microsoft .NET development framework | [docs/en/link_dotnet.md](en/link_dotnet.md) |
+| dx11 | Legacy DirectX End-User Runtime | [docs/en/link_dx11.md](en/link_dx11.md) |
+| vcredist | Visual C++ Redistributable | [docs/en/link_vcredist.md](en/link_vcredist.md) |
+| vs | Visual Studio Community IDE | [docs/en/link_vs.md](en/link_vs.md) |
+| vscode | Visual Studio Code editor | [docs/en/link_vscode.md](en/link_vscode.md) |
 
 ## Showcase
+
 | Module | Description | Docs |
 |--------|-------------|------|
-| flake | Nix flake repository | [docs/en/flake.md](en/flake.md) |
+| flake | Personal Nix flake repository — custom packages, overlays, NixOS modules | [docs/en/tile_flake.md](en/tile_flake.md) |
+| bilibili | Bilibili space — virtual streamer introduction | [docs/en/tile_bilibili.md](en/tile_bilibili.md) |
 
 ## Spec
+
 | Doc | Description |
 |-----|-------------|
 | [docs/en/module-spec.md](en/module-spec.md) | KITS module system format reference |
 
 ## Author
+
 - **Kitsunori (キツのり)** — Creator and maintainer
-- **Kitsunome (キツのめ)** — Design & development
-- **Kitsunome Jr. (キツのめ)** — Hardware inference infra
+- **Kitsunome (キツのめ)** — Design & development feat. deepseek-v4-pro (Max)
+- **Kitsunome Jr. (キツのめ)** — Hardware inference infra feat. llama-cpp-rocm: Qwen3.6-27B-MTP · Qwen3.6-35B-A3B-MTP · Qwen3.5-122B-A10B-MTP · Qwen3-Coder-Next · MiniMax-M2.7
 
 ## License
+
 [MIT](../LICENSE)
