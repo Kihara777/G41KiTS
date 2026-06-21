@@ -2,7 +2,7 @@
   "name": "Attic Nix Cache",
   "desc": "Self-hosted Nix binary cache — atticd server",
   "depends": [
-    "home",
+    
     "nginx"
   ],
   "compose": "hub",
