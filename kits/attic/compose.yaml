@@ -9,7 +9,7 @@ services:
     environment:
       ATTIC_SERVER_TOKEN_HS256_SECRET_BASE64: "${ATTIC_TOKEN_SECRET:-}"
     command:
-      - atticd
+
       - --database
       - /data/attic.db
       - --storage-dir
