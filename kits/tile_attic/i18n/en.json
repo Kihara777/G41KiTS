@@ -1,1 +1,1 @@
-{"tile_attic":["📦 Attic","Nix Binary Cache"],"attic_h":"Self-hosted Nix Cache","attic_p":"Attic-based Nix binary cache server with multi-tenancy and global dedup","attic_h2":"Configuration"}
+{"tile_attic":["📦 Attic","Nix Binary Cache"],"attic_h":"Self-hosted Nix Cache","attic_p":"Attic-based Nix binary cache server with multi-tenancy and global dedup","attic_h2":"Configuration","attic_link":"<a href=\"/attic/\" style=\"color:var(--wp-blue)\">/attic/</a> → NixKits Binary Cache"}

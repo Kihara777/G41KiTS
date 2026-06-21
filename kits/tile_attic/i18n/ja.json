@@ -1,1 +1,1 @@
-{"tile_attic":["📦 Attic","Nix バイナリキャッシュ"],"attic_h":"セルフホスト Nix キャッシュ","attic_p":"atticd ベースの Nix バイナリキャッシュサーバー、マルチテナント＆グローバル重複排除対応","attic_h2":"設定"}
+{"tile_attic":["📦 Attic","Nix バイナリキャッシュ"],"attic_h":"セルフホスト Nix キャッシュ","attic_p":"atticd ベースの Nix バイナリキャッシュサーバー、マルチテナント＆グローバル重複排除対応","attic_h2":"設定","attic_link":"<a href=\"/attic/\" style=\"color:var(--wp-blue)\">/attic/</a> → NixKits バイナリキャッシュ"}
