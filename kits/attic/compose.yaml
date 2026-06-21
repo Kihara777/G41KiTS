@@ -8,14 +8,9 @@ services:
       - ../../.attic:/data
     environment:
       ATTIC_SERVER_TOKEN_HS256_SECRET_BASE64: "${ATTIC_TOKEN_SECRET:-}"
-    command:
-
-      - --database
-      - /data/attic.db
-      - --storage-dir
-      - /data/storage
-      - --listen
-      - 0.0.0.0:8080
+      ATTIC_DATABASE: /data/attic.db
+      ATTIC_STORAGE_DIR: /data/storage
+      ATTIC_LISTEN: 0.0.0.0:8080
     restart: unless-stopped
     logging:
       driver: "json-file"
