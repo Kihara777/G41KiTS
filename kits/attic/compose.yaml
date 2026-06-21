@@ -1,0 +1,24 @@
+services:
+  attic:
+    image: ghcr.io/zhaofengli/attic:latest
+    container_name: attic
+    ports:
+      - "127.0.0.1:8188:8080"
+    volumes:
+      - ../../.attic:/data
+    environment:
+      ATTIC_SERVER_TOKEN_HS256_SECRET_BASE64: "${ATTIC_TOKEN_SECRET:-}"
+    command:
+      - atticd
+      - --database
+      - /data/attic.db
+      - --storage-dir
+      - /data/storage
+      - --listen
+      - 0.0.0.0:8080
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 3

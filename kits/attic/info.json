@@ -1,0 +1,19 @@
+{
+  "name": "Attic Nix Cache",
+  "desc": "Self-hosted Nix binary cache — atticd server with status page",
+  "depends": [
+    "home",
+    "nginx"
+  ],
+  "compose": "file",
+  "docker": {"service": "attic", "container": "attic"},
+  "persist": ".attic",
+  "store": [
+    {"src": "site/index.html", "to": "hako/attic/index.html"}
+  ],
+  "webroot": {
+    "target": "hako",
+    "method": "hardlink"
+  },
+  "notes": "首次部署需运行 `atticd --database /data/attic.db generate-keypair` 生成签名密钥。ATTIC_TOKEN_SECRET 需在 .env 中配置。"
+}

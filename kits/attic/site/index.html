@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attic 缓存状态 — G41KiTS</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; background: #1a1a2e; color: #e0e0e0; }
+h1 { color: #7c8cf8; } .card { background: #16213e; border-radius: 8px; padding: 1rem; } .error { color: #f87171; }
+</style>
+</head>
+<body>
+<h1>📦 Attic 二进制缓存</h1>
+<div id="stats"><div class="card">加载中…</div></div>
+<pre id="error" class="error" style="display:none"></pre>
+<script>
+const API = location.protocol + "//" + location.host + "/attic/api/v1/caches";
+(async () => {
+ try {
+  const r = await fetch(API);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const caches = await r.json();
+  let h = "";
+  for (const c of caches) {
+   h += '<div class="card"><strong>' + (c.name||c.id||"unknown") + '</strong>';
+   h += '<div>公开：' + (c.isPublic?"是":"否") + '</div></div>';
+  }
+  document.getElementById("stats").innerHTML = h || '<div class="card">无缓存</div>';
+ } catch(e) {
+  document.getElementById("error").style.display="block";
+  document.getElementById("error").textContent = "API 不可用：" + e.message;
+  document.getElementById("stats").innerHTML = '<div class="card">无法获取（atticd 未运行或 /attic/ 未配置）</div>';
+ }
+})();
+</script>
+</body>
+</html>
