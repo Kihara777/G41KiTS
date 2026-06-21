@@ -1,0 +1,10 @@
+{
+  "name": "Attic Cache",
+  "desc": "Self-hosted Nix binary cache — atticd with cache status page",
+  "depends": [
+    "attic",
+    "home",
+    "nginx"
+  ],
+  "compose": "none"
+}

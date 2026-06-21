@@ -1,0 +1,13 @@
+{
+  "id": "tile_attic",
+  "icon": "📦",
+  "label": "tile_attic",
+  "type": "guide",
+  "sections": [
+    {"h": "attic_h", "p": "attic_p"},
+    {"p": "<a href=\"/attic/\" style=\"color:var(--wp-blue)\">/attic/</a> → NixKits 二进制缓存"},
+    {"h": "attic_h2"},
+    {"pre": "cachix use nixkits"},
+    {"pre": "nix.settings.substituters = [ \"https://__HOST__/attic\" ];\nnix.settings.trusted-public-keys = [ \"nixkits:<key>\" ];"}
+  ]
+}

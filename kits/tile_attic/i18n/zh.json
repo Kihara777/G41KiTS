@@ -1,0 +1,1 @@
+{"tile_attic":["📦 Attic","Nix 二进制缓存"],"attic_h":"自托管 Nix 缓存","attic_p":"基于 atticd 的 Nix 二进制缓存服务器，支持多租户与全局去重","attic_h2":"配置"}
