@@ -1,0 +1,6 @@
+{
+  "name": "Kihara777",
+  "desc": "My GitHub profile — projects, contributions, and contact",
+  "depends": ["home"],
+  "compose": "none"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Ma8lKits",
+  "desc": "Mail infrastructure toolkit — self-hosted email stack",
+  "depends": ["home"],
+  "compose": "none"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "tile_kihara777",
+  "icon": "🦊",
+  "label": "tile_kihara777",
+  "type": "guide",
+  "sections": [
+    {"p": "kihara777_desc"},
+    {"p": "<a href=\"https://github.com/Kihara777\" target=\"_blank\" style=\"color:var(--wp-amber)\">github.com/Kihara777</a>"},
+    {"h": "kihara777_h"},
+    {"p": "kihara777_bio"}
+  ]
+}

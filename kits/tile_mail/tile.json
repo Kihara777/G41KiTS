@@ -1,0 +1,10 @@
+{
+  "id": "tile_mail",
+  "icon": "📧",
+  "label": "tile_mail",
+  "type": "guide",
+  "sections": [
+    {"h": "mail_h", "p": "mail_p"},
+    {"p": "<a href=\"https://github.com/Kihara777/Ma8lKits\" target=\"_blank\" style=\"color:var(--wp-amber)\">github.com/Kihara777/Ma8lKits</a>"}
+  ]
+}

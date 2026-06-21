@@ -1,0 +1,12 @@
+{
+  "id": "tile_homete",
+  "icon": "🏠",
+  "label": "tile_homete",
+  "type": "guide",
+  "sections": [
+    {"h": "homete_h", "p": "homete_p"},
+    {"p": "<a href=\"https://github.com/Kihara777/G41KiTS\" target=\"_blank\" style=\"color:var(--wp-amber)\">github.com/Kihara777/G41KiTS</a>"},
+    {"h": "homete_h2"},
+    {"p": "homete_stack"}
+  ]
+}
