@@ -14,6 +14,7 @@ include:
   - kits/nginx/compose.yaml
   - kits/redis/compose.yaml
   - kits/tracker/compose.yaml
+  - kits/attic/compose.yaml
 volumes:
   certs:
     driver: local

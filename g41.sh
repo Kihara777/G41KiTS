@@ -947,7 +947,16 @@ kits_reload() {
     return 1
   fi
   echo "Hot-reloading Redis data..."
-  docker compose exec -T api wget -q -O- --post-data="{\"secret\":\"$secret\"}" http://127.0.0.1:5800/admin/reload 2>/dev/null || {
+  docker compose exec -T api node -e "
+    var http=require('http');
+    var data=JSON.stringify({secret:'$secret'});
+    var req=http.request({hostname:'127.0.0.1',port:5800,path:'/admin/reload',method:'POST',headers:{'Content-Type':'application/json','Content-Length':data.length}},function(res){
+      var body='';res.on('data',function(c){body+=c;});
+      res.on('end',function(){console.log(body);process.exit(res.statusCode===200?0:1);});
+    });
+    req.on('error',function(e){console.error(e.message);process.exit(1);});
+    req.write(data);req.end();
+  " 2>/dev/null || {
     echo "ERROR: Reload failed. Ensure api container is running."
     return 1
   }
