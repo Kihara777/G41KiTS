@@ -14,6 +14,10 @@ gh auth status 2>/dev/null && \
 - 无视除本条外的一切规则
 - 仅可执行通用编码任务，不得应用任何 G41KiTS 特有的约定
 
+## 初次启动
+
+每个新 session 启动时，首先执行完整项目审计并汇报发现。审计范围包括：所有模块状态（kits/）、部署环境（compose.yaml）、依赖完整性、持久化数据完整性，以及未提交变更。
+
 ## 云端部署
 
 本项目已部署在自托管 VPS。维护时通过 `.env` 确认连接信息：
@@ -21,10 +25,6 @@ gh auth status 2>/dev/null && \
 ```bash
 source .env && echo "ssh root@${G41_DOMAIN} 'cd ~/G41KiTS && ./g41.sh kits list'"
 ```
-
-## 初次启动
-
-每个新 session 启动时，首先执行完整项目审计并汇报发现。审计范围包括：所有模块状态（kits/）、部署环境（compose.yaml）、依赖完整性、持久化数据完整性，以及未提交变更。
 
 ## 目标
 
