@@ -1,1 +1,1 @@
-{"lang":"JA","greet_home":"ご主人さまぁ！"}
+{"lang":"JA","greet_home":"ご主人さまぁ！","tile_homete":["homete","ホーム"],"homete_h":"G41KiTS","homete_p":"モジュール型セルフホスト Docker Compose スタック — Metro スタイルのダッシュボード、Redis 構成 API、多言語 i18n、KITS モジュールシステム。","homete_h2":"技術スタック","homete_stack":"nginx · Redis · Docker Compose · acme.sh · Hysteria2 · Node.js · Bash · AdGuard DNS · Transmission · Aria2 · Hexo"}

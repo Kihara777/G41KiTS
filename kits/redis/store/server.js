@@ -130,6 +130,7 @@ function loadData(callback) {
         console.log('data:links');
         for(var j=0;j<all.length;j++){multi.set('link:'+all[j].short,all[j].target);}
       }
+      tileList.sort(function(a,b){return (a.id||'').localeCompare(b.id||'');});
       if(tileList.length){multi.set('data:tiles',JSON.stringify(tileList));console.log('data:tiles ('+tileList.length+')');}
       var lk=Object.keys(perLang);
       for(var k=0;k<lk.length;k++){multi.set('data:i18n_'+lk[k],JSON.stringify(perLang[lk[k]]));console.log('data:i18n_'+lk[k]);}

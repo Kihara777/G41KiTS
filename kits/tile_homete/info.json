@@ -1,6 +1,0 @@
-{
-  "name": "G41KiTS",
-  "desc": "Modular self-hosted Docker Compose stack — Metro-style dashboard, Redis API, i18n, KITS module system",
-  "depends": ["home"],
-  "compose": "none"
-}
