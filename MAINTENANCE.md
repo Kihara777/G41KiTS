@@ -9,10 +9,16 @@
 - tile_attic 全量本地化：代码块转为 i18n 键（attic_pre1/attic_pre2/attic_note）
 - 新增 attic / tile_attic 三语文档（zh/en/ja，共 6 篇）
 - README 三语同步：站点服务 + 展示表添加 attic 条目
-- 新增 tile_mail / tile_homete / tile_kihara777 磁贴（GitHub 项目与主页展示）
+- 新增 tile_mail / tile_homete / tile_kihara777 磁贴（GitHub 项目与主页展示，三语 i18n）
 - 新增 Redis API 热重载端点 POST /admin/reload（RELOAD_SECRET 认证，零停机）
-- 新增 g41.sh kits reload 命令：一键刷新磁贴/i18n/链接数据
+- 新增 g41.sh kits reload 命令：一键刷新磁贴/i18n/链接数据（容器内 Node.js HTTP 请求）
 - 修复 tile_attic 硬编码中文链接文本 → i18n 键 attic_link
+- 修复新磁贴标题格式：统一为小写无 emoji（attic/homete/kihara777/mail）
+- home 模块合并 tile_homete：直接提供 homete 磁贴，移除冗余模块
+- Redis API 磁贴列表按 id 字母序排列
+- home 三语文档更新：补充 homete 磁贴与模块提供内容详情
+- 修复 g41.sh kits reload 容器内 wget 不可用问题
+- 修复 rsync 后硬链接断裂 → 追加 g41.sh kits add -C 重建链接
 
 ## 2026-06-20
 
