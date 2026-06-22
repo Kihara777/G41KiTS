@@ -1,1 +1,1 @@
-{"tile_mail":["mail","邮件基础"],"mail_h":"邮件基础设施","mail_p":"自托管邮件技术栈 — 集成 SMTP、IMAP、Webmail 与垃圾邮件过滤的模块化工具包。"}
+{"tile_mail":["mail","邮件基础"],"mail_h":"MailKits — 透明邮件代理","mail_p":"基于 Cloudflare Email Workers + Resend 的零成本透明邮件代理系统。Email Routing 收件 → Worker 处理 → 转发/回复/发送。","mail_h2":"架构","mail_arch":"外部发件人 → Email Routing → mail-worker → 规则判断：非本人邮件嵌入元数据转发，本人邮件按回复处理。","mail_h3":"主要功能","mail_features":"• 按发件人自动分流转发 / 回复<br>• 邮件头嵌入元数据（支持可回复转发）<br>• 通过 Resend API 发送（SPF/DKIM/DMARC）<br>• Cloudflare Workers 免费额度运行（10万次/天）"}

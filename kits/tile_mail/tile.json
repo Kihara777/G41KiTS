@@ -5,6 +5,10 @@
   "type": "guide",
   "sections": [
     {"h": "mail_h", "p": "mail_p"},
-    {"p": "<a href=\"https://github.com/Kihara777/Ma8lKits\" target=\"_blank\" style=\"color:var(--wp-amber)\">github.com/Kihara777/Ma8lKits</a>"}
+    {"p": "<a href=\"https://github.com/Kihara777/MailKits\" target=\"_blank\" style=\"color:var(--wp-amber)\">github.com/Kihara777/MailKits</a>"},
+    {"h": "mail_h2"},
+    {"p": "mail_arch"},
+    {"h": "mail_h3"},
+    {"p": "mail_features"}
   ]
 }
