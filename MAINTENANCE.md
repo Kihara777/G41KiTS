@@ -1,5 +1,16 @@
 # 维护记录
 
+## 2026-06-22T23:50:00+09:00
+
+**摘要**：attic — 自托管 Nix 二进制缓存模块 + tile_attic 首页磁贴；AGENTS.md 新增访问控制、初次启动审计、云端部署规则
+
+| 提交 | 说明 |
+|------|------|
+| `054a758` | feat(attic): add self-hosted Nix binary cache module |
+| `af6b661` | feat(tile_attic): add dedicated tile for attic binary cache |
+| `08ad54f` | docs(AGENTS): add access control, cloud deployment info, reorder sections |
+| `7b2ec2b` | docs(AGENTS): move cloud deployment section after new-session audit |
+
 [中文](MAINTENANCE.md) | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md)
 
 ## 2026-06-22
