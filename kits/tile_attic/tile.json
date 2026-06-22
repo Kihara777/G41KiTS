@@ -7,7 +7,8 @@
     {"h": "attic_h", "p": "attic_p"},
     {"p": "attic_link"},
     {"h": "attic_h2"},
-    {"pre": "cachix use nixkits"},
-    {"pre": "nix.settings.substituters = [ \"https://__HOST__/attic\" ];\nnix.settings.trusted-public-keys = [ \"nixkits:<key>\" ];"}
+    {"pre": "attic_pre1"},
+    {"pre": "attic_pre2"},
+    {"p": "attic_note"}
   ]
 }
