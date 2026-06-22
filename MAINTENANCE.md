@@ -2,6 +2,18 @@
 
 [中文](MAINTENANCE.md) | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md)
 
+## 2026-06-22
+
+- 新增 attic 模块：自托管 Nix 二进制缓存服务器（atticd）
+- 新增 tile_attic 磁贴：Attic 使用指南（三语 i18n + 密钥生成说明）
+- tile_attic 全量本地化：代码块转为 i18n 键（attic_pre1/attic_pre2/attic_note）
+- 新增 attic / tile_attic 三语文档（zh/en/ja，共 6 篇）
+- README 三语同步：站点服务 + 展示表添加 attic 条目
+- 新增 tile_mail / tile_homete / tile_kihara777 磁贴（GitHub 项目与主页展示）
+- 新增 Redis API 热重载端点 POST /admin/reload（RELOAD_SECRET 认证，零停机）
+- 新增 g41.sh kits reload 命令：一键刷新磁贴/i18n/链接数据
+- 修复 tile_attic 硬编码中文链接文本 → i18n 键 attic_link
+
 ## 2026-06-20
 
 - 开源推送 `main` 分支至 GitHub

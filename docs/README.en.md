@@ -68,6 +68,7 @@ User-facing services exposed through nginx reverse proxy.
 | hexo | Personal blog engine | [docs/en/hexo.md](en/hexo.md) |
 | hy2 | Hysteria2 proxy sharing port 443 with nginx | [docs/en/hy2.md](en/hy2.md) |
 | tracker | Lightweight HTTPS BitTorrent tracker | [docs/en/tracker.md](en/tracker.md) |
+| attic | Self-hosted Nix binary cache server (atticd) | [docs/en/attic.md](en/attic.md) |
 
 ## Proxy & Mirror
 
@@ -107,6 +108,7 @@ Static link tiles on the homepage pointing to external downloads (no Docker serv
 |--------|-------------|------|
 | flake | Personal Nix flake repository — custom packages, overlays, NixOS modules | [docs/en/tile_flake.md](en/tile_flake.md) |
 | bilibili | Bilibili space — virtual streamer introduction | [docs/en/tile_bilibili.md](en/tile_bilibili.md) |
+| attic | Attic Nix binary cache usage guide | [docs/en/tile_attic.md](en/tile_attic.md) |
 
 ## Spec
 
