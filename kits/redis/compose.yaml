@@ -33,6 +33,7 @@ services:
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - G41_DOMAIN=${G41_DOMAIN}
+      - RELOAD_SECRET=${RELOAD_SECRET:-}
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5800/data/tiles || exit 1"]
       interval: 30s

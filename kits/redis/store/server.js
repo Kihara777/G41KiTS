@@ -24,15 +24,13 @@ function mergeDir(confDir,dirName){
   return items;
 }
 
-redisClient.connect().then(function(){
-  console.log('Redis connected');
-  redisGet('data:loaded',function(loaded){
-    if(loaded)return startServer();
-    // 清理未完成的加载（crash 残留）
-    redisGet('data:loading',function(loading){
-      if(loading){console.log('Previous load incomplete, restarting...');redisClient.del('data:loading');}
-    });
+// ==== Data loader (re-entrant: callable at startup or on /admin/reload) ====
+function loadData(callback) {
+  redisGet('data:loading',function(loading){
+    if(loading){console.log('Reload blocked: already in progress');callback(new Error('already loading'));return;}
+    console.log('Data load started');
     redisSet('data:loading','1');
+
     var confDir='/conf-data',perLang={},pending=0,tileList=[];
 
     function done(){if(--pending<=0)finish();}
@@ -67,7 +65,7 @@ redisClient.connect().then(function(){
         redisSet('data:tiles/'+id,JSON.stringify(td),function(){console.log('data:tiles/'+id);done();});
       });
       if(tileList.length===0)finish();
-    }
+    } else { finish(); }
 
     /* Load global i18n */
     var i18nDir=path.join(confDir,'i18n');
@@ -125,7 +123,6 @@ redisClient.connect().then(function(){
 
     function finish(){
       var multi=redisClient.multi();
-      // 短链接汇总
       var linksDir=path.join(confDir,'links');
       if(fs.existsSync(linksDir)){
         var all=mergeDir(confDir,'links');
@@ -133,22 +130,36 @@ redisClient.connect().then(function(){
         console.log('data:links');
         for(var j=0;j<all.length;j++){multi.set('link:'+all[j].short,all[j].target);}
       }
-      // 磁贴汇总
       if(tileList.length){multi.set('data:tiles',JSON.stringify(tileList));console.log('data:tiles ('+tileList.length+')');}
-      // i18n
       var lk=Object.keys(perLang);
       for(var k=0;k<lk.length;k++){multi.set('data:i18n_'+lk[k],JSON.stringify(perLang[lk[k]]));console.log('data:i18n_'+lk[k]);}
-      // 完成标志
       multi.set('data:loaded','1');
       multi.del('data:loading');
       multi.exec().then(function(){
         console.log('Data load complete');
-        startServer();
+        callback(null);
       })['catch'](function(e){
         console.error('Batch write failed:',e.message);
-        startServer();
+        redisClient.del('data:loading');
+        callback(e);
       });
     }
+  });
+}
+
+// ==== Startup ====
+var serverStarted=false;
+redisClient.connect().then(function(){
+  console.log('Redis connected');
+  redisGet('data:loaded',function(loaded){
+    if(loaded){startServer();return;}
+    redisGet('data:loading',function(loading){
+      if(loading){console.log('Previous load incomplete, restarting...');redisClient.del('data:loading');}
+    });
+    loadData(function(err){
+      if(err)console.error('Initial load failed:',err.message);
+      startServer();
+    });
   });
 })['catch'](function(e){
   console.error('Redis connect failed:',e.message);
@@ -156,20 +167,57 @@ redisClient.connect().then(function(){
 });
 
 function startServer(){
+  if(serverStarted)return;
+  serverStarted=true;
   http.createServer(function(req,res){
     res.setHeader('Access-Control-Allow-Origin','*');
     var u=req.url.split('?')[0];
+
+    // GET /data/* — read from Redis
     if(u.startsWith('/data/')){
       redisGet('data:'+u.slice(6),function(v){
         res.writeHead(v?200:404,{'Content-Type':'application/json'});res.end(v||'{}');
       });return;
     }
+
+    // GET /link/* — short-link redirect
     if(u.startsWith('/link/')){
       redisGet('link:'+u.slice(5),function(v){
         if(v){var host=req.headers.host;if(!host){res.writeHead(400,{'Content-Type':'text/plain'});res.end('Bad Request: missing Host header');return;}res.writeHead(302,{'Location':v.replace(/__HOST__/g,host)});res.end();}
         else{res.writeHead(404);res.end();}
       });return;
     }
+
+    // POST /admin/reload — hot-reload data from filesystem
+    if(req.method==='POST'&&u==='/admin/reload'){
+      var body='';
+      req.on('data',function(c){body+=c;});
+      req.on('end',function(){
+        var secret='';
+        try{secret=JSON.parse(body).secret||'';}catch(e){}
+        var expected=process.env.RELOAD_SECRET||'';
+        if(expected&&secret!==expected){
+          res.writeHead(403,{'Content-Type':'application/json'});
+          res.end(JSON.stringify({error:'Forbidden'}));
+          return;
+        }
+        redisClient.del('data:loaded').then(function(){
+          loadData(function(err){
+            if(err){
+              res.writeHead(409,{'Content-Type':'application/json'});
+              res.end(JSON.stringify({error:err.message}));
+            }else{
+              res.writeHead(200,{'Content-Type':'application/json'});
+              res.end(JSON.stringify({status:'ok'}));
+            }
+          });
+        })['catch'](function(e){
+          res.writeHead(500,{'Content-Type':'application/json'});
+          res.end(JSON.stringify({error:e.message}));
+        });
+      });return;
+    }
+
     res.writeHead(404);res.end();
   }).listen(5800,'0.0.0.0',function(){console.log('API:5800');});
 }

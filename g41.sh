@@ -146,12 +146,13 @@ G41ONLY
 }
 
 kits_help() {
-  echo "Usage: $0 kits [check|add|del|--help] [module]"
+  echo "Usage: $0 kits [check|add|del|reload|--help] [module]"
   echo "  kits              Interactive module browser"
   echo "  kits check <mod>  Verify installed module files"
   echo "  kits verify <mod>  Full pre-install validation (L1-L4)"
   echo "  kits add <mod>    Install module (-y skip, -C core, 'all' for all)"
   echo "  kits del <mod>    Uninstall module (-y skip, -C core, 'all' cascading)"
+  echo "  kits reload       Hot-reload tile/i18n/link data into Redis (zero downtime)"
   echo "  kits pack [-L] [-S] [-A] [-D]  Build archive (-L .local, -S store, -A agents, -D docs)"
   echo "  kits simulate       Trace mode (--dry-run)"
   exit 0
@@ -936,6 +937,24 @@ kits_list() {
   printf '\e[?25h\n'
 }
 
+kits_reload() {
+  local secret=""
+  source .env 2>/dev/null
+  secret="${RELOAD_SECRET:-}"
+  if [ -z "$secret" ]; then
+    echo "ERROR: RELOAD_SECRET not set in .env"
+    echo "Generate one and add to .env: RELOAD_SECRET=<random_string>"
+    return 1
+  fi
+  echo "Hot-reloading Redis data..."
+  docker compose exec -T api wget -q -O- --post-data="{\"secret\":\"$secret\"}" http://127.0.0.1:5800/admin/reload 2>/dev/null || {
+    echo "ERROR: Reload failed. Ensure api container is running."
+    return 1
+  }
+  echo
+  echo "Reload complete. Tiles, i18n, and links refreshed."
+}
+
 main() {
   case "${1:-}" in
     init)
@@ -950,6 +969,7 @@ main() {
         del) shift 2; kits_del "$@";;
 
         pack) shift 2; kits_pack "$@";;
+        reload) kits_reload;;
         simulate) echo "Use: ./g41.sh kits add <name> --dry-run";;
         "") kits_list;;
         *) echo "Unknown kits command: $2"; kits_help;;
