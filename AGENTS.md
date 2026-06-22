@@ -1,5 +1,9 @@
 # G41KiTS — 代理开发指南
 
+## 初次启动
+
+每个新 session 启动时，首先执行完整项目审计并汇报发现。审计范围包括：所有模块状态（kits/）、部署环境（compose.yaml）、依赖完整性、持久化数据完整性，以及未提交变更。
+
 ## 目标
 
 构建和维护 G41KiTS —— 模块化自托管 Docker Compose 技术栈，包含 Metro/WP8.1 风格首页、Redis 配置 API、多语言 i18n、KITS 模块系统。
