@@ -1,6 +1,6 @@
 # 维护记录
 
-[中文](MAINTENANCE.md) | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md)
+[中文](MAINTENANCE.md) | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) | [ｶﾀﾘｯｼｭ](docs/katalish/MAINTENANCE.md) | [偽中国語](docs/pcn/MAINTENANCE.md)
 
 ## 2026-06-24
 

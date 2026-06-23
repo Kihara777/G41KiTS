@@ -1,6 +1,6 @@
 # メンテナンス記録
 
-[中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | [日本語](MAINTENANCE.ja.md)
+[中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | [日本語](MAINTENANCE.ja.md) | [ｶﾀﾘｯｼｭ](katalish/MAINTENANCE.md) | [偽中国語](pcn/MAINTENANCE.md)
 
 ## 2026-06-20
 

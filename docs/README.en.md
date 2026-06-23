@@ -1,6 +1,6 @@
 # G41KiTS
 
-[中文](../README.md) | [English](README.en.md) | [日本語](README.ja.md)
+[中文](../README.md) | [English](README.en.md) | [日本語](README.ja.md) | [ｶﾀﾘｯｼｭ](katalish/README.md) | [偽中国語](pcn/README.md)
 
 Modular self-hosted Docker Compose stack — Metro/WP8.1 style homepage, Redis-backed config API, multi-language i18n, KITS module system.
 
