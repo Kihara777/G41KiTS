@@ -25,4 +25,4 @@ These ｱｾｯﾂ 残存 ｻﾞ 知的 財産 ｵﾌﾞ their 各々 著作権 
 
 ## ﾗｲｾﾝｽ
 
-ｵｰﾙ 他 ｺｰﾄﾞ ｱﾝﾄﾞ 設定 ｲﾝ ﾃﾞｨｽ ﾘﾎﾟｼﾞﾄﾘ ｲｽﾞ licensed under ｻﾞ MIT ﾗｲｾﾝｽ. See [LICENSE](../LICENSE) ﾌｫｱ 詳細.
+ｵｰﾙ 他 ｺｰﾄﾞ ｱﾝﾄﾞ 設定 ｲﾝ ﾃﾞｨｽ ﾘﾎﾟｼﾞﾄﾘ ｲｽﾞ licensed under ｻﾞ MIT ﾗｲｾﾝｽ. See [LICENSE](../../LICENSE) ﾌｫｱ 詳細.
