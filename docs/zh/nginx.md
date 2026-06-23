@@ -1,5 +1,5 @@
 # nginx
-中文 | [English](../en/nginx.md) | [日本語](../ja/nginx.md) | [ｶﾀﾘｯｼｭ](../katalish/nginx.md) | [偽中国語](../pcn/nginx.md)
+中文 | [English](../en/nginx.md) | [日本語](../ja/nginx.md)
 
 TLS 1.3 / HTTP/3 网关，反向代理全部后端
 

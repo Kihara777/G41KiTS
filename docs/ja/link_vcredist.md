@@ -1,5 +1,5 @@
 # link_vcredist
-[中文](../zh/link_vcredist.md) | [English](../en/link_vcredist.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/link_vcredist.md) | [偽中国語](../pcn/link_vcredist.md)
+[中文](../zh/link_vcredist.md) | [English](../en/link_vcredist.md) | 日本語
 
 VC++ Redist。
 

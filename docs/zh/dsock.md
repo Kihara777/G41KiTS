@@ -1,5 +1,5 @@
 # dsock
-中文 | [English](../en/dsock.md) | [日本語](../ja/dsock.md) | [ｶﾀﾘｯｼｭ](../katalish/dsock.md) | [偽中国語](../pcn/dsock.md)
+中文 | [English](../en/dsock.md) | [日本語](../ja/dsock.md)
 
 Docker API 安全代理，替代 docker.sock 直接挂载
 

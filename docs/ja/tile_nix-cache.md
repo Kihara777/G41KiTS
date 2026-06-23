@@ -1,5 +1,5 @@
 # tile_nix-cache
-[中文](../zh/tile_nix-cache.md) | [English](../en/tile_nix-cache.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/tile_nix-cache.md) | [偽中国語](../pcn/tile_nix-cache.md)
+[中文](../zh/tile_nix-cache.md) | [English](../en/tile_nix-cache.md) | 日本語
 
 NixOS バイナリキャッシュミラー。
 

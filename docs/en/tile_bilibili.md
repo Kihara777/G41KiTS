@@ -1,5 +1,5 @@
 # tile_bilibili
-[中文](../zh/tile_bilibili.md) | English | [日本語](../ja/tile_bilibili.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_bilibili.md) | [偽中国語](../pcn/tile_bilibili.md)
+[中文](../zh/tile_bilibili.md) | English | [日本語](../ja/tile_bilibili.md)
 
 Bilibili space tile.
 

@@ -1,6 +1,6 @@
 # NOTICE
 
-[中文](../NOTICE.md) | [English](NOTICE.en.md) | 日本語 | [ｶﾀﾘｯｼｭ](katalish/NOTICE.md) | [偽中国語](pcn/NOTICE.md)
+[中文](../NOTICE.md) | [English](NOTICE.en.md) | 日本語 
 
 ## サードパーティアセット
 

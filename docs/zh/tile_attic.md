@@ -1,5 +1,5 @@
 # tile_attic
-中文 | [English](../en/tile_attic.md) | [日本語](../ja/tile_attic.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_attic.md) | [偽中国語](../pcn/tile_attic.md)
+中文 | [English](../en/tile_attic.md) | [日本語](../ja/tile_attic.md)
 
 Attic Nix 二进制缓存磁贴。
 

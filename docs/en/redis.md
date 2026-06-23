@@ -1,5 +1,5 @@
 # redis
-[中文](../zh/redis.md) | English | [日本語](../ja/redis.md) | [ｶﾀﾘｯｼｭ](../katalish/redis.md) | [偽中国語](../pcn/redis.md)
+[中文](../zh/redis.md) | English | [日本語](../ja/redis.md)
 
 Redis config store + Node.js HTTP API bridge
 

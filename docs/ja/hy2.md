@@ -1,5 +1,5 @@
 # hy2
-[中文](../zh/hy2.md) | [English](../en/hy2.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/hy2.md) | [偽中国語](../pcn/hy2.md)
+[中文](../zh/hy2.md) | [English](../en/hy2.md) | 日本語
 
 Hysteria2 プロキシ（nginx と 443 ポート共有）
 

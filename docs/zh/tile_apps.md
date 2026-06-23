@@ -1,5 +1,5 @@
 # tile_apps
-中文 | [English](../en/tile_apps.md) | [日本語](../ja/tile_apps.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_apps.md) | [偽中国語](../pcn/tile_apps.md)
+中文 | [English](../en/tile_apps.md) | [日本語](../ja/tile_apps.md)
 
 应用列表磁贴 — 全部服务的首页入口
 

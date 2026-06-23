@@ -1,5 +1,5 @@
 # bt
-中文 | [English](../en/bt.md) | [日本語](../ja/bt.md) | [ｶﾀﾘｯｼｭ](../katalish/bt.md) | [偽中国語](../pcn/bt.md)
+中文 | [English](../en/bt.md) | [日本語](../ja/bt.md)
 
 BitTorrent 客户端，含 WebUI 与 WebDAV 共享
 

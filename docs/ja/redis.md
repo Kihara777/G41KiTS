@@ -1,5 +1,5 @@
 # redis
-[中文](../zh/redis.md) | [English](../en/redis.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/redis.md) | [偽中国語](../pcn/redis.md)
+[中文](../zh/redis.md) | [English](../en/redis.md) | 日本語
 
 Redis 設定ストア + Node.js HTTP API ブリッジ
 

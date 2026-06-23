@@ -1,5 +1,5 @@
 # tile_links
-中文 | [English](../en/tile_links.md) | [日本語](../ja/tile_links.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_links.md) | [偽中国語](../pcn/tile_links.md)
+中文 | [English](../en/tile_links.md) | [日本語](../ja/tile_links.md)
 
 短链接磁贴。
 

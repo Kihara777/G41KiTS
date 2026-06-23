@@ -1,5 +1,5 @@
 # tile_mail
-[中文](../zh/tile_mail.md) | [English](../en/tile_mail.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/tile_mail.md) | [偽中国語](../pcn/tile_mail.md)
+[中文](../zh/tile_mail.md) | [English](../en/tile_mail.md) | 日本語
 
 MailKits メールプロキシシステムタイル。
 

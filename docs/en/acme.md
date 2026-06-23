@@ -1,5 +1,5 @@
 # acme
-[中文](../zh/acme.md) | English | [日本語](../ja/acme.md) | [ｶﾀﾘｯｼｭ](../katalish/acme.md) | [偽中国語](../pcn/acme.md)
+[中文](../zh/acme.md) | English | [日本語](../ja/acme.md)
 
 SSL certificate management (acme.sh + ZeroSSL/Cloudflare DNS)
 

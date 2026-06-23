@@ -1,5 +1,5 @@
 # shortlinks
-[中文](../zh/shortlinks.md) | [English](../en/shortlinks.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/shortlinks.md) | [偽中国語](../pcn/shortlinks.md)
+[中文](../zh/shortlinks.md) | [English](../en/shortlinks.md) | 日本語
 
 Redis API 経由の動的短縮リンク。
 

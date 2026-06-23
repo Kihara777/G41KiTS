@@ -1,5 +1,5 @@
 # tile_flake
-[中文](../zh/tile_flake.md) | English | [日本語](../ja/tile_flake.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_flake.md) | [偽中国語](../pcn/tile_flake.md)
+[中文](../zh/tile_flake.md) | English | [日本語](../ja/tile_flake.md)
 
 Nix flake repository — custom packages, overlays, NixOS modules
 

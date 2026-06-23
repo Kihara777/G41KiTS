@@ -1,5 +1,5 @@
 # link_7zip
-中文 | [English](../en/link_7zip.md) | [日本語](../ja/link_7zip.md) | [ｶﾀﾘｯｼｭ](../katalish/link_7zip.md) | [偽中国語](../pcn/link_7zip.md)
+中文 | [English](../en/link_7zip.md) | [日本語](../ja/link_7zip.md)
 
 7-Zip 文件归档工具。
 

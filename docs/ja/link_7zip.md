@@ -1,5 +1,5 @@
 # link_7zip
-[中文](../zh/link_7zip.md) | [English](../en/link_7zip.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/link_7zip.md) | [偽中国語](../pcn/link_7zip.md)
+[中文](../zh/link_7zip.md) | [English](../en/link_7zip.md) | 日本語
 
 7-Zip ファイルアーカイバ。
 

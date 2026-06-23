@@ -1,6 +1,6 @@
 # NOTICE
 
-[中文](../NOTICE.md) | English | [日本語](NOTICE.ja.md) | [ｶﾀﾘｯｼｭ](katalish/NOTICE.md) | [偽中国語](pcn/NOTICE.md)
+[中文](../NOTICE.md) | English | [日本語](NOTICE.ja.md) 
 
 ## Third-Party Assets
 

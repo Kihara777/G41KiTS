@@ -1,5 +1,5 @@
 # attic
-中文 | [English](../en/attic.md) | [日本語](../ja/attic.md) | [ｶﾀﾘｯｼｭ](../katalish/attic.md) | [偽中国語](../pcn/attic.md)
+中文 | [English](../en/attic.md) | [日本語](../ja/attic.md)
 
 自托管 Nix 二进制缓存服务器（atticd）。
 

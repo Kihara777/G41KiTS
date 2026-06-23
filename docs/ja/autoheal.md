@@ -1,5 +1,5 @@
 # autoheal
-[中文](../zh/autoheal.md) | [English](../en/autoheal.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/autoheal.md) | [偽中国語](../pcn/autoheal.md)
+[中文](../zh/autoheal.md) | [English](../en/autoheal.md) | 日本語
 
 異常な Docker コンテナの自動再起動
 

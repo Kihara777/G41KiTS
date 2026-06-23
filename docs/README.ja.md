@@ -1,6 +1,6 @@
 # G41KiTS
 
-[中文](../README.md) | [English](README.en.md) | 日本語 | [ｶﾀﾘｯｼｭ](katalish/README.md) | [偽中国語](pcn/README.md)
+[中文](../README.md) | [English](README.en.md) | 日本語 
 
 モジュール型セルフホスト Docker Compose スタック — Metro/WP8.1 風ホームページ、Redis 設定 API、多言語 i18n、KITS モジュールシステム。
 

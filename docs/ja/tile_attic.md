@@ -1,5 +1,5 @@
 # tile_attic
-[中文](../zh/tile_attic.md) | [English](../en/tile_attic.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/tile_attic.md) | [偽中国語](../pcn/tile_attic.md)
+[中文](../zh/tile_attic.md) | [English](../en/tile_attic.md) | 日本語
 
 Attic Nix バイナリキャッシュタイル。
 

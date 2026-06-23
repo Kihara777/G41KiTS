@@ -1,5 +1,5 @@
 # tile_nix-cache
-中文 | [English](../en/tile_nix-cache.md) | [日本語](../ja/tile_nix-cache.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_nix-cache.md) | [偽中国語](../pcn/tile_nix-cache.md)
+中文 | [English](../en/tile_nix-cache.md) | [日本語](../ja/tile_nix-cache.md)
 
 NixOS 二进制缓存镜像。
 
