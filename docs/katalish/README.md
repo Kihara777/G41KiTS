@@ -51,7 +51,7 @@ Both ﾓｰﾄﾞ ｱｰ 任意. ｲﾌ どちらもない exists, `init` skips 
 | redis | Redis ｺﾝﾌｨｸﾞ ｽﾄｱ + Node.js HTTP API 橋渡 | [docs/katalish/redis.md](./redis.md) |
 | acme | SSL ｻｰﾃｨﾌｨｹｰﾄ management (acme.sh + ZeroSSL/Cloudflare DNS) | [docs/katalish/acme.md](./acme.md) |
 | autoheal | ｵｰﾄ-再起動 unhealthy Docker ｺﾝﾃﾅ | [docs/katalish/autoheal.md](./autoheal.md) |
-| dsock | Docker API security ﾌﾟﾛｸｼ (置換 直接 docker.sock ﾏｳﾝﾄ) | [docs/katalish/dsock.md](./dsock.md) |
+| dsock | Docker API ｾｷｭﾘﾃｨ ﾌﾟﾛｸｼ (置換 直接 docker.sock ﾏｳﾝﾄ) | [docs/katalish/dsock.md](./dsock.md) |
 | home | ｻｲﾄ ｺｱ ﾃﾞｲﾀ — ｷｬﾗｸﾀｰ ﾒｯｾｰｼﾞ, ﾃｰﾏ ｶﾗｰ, ｽﾃｰﾀｽ ｺｰﾄﾞ, i18n | [docs/katalish/home.md](./home.md) |
 
 ## ｻｲﾄｻｰﾋﾞｽ

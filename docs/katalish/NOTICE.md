@@ -21,7 +21,7 @@ These ｱｾｯﾂ 残存 ｻﾞ 知的 財産 ｵﾌﾞ their 各々 著作権 
 
 ### 架空 参照
 
-ｻﾞ ﾍﾟｰｼﾞ ﾌｯﾀｰ 参照 架空 ｲﾝ-世界観 存在 ﾌﾛﾑ Dolls' Frontline, ｲﾝｸﾙｰﾄﾞ中 I.O.P. Manufacturing Company, Griffin & Kryuger Military Contractor ｱﾝﾄﾞ Security Consultant Services Company, 中 他. These 名前 ｱｰ 一部 ｵﾌﾞ ｻﾞ Dolls' Frontline 知的 財産 所有 ﾊﾞｲ Sunborn Network Technology Co., Ltd.
+ｻﾞ ﾍﾟｰｼﾞ ﾌｯﾀｰ 参照 架空 ｲﾝ-世界観 存在 ﾌﾛﾑ Dolls' Frontline, ｲﾝｸﾙｰﾄﾞ中 I.O.P. Manufacturing Company, Griffin & Kryuger Military Contractor ｱﾝﾄﾞ ｾｷｭﾘﾃｨ Consultant Services Company, 中 他. These 名前 ｱｰ 一部 ｵﾌﾞ ｻﾞ Dolls' Frontline 知的 財産 所有 ﾊﾞｲ Sunborn Network Technology Co., Ltd.
 
 ## ﾗｲｾﾝｽ
 
