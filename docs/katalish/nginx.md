@@ -1,6 +1,6 @@
 # ﾝｸﾞｲﾝｯｸｽ
 
-[中文](../../zh/nginx.md) | [ｶﾀﾘｯｼｭ](nginx.md) | [日本語](../../ja/nginx.md)
+[中文](../../zh/nginx.md) | [English](../../en/nginx.md) | [日本語](../../ja/nginx.md) | [ｶﾀﾘｯｼｭ](nginx.md) | [偽中国語](../../pcn/nginx.md)
 
 TLS 1.3 / HTTP/3 ｸﾞｱﾄﾕｰｴｲ, ﾙｴﾌﾞｱｰｽｴ ﾌﾟﾙｵｯｸｽｲ ﾄｵ ｱﾙﾙ ﾌﾞｱｯｸｴﾝﾄﾞｽ
 

@@ -1,6 +1,6 @@
 # ｼｵｰﾄﾙｲﾝｸｽ
 
-[中文](../../zh/shortlinks.md) | [ｶﾀﾘｯｼｭ](shortlinks.md) | [日本語](../../ja/shortlinks.md)
+[中文](../../zh/shortlinks.md) | [English](../../en/shortlinks.md) | [日本語](../../ja/shortlinks.md) | [ｶﾀﾘｯｼｭ](shortlinks.md) | [偽中国語](../../pcn/shortlinks.md)
 
 ﾃﾞｨﾝｱﾑｲｸ ｼｵｰﾄ ﾙｲﾝｸｽ ﾌﾟﾙｵｯｸｽｲﾄﾞ ｽﾞﾙｵｳ ﾚﾃﾞｨｽ API.
 

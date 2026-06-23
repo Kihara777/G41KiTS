@@ -1,6 +1,6 @@
 # hexo
 
-[中文](../../zh/hexo.md) | [English](../../en/hexo.md) | [偽中国語](hexo.md)
+[中文](../../zh/hexo.md) | [English](../../en/hexo.md) | [日本語](../../ja/hexo.md) | [偽中国語](hexo.md) | [ｶﾀﾘｯｼｭ](../../katalish/hexo.md)
 
 個人網誌引擎
 

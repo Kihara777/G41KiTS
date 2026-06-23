@@ -1,6 +1,6 @@
 # aria2
 
-[中文](../../zh/aria2.md) | [English](../../en/aria2.md) | [偽中国語](aria2.md)
+[中文](../../zh/aria2.md) | [English](../../en/aria2.md) | [日本語](../../ja/aria2.md) | [偽中国語](aria2.md) | [ｶﾀﾘｯｼｭ](../../katalish/aria2.md)
 
 並列下載管理者（WebUI 與 WebDAV 共有付）
 

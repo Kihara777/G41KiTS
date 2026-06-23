@@ -1,6 +1,6 @@
 # ﾚﾃﾞｨｽ
 
-[中文](../../zh/redis.md) | [ｶﾀﾘｯｼｭ](redis.md) | [日本語](../../ja/redis.md)
+[中文](../../zh/redis.md) | [English](../../en/redis.md) | [日本語](../../ja/redis.md) | [ｶﾀﾘｯｼｭ](redis.md) | [偽中国語](../../pcn/redis.md)
 
 ﾚﾃﾞｨｽ ｸｵﾝﾌｲｸﾞ ｽﾄｵｰｴ + ﾝｵﾄﾞｴ.js HTTP API ﾌﾞﾙｲﾄﾞｸﾞｴ
 

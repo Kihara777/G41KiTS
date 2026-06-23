@@ -1,6 +1,6 @@
 # ｱﾄﾄｲｸ
 
-[中文](../../zh/attic.md) | [ｶﾀﾘｯｼｭ](attic.md) | [日本語](../../ja/attic.md)
+[中文](../../zh/attic.md) | [English](../../en/attic.md) | [日本語](../../ja/attic.md) | [ｶﾀﾘｯｼｭ](attic.md) | [偽中国語](../../pcn/attic.md)
 
 ｽｴﾙﾌ-ﾎｵｽﾄﾄﾞ ﾆｯｸｽ ﾌﾞｲﾝｱｰｲ ｸｱﾁｴ ｻｰﾊﾞｰ (ｱﾄﾄｲｸﾄﾞ).
 

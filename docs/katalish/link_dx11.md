@@ -1,6 +1,6 @@
 # link_dx11
 
-[中文](../../zh/link_dx11.md) | [ｶﾀﾘｯｼｭ](link_dx11.md) | [日本語](../../ja/link_dx11.md)
+[中文](../../zh/link_dx11.md) | [English](../../en/link_dx11.md) | [日本語](../../ja/link_dx11.md) | [ｶﾀﾘｯｼｭ](link_dx11.md) | [偽中国語](../../pcn/link_dx11.md)
 
 ﾄﾞｱｰｴｸﾄｯｸｽ ﾗﾝﾀｲﾑ.
 

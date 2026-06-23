@@ -1,6 +1,6 @@
 # tile_gh-ﾌﾟﾙｵｯｸｽｲ
 
-[中文](../../zh/tile_gh-proxy.md) | [ｶﾀﾘｯｼｭ](tile_gh-proxy.md) | [日本語](../../ja/tile_gh-proxy.md)
+[中文](../../zh/tile_gh-proxy.md) | [English](../../en/tile_gh-proxy.md) | [日本語](../../ja/tile_gh-proxy.md) | [ｶﾀﾘｯｼｭ](tile_gh-proxy.md) | [偽中国語](../../pcn/tile_gh-proxy.md)
 
 ﾙｴﾌﾞｱｰｽｴ ﾌﾟﾙｵｯｸｽｲ ﾌｫｱ ﾙｵｰ.ｸﾞｲｽﾞｱﾌﾞｱｽｱｰｸｵﾝﾄｴﾝﾄ.ｸｵﾑ.
 

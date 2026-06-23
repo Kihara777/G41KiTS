@@ -1,6 +1,6 @@
 # home
 
-[中文](../../zh/home.md) | [English](../../en/home.md) | [偽中国語](home.md)
+[中文](../../zh/home.md) | [English](../../en/home.md) | [日本語](../../ja/home.md) | [偽中国語](home.md) | [ｶﾀﾘｯｼｭ](../../katalish/home.md)
 
 網站点核心資料 — 角色消息、主題色彩、状態符号、i18n。homete 磁貼（G41KiTS 計画紹介）直接提供。
 
