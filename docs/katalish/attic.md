@@ -1,17 +1,16 @@
-# ｱﾄﾄｲｸ
-
+# attic
 [中文](../zh/attic.md) | [English](../en/attic.md) | [日本語](../ja/attic.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/attic.md)
 
-ｽｴﾙﾌ-ﾎｵｽﾄﾄﾞ ﾆｯｸｽ ﾌﾞｲﾝｱｰｲ ｸｱﾁｴ ｻｰﾊﾞｰ (ｱﾄﾄｲｸﾄﾞ).
+ｾﾙﾌﾎｽﾄ Nix ﾊﾞｲﾅﾘ ｷｬｯｼｭ ｻｰﾊﾞｰ (atticd).
 
 ## ｲﾝﾌｫ
 
-| ｱｲﾄﾑ | ﾌﾞｱﾙｱｴ |
+| 項目 | 値 |
 |------|-------|
-| ﾃｨﾌﾟｴ | ｻｰﾋﾞｽ |
-| ﾄﾞｴﾌﾟｴﾝﾄﾞｽ | ﾝｸﾞｲﾝｯｸｽ |
-| ｸｵﾝﾄｴｲﾝｱｰ | ｱﾄﾄｲｸ |
-| ｲﾑｴｲｼﾞ | ｸﾞｸﾙ.ｲｵ/ｽﾞﾎｱｵﾌｴﾝｸﾞﾙｲ/ｱﾄﾄｲｸ (ﾄﾞｯｶｰ ﾎｱﾌﾞ) |
+| ﾀｲﾌﾟ | ｻｰﾋﾞｽ |
+| 依存 | nginx |
+| ｺﾝﾃﾅ | attic |
+| ｲﾒｰｼﾞ | ghcr.io/zhaofengli/attic (Docker Hub) |
 
 ## ｲﾝｽﾄｰﾙ
 
@@ -19,17 +18,17 @@
 ./g41.sh kits add attic
 ```
 
-## ﾌｧｰｽﾄ-ﾀｲﾑ ｾｯﾄｱｯﾌﾟ
+## 初回設定
 
-1. ｽｴﾄ `ATTIC_TOKEN_SECRET` ｲﾝ `.env` (ｽﾄﾙｵﾝｸﾞ ﾙｱﾝﾄﾞｵﾑ ｽﾄﾙｲﾝｸﾞ)
-2. ｸﾞｴﾝｱｰｴｲﾄ ｽｲﾆｲﾝｸﾞ ｸｴｲﾌﾟｴｲﾙ:
+1. Set `ATTIC_TOKEN_SECRET` ｲﾝ `.env` (strong random string)
+2. Generate signing keypair:
    ```bash
-   docker compose exec attic atticd --database /data/attic.db generate-keypair
+   docker ｺﾝﾎﾟｰｽﾞ exec attic atticd --database /ﾃﾞｲﾀ/attic.db generate-keypair
    ```
-3. ﾕｰｽﾞ ｻﾞ ｵｳﾄﾌﾟｱﾄ ﾌﾟｱﾌﾞﾙｲｸ ｸｴｲ ｲﾝ ｸﾗｲｱﾝﾄ ｸｵﾝﾌｲｸﾞｱｰｱｼｮﾝ
+3. ﾕｰｽﾞ ｻﾞ output ﾊﾟﾌﾞﾘｯｸ key ｲﾝ ｸﾗｲｱﾝﾄ 設定
 
-## ﾉｰﾂ
+## 注意
 
-- ｽﾄｱﾄｱｽ ﾌﾟｴｲｼﾞ: `/attic/`
-- ﾄﾞｱﾄｱ ﾄﾞｱｰｴｸﾄｵｰｲ: `.attic/`
-- API ｴﾝﾄﾞﾌﾟｵｲﾝﾄ ﾙｲｽﾄｴﾝｽ ｵﾝ 127.0.0.1:8188, ｴｯｸｽﾌﾟｵｽﾄﾞ ﾌﾞｲｱ ﾝｸﾞｲﾝｯｸｽ ﾙｴﾌﾞｱｰｽｴ ﾌﾟﾙｵｯｸｽｲ
+- ｽﾃｰﾀｽ ﾍﾟｰｼﾞ: `/attic/`
+- ﾃﾞｲﾀ ﾃﾞｨﾚｸﾄﾘ: `.attic/`
+- API ｴﾝﾄﾞﾎﾟｲﾝﾄ listens ｵﾝ 127.0.0.1:8188, 露出済 via nginx ﾘﾊﾞｰｽ ﾌﾟﾛｸｼ

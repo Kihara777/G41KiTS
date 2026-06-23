@@ -1,50 +1,50 @@
-# Maintenance Log
-
+# ﾒﾝﾃﾅﾝｽ Log
 [中文](../../MAINTENANCE.md) | [English](../MAINTENANCE.en.md) | [日本語](../MAINTENANCE.ja.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/MAINTENANCE.md)
+
 
 ## 2026-06-20
 
-- Open-sourced: pushed `main` branch to GitHub
-- Trilingual docs ﾗｲﾌﾞ (27 modules + ﾓｼﾞｭｰﾙ spec): zh:29 / en:29 / ja:29
-- AGENTS.md rewritten in Chinese (292 lines), covering ｱｰｷﾃｸﾁｬ, ﾃﾞｨﾍﾞﾛｯﾌﾟﾒﾝﾄ ﾜｰｸﾌﾛｰ, common issues
-- README added `.ﾛｰｶﾙ/` ﾛｰｶﾙ ｲﾆｯﾄ section
-- Trilingual ﾒﾝﾃﾅﾝｽ logs (ﾒﾝﾃﾅﾝｽ.md / en / ja)
-- Trilingual ﾉｰﾃｨｽ.md (ｻｰﾄﾞﾊﾟｰﾃｨ ｱｾｯﾂ ﾉｰﾃｨｽ)
+- ｵｰﾌﾟﾝ-ｿｰｽ済: pushed `main` ﾌﾞﾗﾝﾁ ﾄｩ GitHub
+- Trilingual docs ﾗｲﾌﾞ (27 ﾓｼﾞｭｰﾙ + ﾓｼﾞｭｰﾙ 仕様): zh:29 / en:29 / ja:29
+- ｴｰｼﾞｪﾝﾄ.md 書換済 ｲﾝ Chinese (292 行), 網羅 ｱｰｷﾃｸﾁｬ, ﾃﾞｨﾍﾞﾛｯﾌﾟﾒﾝﾄ ﾜｰｸﾌﾛｰ, ｺﾓﾝ ｲｼｭｰｽﾞ
+- README added `.local/` ﾛｰｶﾙ ｲﾃｯﾄ 節
+- Trilingual ﾒﾝﾃﾅﾝｽ ﾛｸﾞｽ (ﾒﾝﾃﾅﾝｽ.md / en / ja)
+- Trilingual NOTICE.md (ｻｰﾄﾞ-ﾊﾟｰﾃｨ ｱｾｯﾂ notice)
 
 ## 2026-06-18
 
-- Removed ｵｰﾙ Docker ﾊﾞｰｼﾞｮﾝ locks: Dockerfile ﾌﾛﾑ lines, compose image tags, npm ﾊﾟｯｹｰｼﾞ versions, ｱﾄﾞ --checksum ｵｰﾙ switched to floating versions
-- Fixed `g41.sh kits pack` failing on `ｾｯﾄ -e` due to missing `skills/` ﾃﾞｨﾚｸﾄﾘ
-- ﾌﾙ stack forced rebuild, 14/14 healthy
+- 削除済 ｵｰﾙ Docker ﾊﾞｰｼﾞｮﾝ ﾛｯｸ: Dockerfile ﾌﾛﾑ 行, ｺﾝﾎﾟｰｽﾞ ｲﾒｰｼﾞ ﾀｸﾞ, npm ﾊﾟｯｹｰｼﾞ ﾊﾞｰｼﾞｮﾝ, ｱﾄﾞ --checksum ｵｰﾙ 切替済 ﾄｩ ﾌﾛｰﾃｨﾝｸﾞ ﾊﾞｰｼﾞｮﾝ
+- 修正済 `g41.sh kits pack` 失敗 ｵﾝ `set -e` due ﾄｩ 欠落 `skills/` ﾃﾞｨﾚｸﾄﾘ
+- ﾌﾙ ｽﾀｯｸ 強制済 ﾘﾋﾞﾙﾄﾞ, 14/14 正常
 
 ## 2026-06-16
 
-- Two rounds of ﾌﾙ security audits (4 sub-agents in ﾊﾟﾗﾚﾙ): 24 issues found, ｵｰﾙ fixed ｵﾗ accepted
-- g41.sh hardening: `ｾｯﾄ -o pipefail`, `sed -i` → atomic writes (`sed > tmp && mv`), compose ｲﾝｸﾙｰﾄﾞ uses line-number precise insertion
-- autoheal crash fix: switched ﾌﾛﾑ willfarrell/autoheal Hub image to custom Dockerfile (master entrypoint, TCP socket ｻﾎﾟｰﾄ)
-- CSP security headers layered configuration: strict ﾌｫｱ main ｻｲﾄ + relaxed ﾌｫｱ aria2/nix-ｷｬｯｼｭ/gh-ﾌﾟﾛｸｼ ﾌﾟﾛｸｼ paths
-- tiles.js ﾄﾗｯｶｰ embed XSS fix: `innerHTML` → `createElement` + `textContent`
-- G41.js fetch added 5s timeout (`AbortSignal.timeout(5000)`)
-- ｻｰﾊﾞｰ.js ｵｰﾙ `catch(e){}` silent errors now ﾛｸﾞ ｳﾞｨｱ `console.error`
-- Open-source readiness audit passed: zero hardcoded domains/secrets, ｵｰﾙ sensitive files excluded ｳﾞｨｱ `.gitignore`
-- tile_bilibili ﾓｼﾞｭｰﾙ created: Bilibili VTuber tile (trilingual i18n)
-- tile_flake tile populated: 13 NixKits ﾊﾟｯｹｰｼﾞｽﾞ/patches/skills entries
-- tile_gh-ﾌﾟﾛｸｼ i18n hardcoded `g41.moe` → `__HOST__` placeholder
-- g41.sh TUI switched to ANSI escape sequence incremental rendering (eliminates flicker)
-- GitHub ﾘﾎﾟｼﾞﾄﾘ created ｳｨｽﾞ topics
+- Two ﾗｳﾝﾄﾞ ｵﾌﾞ ﾌﾙ security 監査 (4 sub-ｴｰｼﾞｪﾝﾄ ｲﾝ 並列): 24 ｲｼｭｰｽﾞ found, ｵｰﾙ 修正済 ｵﾗ 受理済
+- g41.sh 強化: `set -o pipefail`, `sed -i` → ｱﾄﾐｯｸ 書込 (`sed > tmp && mv`), ｺﾝﾎﾟｰｽﾞ ｲﾝｸﾙｰﾄﾞ uses line-number 精密 挿入
+- autoheal ｸﾗｯｼｭ 修正: 切替済 ﾌﾛﾑ willfarrell/autoheal Hub ｲﾒｰｼﾞ ﾄｩ ｶｽﾀﾑ Dockerfile (ﾏｽﾀｰ 入口点, TCP ｿｹｯﾄ ｻﾎﾟｰﾄ)
+- CSP security ﾍｯﾀﾞｰ 階層化 設定: ｽﾄﾘｸﾄ ﾌｫｱ main ｻｲﾄ + 緩和 ﾌｫｱ aria2/nix-ｷｬｯｼｭ/gh-ﾌﾟﾛｸｼ ﾌﾟﾛｸｼ ﾊﾟｽ
+- ﾀｲﾙ.js ﾄﾗｯｶｰ 埋込 XSS 修正: `innerHTML` → `createElement` + `textContent`
+- G41.js ﾌｪｯﾁ added 5s ﾀｲﾑｱｳﾄ (`AbortSignal.timeout(5000)`)
+- ｻｰﾊﾞｰ.js ｵｰﾙ `catch(e){}` ｻｲﾚﾝﾄ errors now log via `console.error`
+- ｵｰﾌﾟﾝ-source 準備状況 audit 通過済: ｾﾞﾛ ﾊｰﾄﾞｺｰﾄﾞ済 ﾄﾞﾒｲﾝ/ｼｰｸﾚｯﾄ, ｵｰﾙ 機密 ﾌｧｲﾙ 除外済 via `.gitignore`
+- ﾀｲﾙ_bilibili ﾓｼﾞｭｰﾙ 作成済: Bilibili VTuber ﾀｲﾙ (trilingual i18n)
+- ﾀｲﾙ_ﾌﾚｲｸ ﾀｲﾙ 投入済: 13 NixKits ﾊﾟｯｹｰｼﾞ/ﾊﾟｯﾁ/ｽｷﾙ ｴﾝﾄﾘｰ
+- ﾀｲﾙ_gh-ﾌﾟﾛｸｼ i18n ﾊｰﾄﾞｺｰﾄﾞ済 `g41.moe` → `__HOST__` ﾌﾟﾚｰｽﾎﾙﾀﾞｰ
+- g41.sh TUI 切替済 ﾄｩ ANSI ｴｽｹｰﾌﾟ ｼｰｹﾝｽ 増分 ﾚﾝﾀﾞﾘﾝｸﾞ (除去 ﾁﾗﾂｷ)
+- GitHub ﾘﾎﾟｼﾞﾄﾘ 作成済 ｳｨｽﾞ topics
 
 ## 2026-06-11 ~ 2026-06-12
 
-- ﾃﾞｲﾀ/function separation (A/B/C layers): compose variable substitution, nginx ｻｲﾄ ｺﾝﾌｨｸﾞ generalization, ｻｰﾊﾞｰ.js ｴﾝﾌﾞｲﾗｵﾝﾒﾝﾄ injection
-- Security hardening: dsock ﾆｭｰ ﾓｼﾞｭｰﾙ (Docker API ﾌﾟﾛｸｼ), BT supply chain locking, Redis password authentication
-- Health check standardization (HTTP endpoint > ﾎﾟｰﾄ probe > kill -0 1)
-- ﾓｼﾞｭｰﾙ renaming: pure tiles → `tile_*` prefix (5 modules), pure ﾘﾝｸｽ → `link_*` prefix (6 modules)
-- Frontend fixes: error code pages, loading flicker, 404 response
-- hy2 ﾓｼﾞｭｰﾙ privatization: `.ﾛｰｶﾙ/` hides subscription files ｱﾝﾄﾞ nginx configs
-- g41.sh extended: auto-discovery of `.ﾛｰｶﾙ/ｻｲﾄ/` ｱﾝﾄﾞ `.ﾛｰｶﾙ/webroot/`
-- ｻｰﾊﾞｰ.js refactored: raw TCP socket → `redis` npm ﾊﾟｯｹｰｼﾞ ｳｨｽﾞ persistent connection + pipeline batch writes
+- ﾃﾞｲﾀ/function 分離 (A/B/C ﾚｲﾔｰ): ｺﾝﾎﾟｰｽﾞ 変数 代入, nginx ｻｲﾄ ｺﾝﾌｨｸﾞ 汎化, ｻｰﾊﾞｰ.js ｴﾝﾌﾞｲﾗｵﾝﾒﾝﾄ 注入
+- Security 強化: dsock ﾆｭｰ ﾓｼﾞｭｰﾙ (Docker API ﾌﾟﾛｸｼ), BT 供給 ﾁｪｰﾝ ﾛｯｷﾝｸﾞ, Redis ﾊﾟｽﾜｰﾄﾞ 認証
+- ﾍﾙｽ ﾁｪｯｸ 標準化 (HTTP ｴﾝﾄﾞﾎﾟｲﾝﾄ > ﾎﾟｰﾄ ﾌﾟﾛｰﾌﾞ > ｷﾙ -0 1)
+- ﾓｼﾞｭｰﾙ 改名: ﾋﾟｭｱ ﾀｲﾙ → `tile_*` ﾌﾟﾚﾌｨｯｸｽ (5 ﾓｼﾞｭｰﾙ), ﾋﾟｭｱ ﾘﾝｸ → `link_*` ﾌﾟﾚﾌｨｯｸｽ (6 ﾓｼﾞｭｰﾙ)
+- ﾌﾛﾝﾄｴﾝﾄﾞ 修正: ｴﾗｰ ｺｰﾄﾞ ﾍﾟｰｼﾞｽﾞ, ﾛｰﾃﾞｨﾝｸﾞ ﾁﾗﾂｷ, 404 ﾚｽﾎﾟﾝｽ
+- hy2 ﾓｼﾞｭｰﾙ 私有化: `.local/` 隠蔽 購読 ﾌｧｲﾙ ｱﾝﾄﾞ nginx ｺﾝﾌｨｸﾞ
+- g41.sh 拡張済: ｵｰﾄ-発見 ｵﾌﾞ `.local/site/` ｱﾝﾄﾞ `.local/webroot/`
+- ｻｰﾊﾞｰ.js 再構築済: 生 TCP ｿｹｯﾄ → `redis` npm ﾊﾟｯｹｰｼﾞ ｳｨｽﾞ 永続 接続 + ﾊﾟｲﾌﾟﾗｲﾝ ﾊﾞｯﾁ 書込
 
 ## 2026-06-10
 
-- Initial audit: compose.yaml, g41.sh, ｵｰﾙ kits/ modules
-- ｲﾝﾌﾗｽﾄﾗｸﾁｬｰ setup: Metro/WP8.1 style ﾎｰﾑﾍﾟｰｼﾞ, Redis ｺﾝﾌｨｸﾞ API, multi-ﾗﾝｹﾞｰｼﾞ i18n, KITS ﾓｼﾞｭｰﾙ ｼｽﾃﾑ
+- 初期 audit: ｺﾝﾎﾟｰｽﾞ.yaml, g41.sh, ｵｰﾙ kits/ ﾓｼﾞｭｰﾙ
+- ｲﾝﾌﾗｽﾄﾗｸﾁｬｰ 準備: Metro/WP8.1 ｽﾀｲﾙ ﾎｰﾑﾍﾟｰｼﾞ, Redis ｺﾝﾌｨｸﾞ API, 複数-language i18n, KITS ﾓｼﾞｭｰﾙ ｼｽﾃﾑ

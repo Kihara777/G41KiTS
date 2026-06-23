@@ -1,15 +1,14 @@
-# ｼｵｰﾄﾙｲﾝｸｽ
-
+# shortlinks
 [中文](../zh/shortlinks.md) | [English](../en/shortlinks.md) | [日本語](../ja/shortlinks.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/shortlinks.md)
 
-ﾃﾞｨﾝｱﾑｲｸ ｼｵｰﾄ ﾙｲﾝｸｽ ﾌﾟﾙｵｯｸｽｲﾄﾞ ｽﾞﾙｵｳ ﾚﾃﾞｨｽ API.
+ﾀﾞｲﾅﾐｯｸ ｼｮｰﾄ ﾘﾝｸ 代理経由 経由 Redis API.
 
 ## ｲﾝﾌｫ
 
-| ｱｲﾄﾑ | ﾌﾞｱﾙｱｴ |
+| 項目 | 値 |
 |------|-------|
-| ﾃｨﾌﾟｴ | ﾙｲﾝｸ |
-| ﾄﾞｴﾌﾟｴﾝﾄﾞｽ | ﾝｸﾞｲﾝｯｸｽ |
+| ﾀｲﾌﾟ | ﾘﾝｸ |
+| 依存 | nginx |
 
 ## ｲﾝｽﾄｰﾙ
 
@@ -17,6 +16,6 @@
 ./g41.sh kits add shortlinks
 ```
 
-## ﾉｰﾂ
+## 注意
 
-- ﾝｸﾞｲﾝｯｸｽ ﾙｵｸｱｼｮﾝ ﾙｲｰｼﾞｯｸｽ ﾑｱﾄﾁｴｽ ﾙｵﾝｸﾞ ﾄｵｳｸﾝｽ, ﾌｵｰｳｱｰﾄﾞｽ ﾄｵ ﾚﾃﾞｨｽ API
+- nginx location regex matches long tokens, forwards ﾄｩ Redis API

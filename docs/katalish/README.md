@@ -1,10 +1,10 @@
 # G41KiTS
-
 [中文](../../README.md) | [English](../README.en.md) | [日本語](../README.ja.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/README.md)
 
-ﾓｼﾞｭﾗｰ ｾﾙﾌﾎｽﾄ Docker Compose stack — Metro/WP8.1 style ﾎｰﾑﾍﾟｰｼﾞ, Redis-backed ｺﾝﾌｨｸﾞ API, ﾏﾙﾁ-ﾗﾝｹﾞｰｼﾞ i18n, KITS ﾓｼﾞｭｰﾙ ｼｽﾃﾑ.
 
-## ﾃﾞｨﾌﾟﾛｲ
+Modular ｾﾙﾌﾎｽﾄ Docker ｺﾝﾎﾟｰｽﾞ ｽﾀｯｸ — Metro/WP8.1 ｽﾀｲﾙ ﾎｰﾑﾍﾟｰｼﾞ, Redis-基盤 ｺﾝﾌｨｸﾞ API, 複数-language i18n, KITS ﾓｼﾞｭｰﾙ ｼｽﾃﾑ.
+
+## 配備
 
 ```bash
 git clone https://github.com/Kihara777/G41KiTS.git
@@ -14,11 +14,11 @@ cp .env.example .env
 ./g41.sh kits add -y all
 ```
 
-### ﾛｰｶﾙ ｲﾆｯﾄ
+### ﾛｰｶﾙ ｲﾃｯﾄ
 
-`./g41.sh ｲﾆｯﾄ` ｻﾎﾟｰﾂ ｲﾝｼﾞｪｸﾃｨﾝｸﾞ ﾃﾞｨﾌﾟﾛｲﾔｰ固有 ﾎｽﾄ ｺﾝﾌｨｸﾞ ｳﾞｨｱ `.ﾛｰｶﾙ/`, 回避 ｺﾐｯﾄ VPS ﾃﾞｨﾃｰﾙｽﾞ to ｻﾞ ﾘﾎﾟ.
+`./g41.sh init` ｻﾎﾟｰﾄ injecting deployer-特定 host ｺﾝﾌｨｸﾞ via `.local/`, avoiding committing VPS 詳細 ﾄｩ ｻﾞ ﾘﾎﾟ.
 
-**ﾃﾞｨﾚｸﾄﾘ mode** (ﾚｺﾒﾝﾃﾞｯﾄﾞ):
+**ﾃﾞｨﾚｸﾄﾘ ﾓｰﾄﾞ** (推奨):
 ```bash
 mkdir -p .local
 cat <<'EOF' > .local/install.sh
@@ -30,7 +30,7 @@ do_init_local() {
 EOF
 ```
 
-**ﾌｧｲﾙ mode** (ﾚｶﾞｼｰ):
+**ﾌｧｲﾙ ﾓｰﾄﾞ** (ﾚｶﾞｼｰ):
 ```bash
 cat <<'EOF' > .local.sh
 do_init_local() {
@@ -39,92 +39,92 @@ do_init_local() {
 EOF
 ```
 
-ﾎﾞｰｽ modes ｱｰ ｵﾌﾟｼｮﾅﾙ. ｲﾌ ﾅｲｻﾞｰ ｴｸﾞｼﾞｽﾂ, `ｲﾆｯﾄ` ｽｷｯﾌﾟ ﾎｽﾄ ｾｯﾄｱｯﾌﾟ, ｵﾝﾘｰ ｲﾝｽﾄｰﾘﾝｸﾞ Docker ｱﾝﾄﾞ ﾃﾞｨﾌﾟﾛｲﾝｸﾞ ｺﾝﾃﾅｰｽﾞ.
+Both ﾓｰﾄﾞ ｱｰ 任意. ｲﾌ どちらもない exists, `init` skips host 準備, ｵﾝﾘｰ 導入中 Docker ｱﾝﾄﾞ 配備中 ｺﾝﾃﾅ.
 
-## ｲﾝﾌﾗｽﾄﾗｸﾁｬｰ
+## ｲﾝﾌﾗ
 
-ｺｱ ｻｰﾋﾞｽｽﾞ ﾌﾟﾗｵﾌﾞｲﾃﾞｨﾝｸﾞ ｹﾞｰﾄｳｪｲ, ｽﾄﾚｰｼﾞ, ｻｰﾂ, ｱﾝﾄﾞ ｻｲﾄ ｽｹﾙﾄﾝ.
+ｺｱ services 提供中 ｹﾞｰﾄｳｪｲ, ｽﾄﾚｰｼﾞ, 証明書, ｱﾝﾄﾞ ｻｲﾄ 骨組.
 
-| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | ﾄﾞｷｭﾒﾝﾄ |
+| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | Docs |
 |--------|-------------|------|
-| nginx | TLS 1.3 / HTTP/3 ｹﾞｰﾄｳｪｲ, ﾘﾊﾞｰｽ ﾌﾟﾛｸｼ to ｵｰﾙ ﾊﾞｯｸｴﾝﾄﾞｽﾞ | [ﾄﾞｷｭﾒﾝﾄ/en/nginx.md](en/nginx.md) |
-| redis | Redis ｺﾝﾌｨｸﾞ ｽﾄｱ + Node.js HTTP API ﾌﾞﾘｯｼﾞ | [ﾄﾞｷｭﾒﾝﾄ/en/redis.md](en/redis.md) |
-| acme | SSL ｻｰﾃｨﾌｨｹｰﾄ ﾏﾈｼﾞﾒﾝﾄ (acme.sh + ZeroSSL/Cloudflare DNS) | [ﾄﾞｷｭﾒﾝﾄ/en/acme.md](en/acme.md) |
-| autoheal | ｵｰﾄﾘｽﾀｰﾄ ｱﾝﾍﾙｼｰ Docker ｺﾝﾃﾅｰｽﾞ | [ﾄﾞｷｭﾒﾝﾄ/en/autoheal.md](en/autoheal.md) |
-| dsock | Docker API ｾｷｭﾘﾃｨ ﾌﾟﾛｸｼ (ﾘﾌﾟﾚｲｽｽﾞ ﾀﾞｲﾚｸﾄ docker.sock ﾏｳﾝﾂ) | [ﾄﾞｷｭﾒﾝﾄ/en/dsock.md](en/dsock.md) |
-| home | ｻｲﾄ ｺｱ ﾃﾞｲﾀ — ｷｬﾗｸﾀｰ ﾒｯｾｰｼﾞ, ｽｨｰﾑ ｶﾗｰｽﾞ, ｽﾃｰﾀｽ ｺｰﾄﾞｽﾞ, i18n | [ﾄﾞｷｭﾒﾝﾄ/en/home.md](en/home.md) |
+| nginx | TLS 1.3 / HTTP/3 ｹﾞｰﾄｳｪｲ, ﾘﾊﾞｰｽ ﾌﾟﾛｸｼ ﾄｩ ｵｰﾙ ﾊﾞｯｸｴﾝﾄﾞｽﾞ | [docs/en/nginx.md](en/nginx.md) |
+| redis | Redis ｺﾝﾌｨｸﾞ ｽﾄｱ + Node.js HTTP API 橋渡 | [docs/en/redis.md](en/redis.md) |
+| acme | SSL ｻｰﾃｨﾌｨｹｰﾄ management (acme.sh + ZeroSSL/Cloudflare DNS) | [docs/en/acme.md](en/acme.md) |
+| autoheal | ｵｰﾄ-再起動 unhealthy Docker ｺﾝﾃﾅ | [docs/en/autoheal.md](en/autoheal.md) |
+| dsock | Docker API security ﾌﾟﾛｸｼ (置換 直接 docker.sock ﾏｳﾝﾄ) | [docs/en/dsock.md](en/dsock.md) |
+| home | ｻｲﾄ ｺｱ ﾃﾞｲﾀ — ｷｬﾗｸﾀｰ ﾒｯｾｰｼﾞ, ﾃｰﾏ ｶﾗｰ, ｽﾃｰﾀｽ ｺｰﾄﾞ, i18n | [docs/en/home.md](en/home.md) |
 
-## ｻｲﾄ ｻｰﾋﾞｽｽﾞ
+## ｻｲﾄｻｰﾋﾞｽ
 
-ﾕｰｻﾞｰﾌｪｲｼﾝｸﾞ ｻｰﾋﾞｽｽﾞ ｴｸｽﾎﾟｰｽﾞﾄﾞ ｽﾙｰ nginx ﾘﾊﾞｰｽ ﾌﾟﾛｸｼ.
+ﾕｰｻﾞｰ-面向 services 露出済 経由 nginx ﾘﾊﾞｰｽ ﾌﾟﾛｸｼ.
 
-| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | ﾄﾞｷｭﾒﾝﾄ |
+| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | Docs |
 |--------|-------------|------|
-| aria2 | ﾊﾟﾗﾚﾙ ﾀﾞｳﾝﾛｰﾄﾞ ﾑｱﾝｱｼﾞｴﾗ ｳｨｽﾞ WebUI ｱﾝﾄﾞ WebDAV ｼｪｱ | [ﾄﾞｷｭﾒﾝﾄ/en/aria2.md](en/aria2.md) |
-| blc | Bilibili ﾗｲﾌﾞ ﾁｬｯﾄ ｳｨｽﾞ AI ﾄﾗﾝｽﾚｰｼｮﾝ | [ﾄﾞｷｭﾒﾝﾄ/en/blc.md](en/blc.md) |
-| bt | BitTorrent ｸﾗｲｱﾝﾄ ｳｨｽﾞ WebUI ｱﾝﾄﾞ WebDAV ｼｪｱ | [ﾄﾞｷｭﾒﾝﾄ/en/bt.md](en/bt.md) |
-| dns | AdGuard ﾘｶｰｼﾌﾞ DNS ｳｨｽﾞ DoT/DoH/DoQ | [ﾄﾞｷｭﾒﾝﾄ/en/dns.md](en/dns.md) |
-| hako | ｳｪﾌﾞ ﾌｧｲﾙ ﾑｱﾝｱｼﾞｴﾗ ｳｨｽﾞ ﾊﾟﾌﾞﾘｯｸ WebDAV ｼｪｱ | [ﾄﾞｷｭﾒﾝﾄ/en/hako.md](en/hako.md) |
-| hexo | ﾊﾟｰｿﾅﾙ ﾌﾞﾛｸﾞ ｴﾝｼﾞﾝ | [ﾄﾞｷｭﾒﾝﾄ/en/hexo.md](en/hexo.md) |
-| hy2 | Hysteria2 ﾌﾟﾛｸｼ ｼｪｱﾘﾝｸﾞ ﾎﾟｰﾄ 443 ｳｨｽﾞ nginx | [ﾄﾞｷｭﾒﾝﾄ/en/hy2.md](en/hy2.md) |
-| ﾄﾗｯｶｰ | ﾗｲﾄｳｪｲﾄ HTTPS BitTorrent ﾄﾗｯｶｰ | [ﾄﾞｷｭﾒﾝﾄ/en/ﾄﾗｯｶｰ.md](en/ﾄﾗｯｶｰ.md) |
-| attic | ｾﾙﾌﾎｽﾄ Nix ﾊﾞｲﾅﾘ ｷｬｯｼｭ ｻｰﾊﾞｰ (atticd) | [ﾄﾞｷｭﾒﾝﾄ/en/attic.md](en/attic.md) |
+| aria2 | 並列 ﾀﾞｳﾝﾛｰﾄﾞ ﾑｱﾝｱｼﾞｴﾗ ｳｨｽﾞ WebUI ｱﾝﾄﾞ WebDAV ｼｪｱ | [docs/en/aria2.md](en/aria2.md) |
+| blc | Bilibili ﾗｲﾌﾞ ﾁｬｯﾄ ｳｨｽﾞ AI ﾄﾗﾝｽﾚｰｼｮﾝ | [docs/en/blc.md](en/blc.md) |
+| bt | BitTorrent ｸﾗｲｱﾝﾄ ｳｨｽﾞ WebUI ｱﾝﾄﾞ WebDAV ｼｪｱ | [docs/en/bt.md](en/bt.md) |
+| dns | AdGuard ﾘｶｰｼﾌﾞ DNS ｳｨｽﾞ DoT/DoH/DoQ | [docs/en/dns.md](en/dns.md) |
+| hako | ｳｪﾌﾞ ﾌｧｲﾙ ﾑｱﾝｱｼﾞｴﾗ ｳｨｽﾞ ﾊﾟﾌﾞﾘｯｸ WebDAV ｼｪｱ | [docs/en/hako.md](en/hako.md) |
+| hexo | 個人 ﾌﾞﾛｸﾞ ｴﾝｼﾞﾝ | [docs/en/hexo.md](en/hexo.md) |
+| hy2 | Hysteria2 ﾌﾟﾛｸｼ 共有 ﾎﾟｰﾄ 443 ｳｨｽﾞ nginx | [docs/en/hy2.md](en/hy2.md) |
+| ﾄﾗｯｶｰ | ﾗｲﾄｳｪｲﾄ HTTPS BitTorrent ﾄﾗｯｶｰ | [docs/en/tracker.md](en/tracker.md) |
+| attic | ｾﾙﾌﾎｽﾄ Nix ﾊﾞｲﾅﾘ ｷｬｯｼｭ ｻｰﾊﾞｰ (atticd) | [docs/en/attic.md](en/attic.md) |
 
 ## ﾌﾟﾛｸｼ & ﾐﾗｰ
 
-ﾘﾊﾞｰｽ ﾌﾟﾛｸｼ ｱﾝﾄﾞ ｷｬｯｼｭ ｱｸｾﾗﾚｰｼｮﾝ ｻｰﾋﾞｽｽﾞ.
+ﾘﾊﾞｰｽ ﾌﾟﾛｸｼ ｱﾝﾄﾞ ｷｬｯｼｭ 加速 services.
 
-| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | ﾄﾞｷｭﾒﾝﾄ |
+| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | Docs |
 |--------|-------------|------|
-| gh-ﾌﾟﾛｸｼ | ﾘﾊﾞｰｽ ﾌﾟﾛｸｼ ﾌｫｱ raw.githubusercontent.com | [ﾄﾞｷｭﾒﾝﾄ/en/tile_gh-ﾌﾟﾛｸｼ.md](en/tile_gh-proxy.md) |
-| nix-ｷｬｯｼｭ | NixOS ﾊﾞｲﾅﾘ ｷｬｯｼｭ ﾐﾗｰ — channels, ｷｬｯｼｭ, releases | [ﾄﾞｷｭﾒﾝﾄ/en/tile_nix-ｷｬｯｼｭ.md](en/tile_nix-cache.md) |
+| gh-ﾌﾟﾛｸｼ | ﾘﾊﾞｰｽ ﾌﾟﾛｸｼ ﾌｫｱ 生.githubusercontent.com | [docs/en/tile_gh-proxy.md](en/tile_gh-proxy.md) |
+| nix-ｷｬｯｼｭ | NixOS ﾊﾞｲﾅﾘ ｷｬｯｼｭ ﾐﾗｰ — channels, ｷｬｯｼｭ, ﾘﾘｰｽ | [docs/en/tile_nix-cache.md](en/tile_nix-cache.md) |
 
-## ナビゲーション
+## ﾅﾋﾞｹﾞｰｼｮﾝ
 
-ﾎｰﾑﾍﾟｰｼﾞ ﾀｲﾙｽﾞ, ｱﾌﾟﾘ ﾘｽﾄ, ｼｮｰﾄ ﾘﾝｸ ｼｽﾃﾑ.
+ﾎｰﾑﾍﾟｰｼﾞ ﾀｲﾙ, app ﾘｽﾄ, ｼｮｰﾄ ﾘﾝｸ ｼｽﾃﾑ.
 
-| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | ﾄﾞｷｭﾒﾝﾄ |
+| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | Docs |
 |--------|-------------|------|
-| apps | ｱﾌﾟﾘｹｰｼｮﾝ ﾘｽﾄ tile — ﾎｰﾑﾍﾟｰｼﾞ ｴﾝﾄﾘ ﾌｫｱ ｵｰﾙ ｻｰﾋﾞｽｽﾞ | [ﾄﾞｷｭﾒﾝﾄ/en/tile_apps.md](en/tile_apps.md) |
-| ﾘﾝｸｽ | ｼｮｰﾄ ﾘﾝｸ ｼｽﾃﾑ 代理経由 ｽﾙｰ Redis API | [ﾄﾞｷｭﾒﾝﾄ/en/tile_links.md](en/tile_links.md) |
-| ｼｮｰﾄﾘﾝｸｽ | ﾀﾞｲﾅﾐｯｸ ｼｮｰﾄ ﾘﾝｸｽ 代理経由 ｽﾙｰ Redis API | [ﾄﾞｷｭﾒﾝﾄ/en/ｼｮｰﾄﾘﾝｸｽ.md](en/shortlinks.md) |
+| apps | ｱﾌﾟﾘｹｰｼｮﾝ ﾘｽﾄ ﾀｲﾙ — ﾎｰﾑﾍﾟｰｼﾞ ｴﾝﾄﾘ ﾌｫｱ ｵｰﾙ services | [docs/en/tile_apps.md](en/tile_apps.md) |
+| ﾘﾝｸ | ｼｮｰﾄ ﾘﾝｸ ｼｽﾃﾑ 代理経由 経由 Redis API | [docs/en/tile_links.md](en/tile_links.md) |
+| shortlinks | ﾀﾞｲﾅﾐｯｸ ｼｮｰﾄ ﾘﾝｸ 代理経由 経由 Redis API | [docs/en/shortlinks.md](en/shortlinks.md) |
 
 ## ｴｸｽﾀｰﾅﾙ ﾂｰﾙ ﾘﾝｸｽ
 
-ｽﾀﾃｨｯｸ ﾘﾝｸ ﾀｲﾙｽﾞ on ｻﾞ ﾎｰﾑﾍﾟｰｼﾞ ﾎﾟｲﾝﾃｨﾝｸﾞ to ｴｸｽﾀｰﾅﾙ ﾀﾞｳﾝﾛｰﾄﾞｽﾞ (ﾉｰ Docker ｻｰﾋﾞｽｽﾞ).
+ｽﾀﾃｨｯｸ ﾘﾝｸ ﾀｲﾙ ｵﾝ ｻﾞ ﾎｰﾑﾍﾟｰｼﾞ 指向 ﾄｩ ｴｸｽﾀｰﾅﾙ ﾀﾞｳﾝﾛｰﾄﾞ (ﾉｰ Docker services).
 
-| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | ﾄﾞｷｭﾒﾝﾄ |
+| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | Docs |
 |--------|-------------|------|
-| 7zip | ﾌｧｲﾙ ｱｰｶｲﾊﾞ ｳｨｽﾞ ﾊｲ ｺﾝﾌﾟﾚｯｼｮﾝ ﾚｲｼｵ | [ﾄﾞｷｭﾒﾝﾄ/en/link_7zip.md](en/link_7zip.md) |
-| dotnet | Microsoft .NET ﾃﾞｨﾍﾞﾛｯﾌﾟﾒﾝﾄ ﾌﾚｰﾑﾜｰｸ | [ﾄﾞｷｭﾒﾝﾄ/en/link_dotnet.md](en/link_dotnet.md) |
-| dx11 | ﾚｶﾞｼｰ DirectX End-User ﾗﾝﾀｲﾑ | [ﾄﾞｷｭﾒﾝﾄ/en/link_dx11.md](en/link_dx11.md) |
-| vcredist | Visual C++ 再配布可能 | [ﾄﾞｷｭﾒﾝﾄ/en/link_vcredist.md](en/link_vcredist.md) |
-| vs | Visual Studio ｺﾐｭﾆﾃｨ IDE | [ﾄﾞｷｭﾒﾝﾄ/en/link_vs.md](en/link_vs.md) |
-| vscode | Visual Studio Code ｴﾃﾞｨﾀ | [ﾄﾞｷｭﾒﾝﾄ/en/link_vscode.md](en/link_vscode.md) |
+| 7zip | ﾌｧｲﾙ ｱｰｶｲﾊﾞ ｳｨｽﾞ ﾊｲ 圧縮 率 | [docs/en/link_7zip.md](en/link_7zip.md) |
+| dotnet | Microsoft .NET ﾃﾞｨﾍﾞﾛｯﾌﾟﾒﾝﾄ ﾌﾚｰﾑﾜｰｸ | [docs/en/link_dotnet.md](en/link_dotnet.md) |
+| dx11 | ﾚｶﾞｼｰ DirectX End-ﾕｰｻﾞｰ ﾗﾝﾀｲﾑ | [docs/en/link_dx11.md](en/link_dx11.md) |
+| vcredist | Visual C++ 再配布可能 | [docs/en/link_vcredist.md](en/link_vcredist.md) |
+| vs | Visual Studio ｺﾐｭﾆﾃｨ IDE | [docs/en/link_vs.md](en/link_vs.md) |
+| vscode | Visual Studio ｺｰﾄﾞ ｴﾃﾞｨﾀ | [docs/en/link_vscode.md](en/link_vscode.md) |
 
 ## ｼｮｰｹｰｽ
 
-| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | ﾄﾞｷｭﾒﾝﾄ |
+| ﾓｼﾞｭｰﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | Docs |
 |--------|-------------|------|
-| flake | ﾊﾟｰｿﾅﾙ Nix flake ﾘﾎﾟｼﾞﾄﾘ — ｶｽﾀﾑ ﾊﾟｯｹｰｼﾞｽﾞ, ｵｰﾊﾞｰﾚｲｽﾞ, NixOS ﾓｼﾞｭｰﾙｽﾞ | [ﾄﾞｷｭﾒﾝﾄ/en/tile_flake.md](en/tile_flake.md) |
-| bilibili | Bilibili ｽﾍﾟｰｽ — ﾊﾞｰﾁｬﾙ ｽﾄﾘｰﾏｰ ｲﾝﾄﾛﾀﾞｸｼｮﾝ | [ﾄﾞｷｭﾒﾝﾄ/en/tile_bilibili.md](en/tile_bilibili.md) |
-| attic | Attic Nix ﾊﾞｲﾅﾘ ｷｬｯｼｭ ﾕｰｾｰｼﾞ ｶﾞｲﾄﾞ | [ﾄﾞｷｭﾒﾝﾄ/en/tile_attic.md](en/tile_attic.md) |
-| mail | MailKits — Cloudflare Email Workers ﾄﾗﾝｽﾍﾟｱﾚﾝﾄ ﾌﾟﾛｸｼ | [ﾄﾞｷｭﾒﾝﾄ/en/tile_mail.md](en/tile_mail.md) |
-| kihara777 | GitHub ﾌﾟﾛﾌｧｲﾙ — ﾌﾟﾛｼﾞｪｸﾂ, ｺﾝﾄﾘﾋﾞｭｰｼｮﾝ & ｺﾝﾀｸﾄ | [ﾄﾞｷｭﾒﾝﾄ/en/tile_kihara777.md](en/tile_kihara777.md) |
+| ﾌﾚｲｸ | 個人 Nix ﾌﾚｲｸ ﾘﾎﾟｼﾞﾄﾘ — ｶｽﾀﾑ ﾊﾟｯｹｰｼﾞ, ｵｰﾊﾞｰﾚｲ, NixOS ﾓｼﾞｭｰﾙ | [docs/en/tile_flake.md](en/tile_flake.md) |
+| bilibili | Bilibili ｽﾍﾟｰｽ — ﾊﾞｰﾁｬﾙ ｽﾄﾘｰﾏｰ 紹介 | [docs/en/tile_bilibili.md](en/tile_bilibili.md) |
+| attic | Attic Nix ﾊﾞｲﾅﾘ ｷｬｯｼｭ 利用法 ｶﾞｲﾄﾞ | [docs/en/tile_attic.md](en/tile_attic.md) |
+| mail | MailKits — Cloudflare Email ﾜｰｶｰ 透過 ﾌﾟﾛｸｼ | [docs/en/tile_mail.md](en/tile_mail.md) |
+| kihara777 | GitHub ﾌﾟﾛﾌｧｲﾙ — ﾌﾟﾛｼﾞｪｸﾄ, 貢献 & 連絡 | [docs/en/tile_kihara777.md](en/tile_kihara777.md) |
 
-## ｽﾍﾟｯｸ
+## 仕様
 
-| ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | ﾄﾞｷｭﾒﾝﾄ |
+| ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | Doc |
 |-------------|-----|
-| KITS ﾓｼﾞｭｰﾙ ｼｽﾃﾑ ﾌﾙ ﾃﾞﾌｨﾆｼｮﾝ | [kits/README.md](../kits/README.md) |
-| ｻｰﾄﾞﾊﾟｰﾃｨ ｱｾｯﾂ ﾉｰﾃｨｽ | [ﾉｰﾃｨｽ.md](NOTICE.en.md) |
-| ﾒﾝﾃﾅﾝｽ ﾛｸﾞ | [ﾒﾝﾃﾅﾝｽ.md](MAINTENANCE.en.md) |
+| KITS ﾓｼﾞｭｰﾙ ｼｽﾃﾑ ﾌﾙ 定義 | [kits/README.md](../kits/README.md) |
+| ｻｰﾄﾞ-ﾊﾟｰﾃｨ ｱｾｯﾂ notice | [NOTICE.md](NOTICE.en.md) |
+| ﾒﾝﾃﾅﾝｽ log | [MAINTENANCE.md](MAINTENANCE.en.md) |
 | ｴｰｼﾞｪﾝﾄ ｶﾞｲﾄﾞ — ｱｰｷﾃｸﾁｬ, ﾓｼﾞｭｰﾙ ｼｽﾃﾑ, ﾃﾞｨﾍﾞﾛｯﾌﾟﾒﾝﾄ ﾜｰｸﾌﾛｰ | [AGENTS.md](../AGENTS.md) |
 
-## ｵｰｻｰ
+## 作者
 
-- **Kitsunori (キツのり)** — ｸﾘｴｲﾀｰ ｱﾝﾄﾞ ﾒﾝﾃﾅｰ
-- **Kitsunome (キツのめ)** — ﾃﾞｻﾞｲﾝ & ﾃﾞｨﾍﾞﾛｯﾌﾟﾒﾝﾄ ﾌｨｰﾄ. deepseek-v4-pro (Max)
+- **Kitsunori (キツのり)** — 作成者 ｱﾝﾄﾞ ﾒﾝﾃﾅｰ
+- **Kitsunome (キツのめ)** — ﾃﾞｻﾞｲﾝ & ﾃﾞｨﾍﾞﾛｯﾌﾟﾒﾝﾄ 協力. deepseek-v4-pro (Max)
 
 
 ## ﾗｲｾﾝｽ

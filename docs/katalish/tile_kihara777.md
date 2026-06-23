@@ -1,16 +1,15 @@
-# tile_kihara777
-
+# ﾀｲﾙ_kihara777
 [中文](../zh/tile_kihara777.md) | [English](../en/tile_kihara777.md) | [日本語](../ja/tile_kihara777.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/tile_kihara777.md)
 
-ｷﾞｯﾄﾊﾌﾞ ﾌﾟﾙｵﾌｲﾙｴ ﾄｲﾙｴ.
+GitHub ﾌﾟﾛﾌｧｲﾙ ﾀｲﾙ.
 
 ## ｲﾝﾌｫ
 
-| ｱｲﾄﾑ | ﾌﾞｱﾙｱｴ |
+| 項目 | 値 |
 |------|-------|
-| ﾃｨﾌﾟｴ | ﾄｲﾙｴ |
-| ﾄﾞｴﾌﾟｴﾝﾄﾞｽ | ﾎｵｳﾑ |
-| ｲｸｵﾝ | 🦊 |
+| ﾀｲﾌﾟ | ﾀｲﾙ |
+| 依存 | home |
+| ｱｲｺﾝ | 🦊 |
 
 ## ｲﾝｽﾄｰﾙ
 
@@ -18,7 +17,7 @@
 ./g41.sh kits add tile_kihara777
 ```
 
-## ﾀｲﾙ ｺﾝﾃﾝﾄ
+## ﾀｲﾙ内容
 
-- ｷﾞｯﾄﾊﾌﾞ ﾌﾟﾙｵﾌｲﾙｴ ﾙｲﾝｸ `github.com/Kihara777`
-- ﾌﾞｲｵ (ﾄﾙｲﾙｲﾝｸﾞｱｱﾙ): ﾌﾞｲｽｱｱﾙﾘｰ ｲﾑﾌﾟｴｲﾙﾄﾞ ﾌﾟﾙｵｸﾞﾙｱﾑﾑｱｰ, ｵｳｽﾞｵｰ ｵﾌ ﾝｲｯｸｽｸｲﾄｽ/G41KiTS, ﾆｯｸｽOS ｴﾝｽﾞｱｽｲｱｽﾄ, ﾌﾞｱｰﾄｱｱﾙ ｽﾄﾙｲｰﾑｱｰ
+- GitHub ﾌﾟﾛﾌｧｲﾙ ﾘﾝｸ `github.com/Kihara777`
+- Bio (trilingual): visually impaired programmer, 作者 ｵﾌﾞ NixKits/G41KiTS, NixOS enthusiast, ﾊﾞｰﾁｬﾙ ｽﾄﾘｰﾏｰ

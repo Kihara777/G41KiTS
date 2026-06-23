@@ -1,15 +1,14 @@
-# link_vcredist
-
+# ﾘﾝｸ_vcredist
 [中文](../zh/link_vcredist.md) | [English](../en/link_vcredist.md) | [日本語](../ja/link_vcredist.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/link_vcredist.md)
 
-ﾌﾞｸ++ ﾙﾄﾞｲｽﾄ.
+VC++ Redist.
 
 ## ｲﾝﾌｫ
 
-| ｱｲﾄﾑ | ﾌﾞｱﾙｱｴ |
+| 項目 | 値 |
 |------|-------|
-| ﾃｨﾌﾟｴ | ﾙｲﾝｸ |
-| ﾄﾞｴﾌﾟｴﾝﾄﾞｽ | tile_links |
+| ﾀｲﾌﾟ | ﾘﾝｸ |
+| 依存 | ﾀｲﾙ_ﾘﾝｸ |
 
 ## ｲﾝｽﾄｰﾙ
 
