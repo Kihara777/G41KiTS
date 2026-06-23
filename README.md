@@ -109,6 +109,8 @@ EOF
 | flake | 个人 Nix flake 仓库 — 自定义包、overlay、NixOS 模块 | [docs/zh/tile_flake.md](docs/zh/tile_flake.md) |
 | bilibili | Bilibili 个人主页 — 虚拟主播介绍 | [docs/zh/tile_bilibili.md](docs/zh/tile_bilibili.md) |
 | attic | Attic Nix 二进制缓存使用指南 | [docs/zh/tile_attic.md](docs/zh/tile_attic.md) |
+| mail | MailKits — Cloudflare Email Workers 透明邮件代理 | [docs/zh/tile_mail.md](docs/zh/tile_mail.md) |
+| kihara777 | GitHub 个人主页 — 项目、贡献与联系方式 | [docs/zh/tile_kihara777.md](docs/zh/tile_kihara777.md) |
 
 ## 规范
 

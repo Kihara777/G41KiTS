@@ -109,6 +109,8 @@ Static link tiles on the homepage pointing to external downloads (no Docker serv
 | flake | Personal Nix flake repository — custom packages, overlays, NixOS modules | [docs/en/tile_flake.md](en/tile_flake.md) |
 | bilibili | Bilibili space — virtual streamer introduction | [docs/en/tile_bilibili.md](en/tile_bilibili.md) |
 | attic | Attic Nix binary cache usage guide | [docs/en/tile_attic.md](en/tile_attic.md) |
+| mail | MailKits — Cloudflare Email Workers transparent proxy | [docs/en/tile_mail.md](en/tile_mail.md) |
+| kihara777 | GitHub profile — projects, contributions & contact | [docs/en/tile_kihara777.md](en/tile_kihara777.md) |
 
 ## Spec
 

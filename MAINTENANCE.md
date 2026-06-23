@@ -1,17 +1,13 @@
 # 维护记录
 
-## 2026-06-22T23:50:00+09:00
-
-**摘要**：attic — 自托管 Nix 二进制缓存模块 + tile_attic 首页磁贴；AGENTS.md 新增访问控制、初次启动审计、云端部署规则
-
-| 提交 | 说明 |
-|------|------|
-| `054a758` | feat(attic): add self-hosted Nix binary cache module |
-| `af6b661` | feat(tile_attic): add dedicated tile for attic binary cache |
-| `08ad54f` | docs(AGENTS): add access control, cloud deployment info, reorder sections |
-| `7b2ec2b` | docs(AGENTS): move cloud deployment section after new-session audit |
-
 [中文](MAINTENANCE.md) | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md)
+
+## 2026-06-24
+
+- tile_mail / tile_kihara777 三语文档补全（zh/en/ja，共 6 篇）
+- README 三语展示区补充 mail + kihara777 条目
+- MAINTENANCE.md 去重整理：合并摘要区块至时间线
+- AGENTS.md 新增访问控制、初次启动审计、云端部署规则
 
 ## 2026-06-22
 
@@ -30,6 +26,9 @@
 - home 三语文档更新：补充 homete 磁贴与模块提供内容详情
 - 修复 g41.sh kits reload 容器内 wget 不可用问题
 - 修复 rsync 后硬链接断裂 → 追加 g41.sh kits add -C 重建链接
+- tile_mail 链接修正（Ma8lKits → MailKits）+ 详情页重构（架构/功能章节）
+- tile_attic i18n 增强：多租户/S3 后端描述、客户端配置标题、完整密钥生成路径
+- AGENTS.md 新增访问控制、初次启动审计、云端部署规则、Section 重排序
 
 ## 2026-06-20
 
