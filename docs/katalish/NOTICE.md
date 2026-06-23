@@ -4,24 +4,25 @@
 
 ## ｻｰﾄﾞﾊﾟｰﾃｨ ｱｾｯﾂ
 
-ﾃﾞｨｽ project ｲﾝｸﾙｰﾄﾞs ｷｬﾗｸﾀｰ artwork ｱﾝﾄﾞ ｱｾｯﾂ ﾌﾛﾑ ｻﾞ game **Dolls' Frontline** (Girls' Frontline), copyright Sunborn Network Technoﾛｸﾞy Co., Ltd.
+ﾃﾞｨｽ project includes ｷｬﾗｸﾀｰ artwork ｱﾝﾄﾞ ｱｾｯﾂ ﾌﾛﾑ ｻﾞ game **Dolls' Frontline** (Girls' Frontline), copyright Sunborn Network Technology Co., Ltd.
 
-### Affected ﾌｧｲﾙs
+### Affected Files
 
-ｻﾞ ﾌｫﾛｰing ﾌｧｲﾙs in `.wr/G41/img/` ｱｰ derivative ｵﾗ ﾀﾞｲﾚｸﾄ ｱｾｯﾂ ﾌﾛﾑ ｵﾗ inspired ﾊﾞｲ Dolls' Frontline, ﾕｰｽﾞd solely as fan content ﾌｫｱ non-commercial purposes:
+ｻﾞ following files in `.wr/G41/img/` ｱｰ derivative ｵﾗ ﾀﾞｲﾚｸﾄ ｱｾｯﾂ ﾌﾛﾑ ｵﾗ inspired by Dolls' Frontline, used solely as fan content ﾌｫｱ non-commercial purposes:
 
 | ﾌｧｲﾙ | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ |
 |------|-------------|
 | `Pic_G41.png` | G41 ｷｬﾗｸﾀｰ artwork |
 | `Pic_G41_Dhx.png` | G41 ｷｬﾗｸﾀｰ artwork (variant) |
-| `H_Accessory.ｳｪﾌﾞp` | G41 accessory icon |
-| `GK_ﾛｸﾞo_EN.png` | Griffin & Kryuger ﾛｸﾞo |
+| `H_Accessory.webp` | G41 accessory icon |
+| `GK_Logo_EN.png` | Griffin & Kryuger logo |
 
-ｻﾞse ｱｾｯﾂ remain ｻﾞ intellectual proﾊﾟｰty of ｻﾞir respective copyright holders. If you ｱｰ ｻﾞ copyright ｵｳﾝer ｱﾝﾄﾞ wish ﾌｫｱ ｻﾞse ｱｾｯﾂ to be removed, please contact ｻﾞ project ﾒﾝﾃﾅｰ.
+These ｱｾｯﾂ remain ｻﾞ intellectual property of their respective copyright holders. If you ｱｰ ｻﾞ copyright owner ｱﾝﾄﾞ wish ﾌｫｱ these ｱｾｯﾂ to be removed, please contact ｻﾞ project ﾒﾝﾃﾅｰ.
 
 ### Fictional References
 
-ｻﾞ page footer references fictional in-universe entities ﾌﾛﾑ Dolls' Frontline, including I.O.P. Manufacturing Compｴﾆｰ, Griffin & Kryuger Military Contractor ｱﾝﾄﾞ Security Consultant ｻｰﾋﾞｽｽﾞ Compｴﾆｰ, among oｻﾞrs. ｻﾞse names ｱｰ part of ｻﾞ Dolls' Frontline intellectual proﾊﾟｰty ｵｳﾝed ﾊﾞｲ Sunborn Network Technoﾛｸﾞy Co., Ltd.
+ｻﾞ page footer references fictional in-universe entities ﾌﾛﾑ Dolls' Frontline, including I.O.P. Manufacturing Company, Griffin & Kryuger Military Contractor ｱﾝﾄﾞ Security Consultant ｻｰﾋﾞｽｽﾞ Company, among others. These names ｱｰ part of ｻﾞ Dolls' Frontline intellectual property owned by Sunborn Network Technology Co., Ltd.
 
 ## ﾗｲｾﾝｽ
 
+ｵｰﾙ other code ｱﾝﾄﾞ configuration in ﾃﾞｨｽ ﾘﾎﾟｼﾞﾄﾘ ｲｽﾞ licensed under ｻﾞ MIT ﾗｲｾﾝｽ. ｽｨｰ [ﾗｲｾﾝｽ](../LICENSE) ﾌｫｱ details.
