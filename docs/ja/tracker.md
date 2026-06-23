@@ -1,6 +1,5 @@
 # tracker
-
-[中文](../zh/tracker.md) | [English](../en/tracker.md) | [日本語](tracker.md)
+[中文](../zh/tracker.md) | [English](../en/tracker.md) | [日本語](tracker.md) | [ｶﾀﾘｯｼｭ](../katalish/tracker.md) | [偽中国語](../pcn/tracker.md)
 
 軽量 HTTPS BitTorrent トラッカー
 

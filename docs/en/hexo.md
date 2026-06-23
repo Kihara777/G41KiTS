@@ -1,6 +1,5 @@
 # hexo
-
-[中文](../zh/hexo.md) | [English](hexo.md) | [日本語](../ja/hexo.md)
+[中文](../zh/hexo.md) | [English](hexo.md) | [日本語](../ja/hexo.md) | [ｶﾀﾘｯｼｭ](../katalish/hexo.md) | [偽中国語](../pcn/hexo.md)
 
 Personal blog engine
 

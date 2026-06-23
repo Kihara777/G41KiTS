@@ -1,6 +1,5 @@
 # tile_apps
-
-[中文](../zh/tile_apps.md) | [English](tile_apps.md) | [日本語](../ja/tile_apps.md)
+[中文](../zh/tile_apps.md) | [English](tile_apps.md) | [日本語](../ja/tile_apps.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_apps.md) | [偽中国語](../pcn/tile_apps.md)
 
 Application list tile — homepage entry for all services
 

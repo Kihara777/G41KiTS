@@ -1,6 +1,5 @@
 # redis
-
-[中文](redis.md) | [English](../en/redis.md) | [日本語](../ja/redis.md)
+[中文](redis.md) | [English](../en/redis.md) | [日本語](../ja/redis.md) | [ｶﾀﾘｯｼｭ](../katalish/redis.md) | [偽中国語](../pcn/redis.md)
 
 Redis 配置存储 + Node.js HTTP API 桥接
 

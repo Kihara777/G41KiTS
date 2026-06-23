@@ -1,6 +1,5 @@
 # KITS 模块规范
-
-[中文](kits-spec.md) | [English](../en/kits-spec.md) | [日本語](../ja/kits-spec.md)
+[中文](kits-spec.md) | [English](../en/kits-spec.md) | [日本語](../ja/kits-spec.md) | [ｶﾀﾘｯｼｭ](../katalish/kits-spec.md) | [偽中国語](../pcn/kits-spec.md)
 
 定义 G41KiTS 的模块系统约定、`info.json` 字段 schema 及目录结构。
 

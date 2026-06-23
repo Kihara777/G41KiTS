@@ -1,6 +1,5 @@
 # blc
-
-[中文](../zh/blc.md) | [English](blc.md) | [日本語](../ja/blc.md)
+[中文](../zh/blc.md) | [English](blc.md) | [日本語](../ja/blc.md) | [ｶﾀﾘｯｼｭ](../katalish/blc.md) | [偽中国語](../pcn/blc.md)
 
 Bilibili live chat with AI translation
 

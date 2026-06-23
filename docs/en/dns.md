@@ -1,6 +1,5 @@
 # dns
-
-[中文](../zh/dns.md) | [English](dns.md) | [日本語](../ja/dns.md)
+[中文](../zh/dns.md) | [English](dns.md) | [日本語](../ja/dns.md) | [ｶﾀﾘｯｼｭ](../katalish/dns.md) | [偽中国語](../pcn/dns.md)
 
 AdGuard recursive DNS with DoT/DoH/DoQ
 

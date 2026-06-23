@@ -1,6 +1,5 @@
 # home
-
-[中文](home.md) | [English](../en/home.md) | [日本語](../ja/home.md)
+[中文](home.md) | [English](../en/home.md) | [日本語](../ja/home.md) | [ｶﾀﾘｯｼｭ](../katalish/home.md) | [偽中国語](../pcn/home.md)
 
 站点核心数据 — 角色消息、主题色、状态码、i18n。模块直接提供 homete 磁贴（G41KiTS 项目介绍）。
 

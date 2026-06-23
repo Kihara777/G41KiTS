@@ -1,6 +1,5 @@
 # autoheal
-
-[中文](../zh/autoheal.md) | [English](autoheal.md) | [日本語](../ja/autoheal.md)
+[中文](../zh/autoheal.md) | [English](autoheal.md) | [日本語](../ja/autoheal.md) | [ｶﾀﾘｯｼｭ](../katalish/autoheal.md) | [偽中国語](../pcn/autoheal.md)
 
 Auto-restart unhealthy Docker containers
 

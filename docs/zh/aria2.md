@@ -1,6 +1,5 @@
 # aria2
-
-[中文](aria2.md) | [English](../en/aria2.md) | [日本語](../ja/aria2.md)
+[中文](aria2.md) | [English](../en/aria2.md) | [日本語](../ja/aria2.md) | [ｶﾀﾘｯｼｭ](../katalish/aria2.md) | [偽中国語](../pcn/aria2.md)
 
 并行下载管理器，含 WebUI 与 WebDAV 共享
 
