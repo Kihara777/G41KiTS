@@ -1,6 +1,6 @@
 # link_vscode
 
-[中文](../zh/link_vscode.md) | [English](../en/link_vscode.md) | [日本語](../ja/link_vscode.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../katalish/link_vscode.md)
+[中文](../zh/link_vscode.md) | [English](../en/link_vscode.md) | [日本語](../ja/link_vscode.md) | [ｶﾀﾘｯｼｭ](../katalish/link_vscode.md) | 偽中国語 
 
 VS Code 編輯器。
 

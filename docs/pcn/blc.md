@@ -1,6 +1,6 @@
 # blc
 
-[中文](../zh/blc.md) | [English](../en/blc.md) | [日本語](../ja/blc.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../katalish/blc.md)
+[中文](../zh/blc.md) | [English](../en/blc.md) | [日本語](../ja/blc.md) | [ｶﾀﾘｯｼｭ](../katalish/blc.md) | 偽中国語 
 
 Bilibili （AI 翻訳付）
 
