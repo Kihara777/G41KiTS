@@ -117,8 +117,8 @@ Both ﾓｰﾄﾞ ｱｰ 任意. ｲﾌ どちらもない exists, `init` skips 
 | ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | Doc |
 |-------------|-----|
 | KITS ﾓｼﾞｭｰﾙ ｼｽﾃﾑ ﾌﾙ 定義 | [kits/README.md](../../kits/README.md) |
-| ｻｰﾄﾞ-ﾊﾟｰﾃｨ ｱｾｯﾂ notice | [NOTICE.md](../NOTICE.en.md) |
-| ﾒﾝﾃﾅﾝｽ log | [MAINTENANCE.md](../MAINTENANCE.en.md) |
+| ｻｰﾄﾞ-ﾊﾟｰﾃｨ ｱｾｯﾂ notice | [NOTICE.md](./NOTICE.md) |
+| ﾒﾝﾃﾅﾝｽ log | [MAINTENANCE.md](./MAINTENANCE.md) |
 | ｴｰｼﾞｪﾝﾄ ｶﾞｲﾄﾞ — ｱｰｷﾃｸﾁｬ, ﾓｼﾞｭｰﾙ ｼｽﾃﾑ, ﾃﾞｨﾍﾞﾛｯﾌﾟﾒﾝﾄ ﾜｰｸﾌﾛｰ | [AGENTS.md](../../AGENTS.md) |
 
 ## 作者
