@@ -1,5 +1,5 @@
 # attic
-[中文](../zh/attic.md) | [English](attic.md) | [日本語](../ja/attic.md) | [ｶﾀﾘｯｼｭ](../katalish/attic.md) | [偽中国語](../pcn/attic.md)
+[中文](../zh/attic.md) | English | [日本語](../ja/attic.md) | [ｶﾀﾘｯｼｭ](../katalish/attic.md) | [偽中国語](../pcn/attic.md)
 
 Self-hosted Nix binary cache server (atticd).
 

@@ -1,5 +1,5 @@
 # home
-[中文](../zh/home.md) | [English](../en/home.md) | [日本語](home.md) | [ｶﾀﾘｯｼｭ](../katalish/home.md) | [偽中国語](../pcn/home.md)
+[中文](../zh/home.md) | [English](../en/home.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/home.md) | [偽中国語](../pcn/home.md)
 
 サイトコアデータ — キャラクターメッセージ、テーマカラー、ステータスコード、i18n。homete タイル（G41KiTS プロジェクト紹介）を直接提供します。
 

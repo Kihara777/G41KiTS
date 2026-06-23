@@ -1,6 +1,6 @@
 # tile_apps
 
-[中文](../../zh/tile_apps.md) | [English](../../en/tile_apps.md) | [日本語](../../ja/tile_apps.md) | [偽中国語](tile_apps.md) | [ｶﾀﾘｯｼｭ](../../katalish/tile_apps.md)
+[中文](../../zh/tile_apps.md) | [English](../../en/tile_apps.md) | [日本語](../../ja/tile_apps.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/tile_apps.md)
 
 応用一覧磁貼 — 全服務之首頁入口
 

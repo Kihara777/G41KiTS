@@ -1,5 +1,5 @@
 # attic
-[中文](../zh/attic.md) | [English](../en/attic.md) | [日本語](attic.md) | [ｶﾀﾘｯｼｭ](../katalish/attic.md) | [偽中国語](../pcn/attic.md)
+[中文](../zh/attic.md) | [English](../en/attic.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/attic.md) | [偽中国語](../pcn/attic.md)
 
 セルフホスト Nix バイナリキャッシュサーバー（atticd）。
 

@@ -1,5 +1,5 @@
 # bt
-[中文](../zh/bt.md) | [English](bt.md) | [日本語](../ja/bt.md) | [ｶﾀﾘｯｼｭ](../katalish/bt.md) | [偽中国語](../pcn/bt.md)
+[中文](../zh/bt.md) | English | [日本語](../ja/bt.md) | [ｶﾀﾘｯｼｭ](../katalish/bt.md) | [偽中国語](../pcn/bt.md)
 
 BitTorrent client with WebUI and WebDAV share
 

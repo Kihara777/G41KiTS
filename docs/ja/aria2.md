@@ -1,5 +1,5 @@
 # aria2
-[中文](../zh/aria2.md) | [English](../en/aria2.md) | [日本語](aria2.md) | [ｶﾀﾘｯｼｭ](../katalish/aria2.md) | [偽中国語](../pcn/aria2.md)
+[中文](../zh/aria2.md) | [English](../en/aria2.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/aria2.md) | [偽中国語](../pcn/aria2.md)
 
 並列ダウンロードマネージャ（WebUI と WebDAV 共有付き）
 

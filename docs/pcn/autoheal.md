@@ -1,6 +1,6 @@
 # autoheal
 
-[中文](../../zh/autoheal.md) | [English](../../en/autoheal.md) | [日本語](../../ja/autoheal.md) | [偽中国語](autoheal.md) | [ｶﾀﾘｯｼｭ](../../katalish/autoheal.md)
+[中文](../../zh/autoheal.md) | [English](../../en/autoheal.md) | [日本語](../../ja/autoheal.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/autoheal.md)
 
 異常 Docker 容器之自動再起動
 

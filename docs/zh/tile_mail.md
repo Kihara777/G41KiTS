@@ -1,5 +1,5 @@
 # tile_mail
-[中文](tile_mail.md) | [English](../en/tile_mail.md) | [日本語](../ja/tile_mail.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_mail.md) | [偽中国語](../pcn/tile_mail.md)
+中文 | [English](../en/tile_mail.md) | [日本語](../ja/tile_mail.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_mail.md) | [偽中国語](../pcn/tile_mail.md)
 
 MailKits 邮件代理系统磁贴。
 

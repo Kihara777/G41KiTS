@@ -1,6 +1,6 @@
 # attic
 
-[中文](../../zh/attic.md) | [English](../../en/attic.md) | [日本語](../../ja/attic.md) | [偽中国語](attic.md) | [ｶﾀﾘｯｼｭ](../../katalish/attic.md)
+[中文](../../zh/attic.md) | [English](../../en/attic.md) | [日本語](../../ja/attic.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/attic.md)
 
 宿主 Nix 二進緩衝伺服器（atticd）。
 

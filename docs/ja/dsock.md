@@ -1,5 +1,5 @@
 # dsock
-[中文](../zh/dsock.md) | [English](../en/dsock.md) | [日本語](dsock.md) | [ｶﾀﾘｯｼｭ](../katalish/dsock.md) | [偽中国語](../pcn/dsock.md)
+[中文](../zh/dsock.md) | [English](../en/dsock.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/dsock.md) | [偽中国語](../pcn/dsock.md)
 
 Docker API セキュリティプロキシ、docker.sock 直接マウントの代替
 

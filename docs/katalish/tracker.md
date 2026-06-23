@@ -1,6 +1,6 @@
 # ﾄﾙｱｯｸｱｰ
 
-[中文](../../zh/tracker.md) | [English](../../en/tracker.md) | [日本語](../../ja/tracker.md) | [ｶﾀﾘｯｼｭ](tracker.md) | [偽中国語](../../pcn/tracker.md)
+[中文](../../zh/tracker.md) | [English](../../en/tracker.md) | [日本語](../../ja/tracker.md) | ｶﾀﾘｯｼｭ | [偽中国語](../../pcn/tracker.md)
 
 ﾙｱｲﾄｳｴｱｲﾄ HTTPS ﾌﾞｲﾄﾄｵｰﾙｴﾝﾄ ﾄﾙｱｯｸｱｰ
 

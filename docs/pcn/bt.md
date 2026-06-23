@@ -1,6 +1,6 @@
 # bt
 
-[中文](../../zh/bt.md) | [English](../../en/bt.md) | [日本語](../../ja/bt.md) | [偽中国語](bt.md) | [ｶﾀﾘｯｼｭ](../../katalish/bt.md)
+[中文](../../zh/bt.md) | [English](../../en/bt.md) | [日本語](../../ja/bt.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/bt.md)
 
 BitTorrent 依頼者（WebUI 與 WebDAV 共有付）
 

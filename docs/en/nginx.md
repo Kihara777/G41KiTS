@@ -1,5 +1,5 @@
 # nginx
-[中文](../zh/nginx.md) | [English](nginx.md) | [日本語](../ja/nginx.md) | [ｶﾀﾘｯｼｭ](../katalish/nginx.md) | [偽中国語](../pcn/nginx.md)
+[中文](../zh/nginx.md) | English | [日本語](../ja/nginx.md) | [ｶﾀﾘｯｼｭ](../katalish/nginx.md) | [偽中国語](../pcn/nginx.md)
 
 TLS 1.3 / HTTP/3 gateway, reverse proxy to all backends
 

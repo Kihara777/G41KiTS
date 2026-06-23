@@ -1,5 +1,5 @@
 # dsock
-[中文](../zh/dsock.md) | [English](dsock.md) | [日本語](../ja/dsock.md) | [ｶﾀﾘｯｼｭ](../katalish/dsock.md) | [偽中国語](../pcn/dsock.md)
+[中文](../zh/dsock.md) | English | [日本語](../ja/dsock.md) | [ｶﾀﾘｯｼｭ](../katalish/dsock.md) | [偽中国語](../pcn/dsock.md)
 
 Restricted Docker API proxy, replaces direct docker.sock mounts
 

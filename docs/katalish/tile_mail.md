@@ -1,6 +1,6 @@
 # tile_mail
 
-[中文](../../zh/tile_mail.md) | [English](../../en/tile_mail.md) | [日本語](../../ja/tile_mail.md) | [ｶﾀﾘｯｼｭ](tile_mail.md) | [偽中国語](../../pcn/tile_mail.md)
+[中文](../../zh/tile_mail.md) | [English](../../en/tile_mail.md) | [日本語](../../ja/tile_mail.md) | ｶﾀﾘｯｼｭ | [偽中国語](../../pcn/tile_mail.md)
 
 ﾑｴｲﾙｸｲﾄｽ ｴﾑｴｲﾙ ﾌﾟﾙｵｯｸｽｲ ｼｽﾃﾑ ﾄｲﾙｴ.
 

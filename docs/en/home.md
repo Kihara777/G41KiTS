@@ -1,5 +1,5 @@
 # home
-[中文](../zh/home.md) | [English](home.md) | [日本語](../ja/home.md) | [ｶﾀﾘｯｼｭ](../katalish/home.md) | [偽中国語](../pcn/home.md)
+[中文](../zh/home.md) | English | [日本語](../ja/home.md) | [ｶﾀﾘｯｼｭ](../katalish/home.md) | [偽中国語](../pcn/home.md)
 
 Site core data — character messages, theme colors, status codes, i18n. Directly provides the homete tile (G41KiTS project intro).
 

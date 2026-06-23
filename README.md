@@ -1,6 +1,6 @@
 # G41KiTS
 
-[中文](README.md) | [English](docs/README.en.md) | [日本語](docs/README.ja.md) | [ｶﾀﾘｯｼｭ](docs/katalish/README.md) | [偽中国語](docs/pcn/README.md)
+中文 | [English](docs/README.en.md) | [日本語](docs/README.ja.md) | [ｶﾀﾘｯｼｭ](docs/katalish/README.md) | [偽中国語](docs/pcn/README.md)
 
 模块化自托管 Docker Compose 技术栈 — Metro/WP8.1 风格首页、Redis 配置 API、多语言 i18n、KITS 模块系统。
 

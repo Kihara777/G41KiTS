@@ -1,6 +1,6 @@
 # NOTICE
 
-[中文](NOTICE.md) | [English](docs/NOTICE.en.md) | [日本語](docs/NOTICE.ja.md) | [ｶﾀﾘｯｼｭ](docs/katalish/NOTICE.md) | [偽中国語](docs/pcn/NOTICE.md)
+中文 | [English](docs/NOTICE.en.md) | [日本語](docs/NOTICE.ja.md) | [ｶﾀﾘｯｼｭ](docs/katalish/NOTICE.md) | [偽中国語](docs/pcn/NOTICE.md)
 
 ## 第三方资产
 

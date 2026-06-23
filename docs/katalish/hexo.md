@@ -1,6 +1,6 @@
 # ﾎｴｯｸｽｵ
 
-[中文](../../zh/hexo.md) | [English](../../en/hexo.md) | [日本語](../../ja/hexo.md) | [ｶﾀﾘｯｼｭ](hexo.md) | [偽中国語](../../pcn/hexo.md)
+[中文](../../zh/hexo.md) | [English](../../en/hexo.md) | [日本語](../../ja/hexo.md) | ｶﾀﾘｯｼｭ | [偽中国語](../../pcn/hexo.md)
 
 ﾌﾟｱｰｽｵﾝｱﾙ ﾌﾞﾙｵｸﾞ ｴﾝｸﾞｱｲﾝ
 

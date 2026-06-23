@@ -1,5 +1,5 @@
 # link_vs
-[中文](../zh/link_vs.md) | [English](../en/link_vs.md) | [日本語](link_vs.md) | [ｶﾀﾘｯｼｭ](../katalish/link_vs.md) | [偽中国語](../pcn/link_vs.md)
+[中文](../zh/link_vs.md) | [English](../en/link_vs.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/link_vs.md) | [偽中国語](../pcn/link_vs.md)
 
 Visual Studio IDE。
 

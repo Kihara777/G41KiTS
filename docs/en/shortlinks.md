@@ -1,5 +1,5 @@
 # shortlinks
-[中文](../zh/shortlinks.md) | [English](shortlinks.md) | [日本語](../ja/shortlinks.md) | [ｶﾀﾘｯｼｭ](../katalish/shortlinks.md) | [偽中国語](../pcn/shortlinks.md)
+[中文](../zh/shortlinks.md) | English | [日本語](../ja/shortlinks.md) | [ｶﾀﾘｯｼｭ](../katalish/shortlinks.md) | [偽中国語](../pcn/shortlinks.md)
 
 Dynamic short links proxied through Redis API.
 

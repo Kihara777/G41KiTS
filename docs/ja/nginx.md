@@ -1,5 +1,5 @@
 # nginx
-[中文](../zh/nginx.md) | [English](../en/nginx.md) | [日本語](nginx.md) | [ｶﾀﾘｯｼｭ](../katalish/nginx.md) | [偽中国語](../pcn/nginx.md)
+[中文](../zh/nginx.md) | [English](../en/nginx.md) | 日本語 | [ｶﾀﾘｯｼｭ](../katalish/nginx.md) | [偽中国語](../pcn/nginx.md)
 
 TLS 1.3 / HTTP/3 ゲートウェイ、全バックエンドへのリバースプロキシ
 

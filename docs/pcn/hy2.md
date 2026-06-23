@@ -1,6 +1,6 @@
 # hy2
 
-[中文](../../zh/hy2.md) | [English](../../en/hy2.md) | [日本語](../../ja/hy2.md) | [偽中国語](hy2.md) | [ｶﾀﾘｯｼｭ](../../katalish/hy2.md)
+[中文](../../zh/hy2.md) | [English](../../en/hy2.md) | [日本語](../../ja/hy2.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/hy2.md)
 
 Hysteria2 代理（nginx 與 443 端口共有）
 

@@ -1,5 +1,5 @@
 # aria2
-[中文](../zh/aria2.md) | [English](aria2.md) | [日本語](../ja/aria2.md) | [ｶﾀﾘｯｼｭ](../katalish/aria2.md) | [偽中国語](../pcn/aria2.md)
+[中文](../zh/aria2.md) | English | [日本語](../ja/aria2.md) | [ｶﾀﾘｯｼｭ](../katalish/aria2.md) | [偽中国語](../pcn/aria2.md)
 
 Parallel download manager with WebUI and WebDAV share
 

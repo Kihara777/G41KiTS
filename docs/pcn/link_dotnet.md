@@ -1,6 +1,6 @@
 # link_dotnet
 
-[中文](../../zh/link_dotnet.md) | [English](../../en/link_dotnet.md) | [日本語](../../ja/link_dotnet.md) | [偽中国語](link_dotnet.md) | [ｶﾀﾘｯｼｭ](../../katalish/link_dotnet.md)
+[中文](../../zh/link_dotnet.md) | [English](../../en/link_dotnet.md) | [日本語](../../ja/link_dotnet.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/link_dotnet.md)
 
 .NET SDK。
 

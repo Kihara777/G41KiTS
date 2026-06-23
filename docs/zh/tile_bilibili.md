@@ -1,5 +1,5 @@
 # tile_bilibili
-[中文](tile_bilibili.md) | [English](../en/tile_bilibili.md) | [日本語](../ja/tile_bilibili.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_bilibili.md) | [偽中国語](../pcn/tile_bilibili.md)
+中文 | [English](../en/tile_bilibili.md) | [日本語](../ja/tile_bilibili.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_bilibili.md) | [偽中国語](../pcn/tile_bilibili.md)
 
 Bilibili 主页磁贴。
 

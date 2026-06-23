@@ -1,5 +1,5 @@
 # autoheal
-[中文](autoheal.md) | [English](../en/autoheal.md) | [日本語](../ja/autoheal.md) | [ｶﾀﾘｯｼｭ](../katalish/autoheal.md) | [偽中国語](../pcn/autoheal.md)
+中文 | [English](../en/autoheal.md) | [日本語](../ja/autoheal.md) | [ｶﾀﾘｯｼｭ](../katalish/autoheal.md) | [偽中国語](../pcn/autoheal.md)
 
 自动重启不健康的 Docker 容器
 

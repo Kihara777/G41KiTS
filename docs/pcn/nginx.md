@@ -1,6 +1,6 @@
 # nginx
 
-[中文](../../zh/nginx.md) | [English](../../en/nginx.md) | [日本語](../../ja/nginx.md) | [偽中国語](nginx.md) | [ｶﾀﾘｯｼｭ](../../katalish/nginx.md)
+[中文](../../zh/nginx.md) | [English](../../en/nginx.md) | [日本語](../../ja/nginx.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/nginx.md)
 
 TLS 1.3 / HTTP/3 門関、全後端之逆代理
 

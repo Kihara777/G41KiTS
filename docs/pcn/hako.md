@@ -1,6 +1,6 @@
 # hako
 
-[中文](../../zh/hako.md) | [English](../../en/hako.md) | [日本語](../../ja/hako.md) | [偽中国語](hako.md) | [ｶﾀﾘｯｼｭ](../../katalish/hako.md)
+[中文](../../zh/hako.md) | [English](../../en/hako.md) | [日本語](../../ja/hako.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/hako.md)
 
 Web 書類管理者（公開 WebDAV 共有付）
 

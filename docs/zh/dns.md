@@ -1,5 +1,5 @@
 # dns
-[中文](dns.md) | [English](../en/dns.md) | [日本語](../ja/dns.md) | [ｶﾀﾘｯｼｭ](../katalish/dns.md) | [偽中国語](../pcn/dns.md)
+中文 | [English](../en/dns.md) | [日本語](../ja/dns.md) | [ｶﾀﾘｯｼｭ](../katalish/dns.md) | [偽中国語](../pcn/dns.md)
 
 AdGuard 递归 DNS，支持 DoT/DoH/DoQ
 

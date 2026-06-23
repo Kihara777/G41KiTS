@@ -1,5 +1,5 @@
 # tile_kihara777
-[中文](../zh/tile_kihara777.md) | [English](tile_kihara777.md) | [日本語](../ja/tile_kihara777.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_kihara777.md) | [偽中国語](../pcn/tile_kihara777.md)
+[中文](../zh/tile_kihara777.md) | English | [日本語](../ja/tile_kihara777.md) | [ｶﾀﾘｯｼｭ](../katalish/tile_kihara777.md) | [偽中国語](../pcn/tile_kihara777.md)
 
 GitHub profile tile.
 

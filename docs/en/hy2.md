@@ -1,5 +1,5 @@
 # hy2
-[中文](../zh/hy2.md) | [English](hy2.md) | [日本語](../ja/hy2.md) | [ｶﾀﾘｯｼｭ](../katalish/hy2.md) | [偽中国語](../pcn/hy2.md)
+[中文](../zh/hy2.md) | English | [日本語](../ja/hy2.md) | [ｶﾀﾘｯｼｭ](../katalish/hy2.md) | [偽中国語](../pcn/hy2.md)
 
 Hysteria2 proxy sharing port 443 with nginx via port reuse
 
