@@ -119,7 +119,6 @@ nginx 代理通公開向服務。
 | KITS 部品体系完全定義 | [kits/README.md](../../kits/README.md) |
 | 資産於関声明 | [NOTICE.md](./NOTICE.md) |
 | 記録 | [MAINTENANCE.md](./MAINTENANCE.md) |
-| 代理（構造、部品体系、開発） | [AGENTS.md](../../AGENTS.md) |
 
 ## 作者
 
