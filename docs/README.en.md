@@ -112,13 +112,6 @@ Static link tiles on the homepage pointing to external downloads (no Docker serv
 | mail | MailKits — Cloudflare Email Workers transparent proxy | [docs/en/tile_mail.md](en/tile_mail.md) |
 | kihara777 | GitHub profile — projects, contributions & contact | [docs/en/tile_kihara777.md](en/tile_kihara777.md) |
 
-## Spec
-
-| Description | Doc |
-|-------------|-----|
-| KITS module system full definition | [kits/README.md](../kits/README.md) |
-| Third-party assets notice | [NOTICE.md](NOTICE.en.md) |
-| Maintenance log | [MAINTENANCE.md](MAINTENANCE.en.md) |
 
 ## Author
 

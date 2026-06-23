@@ -112,13 +112,6 @@ nginx 代理通公開向服務。
 | mail | MailKits — Cloudflare Email Workers 透過郵件代理 | [docs/pcn/tile_mail.md](./tile_mail.md) |
 | kihara777 | GitHub 概要 — 計画、貢献、連絡先 | [docs/pcn/tile_kihara777.md](./tile_kihara777.md) |
 
-## 仕様
-
-| 説明 | 文書 |
-|------|-------------|
-| KITS 部品体系完全定義 | [kits/README.md](../../kits/README.md) |
-| 資産於関声明 | [NOTICE.md](./NOTICE.md) |
-| 記録 | [MAINTENANCE.md](./MAINTENANCE.md) |
 
 ## 作者
 

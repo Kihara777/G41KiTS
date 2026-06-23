@@ -112,13 +112,6 @@ Both ﾓｰﾄﾞ ｱｰ 任意. ｲﾌ どちらもない exists, `init` skips 
 | mail | MailKits — Cloudflare Email ﾜｰｶｰ 透過 ﾌﾟﾛｸｼ | [docs/katalish/tile_mail.md](./tile_mail.md) |
 | kihara777 | GitHub ﾌﾟﾛﾌｧｲﾙ — ﾌﾟﾛｼﾞｪｸﾄ, 貢献 & 連絡 | [docs/katalish/tile_kihara777.md](./tile_kihara777.md) |
 
-## 仕様
-
-| ﾃﾞｨｽｸﾘﾌﾟｼｮﾝ | Doc |
-|-------------|-----|
-| KITS ﾓｼﾞｭｰﾙ ｼｽﾃﾑ ﾌﾙ 定義 | [kits/README.md](../../kits/README.md) |
-| ｻｰﾄﾞ-ﾊﾟｰﾃｨ ｱｾｯﾂ notice | [NOTICE.md](./NOTICE.md) |
-| ﾒﾝﾃﾅﾝｽ log | [MAINTENANCE.md](./MAINTENANCE.md) |
 
 ## 作者
 

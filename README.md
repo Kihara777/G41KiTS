@@ -112,13 +112,6 @@ EOF
 | mail | MailKits — Cloudflare Email Workers 透明邮件代理 | [docs/zh/tile_mail.md](docs/zh/tile_mail.md) |
 | kihara777 | GitHub 个人主页 — 项目、贡献与联系方式 | [docs/zh/tile_kihara777.md](docs/zh/tile_kihara777.md) |
 
-## 规范
-
-| 说明 | 文档 |
-|------|------|
-| KITS 模块系统完整定义 | [kits/README.md](kits/README.md) |
-| 第三方资产声明 | [NOTICE.md](NOTICE.md) |
-| 维护记录 | [MAINTENANCE.md](MAINTENANCE.md) |
 
 ## 作者
 
