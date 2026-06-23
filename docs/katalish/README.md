@@ -47,7 +47,7 @@ Core services providing gateway, storage, certs, ｱﾝﾄﾞ site skeleton.
 
 | ﾓｼﾞｭｰﾙ | Description | Docs |
 |--------|-------------|------|
-| nginx | TLS 1.3 / HTTP/3 gateway, reverse proxy to all backends | [docs/en/nginx.md](en/nginx.md) |
+| nginx | TLS 1.3 / HTTP/3 gateway, reverse proxy to ｵｰﾙ backends | [docs/en/nginx.md](en/nginx.md) |
 | redis | Redis config store + Node.js HTTP API bridge | [docs/en/redis.md](en/redis.md) |
 | acme | SSL certificate management (acme.sh + ZeroSSL/Cloudflare DNS) | [docs/en/acme.md](en/acme.md) |
 | autoheal | Auto-restart unhealthy Docker containers | [docs/en/autoheal.md](en/autoheal.md) |
@@ -85,7 +85,7 @@ Homepage tiles, app list, short link ｼｽﾃﾑ.
 
 | ﾓｼﾞｭｰﾙ | Description | Docs |
 |--------|-------------|------|
-| apps | Application list tile — homepage entry ﾌｫｱ all services | [docs/en/tile_apps.md](en/tile_apps.md) |
+| apps | Application list tile — homepage entry ﾌｫｱ ｵｰﾙ services | [docs/en/tile_apps.md](en/tile_apps.md) |
 | links | Short link ｼｽﾃﾑ proxied through Redis API | [docs/en/tile_links.md](en/tile_links.md) |
 | shortlinks | Dynamic short links proxied through Redis API | [docs/en/shortlinks.md](en/shortlinks.md) |
 
