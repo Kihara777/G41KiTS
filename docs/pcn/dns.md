@@ -1,6 +1,6 @@
 # dns
 
-[中文](../../zh/dns.md) | [English](../../en/dns.md) | [日本語](../../ja/dns.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/dns.md)
+[中文](../zh/dns.md) | [English](../en/dns.md) | [日本語](../ja/dns.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../katalish/dns.md)
 
 AdGuard 再帰 DNS（DoT/DoH/DoQ 対応）
 

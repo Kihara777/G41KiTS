@@ -1,6 +1,6 @@
 # ｱｸﾑｴ
 
-[中文](../../zh/acme.md) | [English](../../en/acme.md) | [日本語](../../ja/acme.md) | ｶﾀﾘｯｼｭ | [偽中国語](../../pcn/acme.md)
+[中文](../zh/acme.md) | [English](../en/acme.md) | [日本語](../ja/acme.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/acme.md)
 
 SSL ｸｱｰﾄｲﾌｲｸｴｲﾄ ﾑｱﾝｴｲｼﾞﾒﾝﾄ (ｱｸﾑｴ.ｼ + ｽﾞｱｰｵｽｽﾙ/ｸﾙｵｳﾄﾞﾌﾙｱｰｴ DNS)
 

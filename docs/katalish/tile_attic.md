@@ -1,6 +1,6 @@
 # tile_attic
 
-[中文](../../zh/tile_attic.md) | [English](../../en/tile_attic.md) | [日本語](../../ja/tile_attic.md) | ｶﾀﾘｯｼｭ | [偽中国語](../../pcn/tile_attic.md)
+[中文](../zh/tile_attic.md) | [English](../en/tile_attic.md) | [日本語](../ja/tile_attic.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/tile_attic.md)
 
 ｱﾄﾄｲｸ ﾆｯｸｽ ﾌﾞｲﾝｱｰｲ ｸｱﾁｴ ﾄｲﾙｴ.
 

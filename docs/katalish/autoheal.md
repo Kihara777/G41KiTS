@@ -1,6 +1,6 @@
 # ｵｳﾄｵﾎｲｰﾙ
 
-[中文](../../zh/autoheal.md) | [English](../../en/autoheal.md) | [日本語](../../ja/autoheal.md) | ｶﾀﾘｯｼｭ | [偽中国語](../../pcn/autoheal.md)
+[中文](../zh/autoheal.md) | [English](../en/autoheal.md) | [日本語](../ja/autoheal.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/autoheal.md)
 
 ｵｳﾄｵ-ﾙｴｽﾄｱｰﾄ ｱﾝﾎｲｰﾙｽﾞｲ ﾄﾞｯｶｰ ｸｵﾝﾄｴｲﾝｱｰｽ
 

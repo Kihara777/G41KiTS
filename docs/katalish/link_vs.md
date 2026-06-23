@@ -1,6 +1,6 @@
 # link_vs
 
-[中文](../../zh/link_vs.md) | [English](../../en/link_vs.md) | [日本語](../../ja/link_vs.md) | ｶﾀﾘｯｼｭ | [偽中国語](../../pcn/link_vs.md)
+[中文](../zh/link_vs.md) | [English](../en/link_vs.md) | [日本語](../ja/link_vs.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/link_vs.md)
 
 ﾌﾞｲｽｱｱﾙ ｽﾄｱﾄﾞｲｵ ｲﾄﾞｴ.
 

@@ -1,6 +1,6 @@
 # ﾎｱｸｵ
 
-[中文](../../zh/hako.md) | [English](../../en/hako.md) | [日本語](../../ja/hako.md) | ｶﾀﾘｯｼｭ | [偽中国語](../../pcn/hako.md)
+[中文](../zh/hako.md) | [English](../en/hako.md) | [日本語](../ja/hako.md) | ｶﾀﾘｯｼｭ | [偽中国語](../pcn/hako.md)
 
 ｳｴﾌﾞ ﾌｲﾙｴ ﾑｱﾝｱｼﾞｴﾗ ｳｨｽﾞ ﾌﾟｱﾌﾞﾙｲｸ WebDAV ｼｱｰｴ
 

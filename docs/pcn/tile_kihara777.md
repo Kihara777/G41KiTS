@@ -1,6 +1,6 @@
 # tile_kihara777
 
-[中文](../../zh/tile_kihara777.md) | [English](../../en/tile_kihara777.md) | [日本語](../../ja/tile_kihara777.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/tile_kihara777.md)
+[中文](../zh/tile_kihara777.md) | [English](../en/tile_kihara777.md) | [日本語](../ja/tile_kihara777.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../katalish/tile_kihara777.md)
 
 GitHub 概要磁貼。
 

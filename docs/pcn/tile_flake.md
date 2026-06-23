@@ -1,6 +1,6 @@
 # tile_flake
 
-[中文](../../zh/tile_flake.md) | [English](../../en/tile_flake.md) | [日本語](../../ja/tile_flake.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../../katalish/tile_flake.md)
+[中文](../zh/tile_flake.md) | [English](../en/tile_flake.md) | [日本語](../ja/tile_flake.md) | 偽中国語 | [ｶﾀﾘｯｼｭ](../katalish/tile_flake.md)
 
 Nix flake 倉庫 — 定制包、overlay、NixOS 部品
 
