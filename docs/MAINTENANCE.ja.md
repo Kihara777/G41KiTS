@@ -8,6 +8,12 @@
 - blc compose.yaml に `custom_public/templates` ボリュームマウントを追加（コンテナパス `/mnt/data/data/custom_public/templates`）
 - g41.sh に `blc_template` タイプのインストール・アンインストール・チェックの全処理を追加（kits_add / kits_del / kits_check）
 - blc 三言語ドキュメント（ja/en/zh）にテンプレート配布の使い方を追記
+- blct_tts モジュール新規作成: blivechat 向け TTS 音声読み上げカスタムテンプレート
+  - デフォルト風ビジュアル表示 + Web Speech API 読み上げのハイブリッド
+  - 言語自動判定（仮名→ja-JP、中国語エンジンフォールバック）
+  - ダブルキュー（通常コメント順次 + ギフト/メンバーシップ割り込み独立キュー）
+  - 中断コメント自動リプレイ、右クリック設定パネル（localStorage 保存）
+  - blc server.conf 修正: custom_public ロケーションに proxy_pass 追加
 
 ## 2026-06-20
 

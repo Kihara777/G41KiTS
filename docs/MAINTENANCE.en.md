@@ -8,6 +8,12 @@
 - Added `custom_public/templates` volume mount to blc compose.yaml (container path `/mnt/data/data/custom_public/templates`)
 - Added full blc_template type handling to g41.sh: install, uninstall, and check (kits_add / kits_del / kits_check)
 - Updated blc trilingual docs (ja/en/zh) with template distribution usage
+- Created blct_tts module: TTS voice broadcast custom template for blivechat
+  - Hybrid mode: default-style visual rendering + Web Speech API voice
+  - Language-adaptive: kana → ja-JP with Chinese engine fallback
+  - Dual queue: sequential normal + priority queue for gifts/members
+  - Interrupted danmaku replay, right-click settings panel (localStorage)
+  - Fixed blc server.conf: added proxy_pass to custom_public location
 
 ## 2026-06-20
 
