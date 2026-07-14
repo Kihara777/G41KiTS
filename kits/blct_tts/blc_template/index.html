@@ -94,9 +94,9 @@
     <div id="chat-overlay"></div>
     <div id="settings-panel">
         <h3>⚙ TTS 设置</h3>
-        <label><span>语速 rate</span><input type="range" id="cfg-rate" min="0.5" max="10" step="0.1"><span class="val" id="val-rate"></span></label>
-        <label><span>音调 pitch</span><input type="range" id="cfg-pitch" min="0" max="2" step="0.05"><span class="val" id="val-pitch"></span></label>
-        <label><span>音量 volume</span><input type="range" id="cfg-volume" min="0" max="1" step="0.05"><span class="val" id="val-volume"></span></label>
+        <label><span>语速 rate</span><input type="range" id="cfg-rate" min="0.5" max="10" step="0.1"><input type="number" id="cfg-rate-num" min="0.5" max="10" step="0.1" style="width:50px"></label>
+        <label><span>音调 pitch</span><input type="range" id="cfg-pitch" min="0" max="2" step="0.05"><input type="number" id="cfg-pitch-num" min="0" max="2" step="0.05" style="width:50px"></label>
+        <label><span>音量 volume</span><input type="range" id="cfg-volume" min="0" max="1" step="0.05"><input type="number" id="cfg-volume-num" min="0" max="1" step="0.05" style="width:50px"></label>
         <label><span>最低礼物价</span><input type="number" id="cfg-minGift" min="0" step="1"><span class="val">元</span></label>
         <label><span>最短弹幕</span><input type="number" id="cfg-minLen" min="0" max="50"><span class="val">字</span></label>
         <label><span>最长播报</span><input type="number" id="cfg-maxLen" min="10" max="200"><span class="val">字</span></label>
@@ -240,24 +240,27 @@
         let currentSource = 'none'; // 'none' | 'normal' | 'priority'
         let interruptedText = null; // 被插队打断的弹幕文本
 
-        /** 检测文本语言：含假名 → 日语，其余 → 中文 */
+        /** 检测文本语言：含假名/日文符号 → 日语，其余 → 中文 */
         function detectLang(text) {
-            if (/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'ja-JP';
+            // 平假名 / 片假名 / 日文特有标点（「」『』・〜） / 半角片假名
+            if (/[\u3040-\u309F\u30A0-\u30FF\u300C-\u300F\u300E-\u300F\u30FB\u301C\uFF65-\uFF9F]/.test(text)) return 'ja-JP';
             return 'zh-CN';
         }
 
-        /** 按语言选择最优语音引擎 */
+        /** 按语言选择最优语音引擎，日语无可用引擎时回退中文引擎 */
         function pickVoice(lang, voices) {
-            if (lang === 'ja-JP') {
-                return voices.find(v => v.lang === 'ja-JP' && (v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Microsoft')))
-                    || voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google'))
-                    || voices.find(v => v.lang === 'ja-JP')
-                    || voices.find(v => v.lang.startsWith('ja'));
-            }
-            return voices.find(v => v.lang === 'zh-CN' && (v.name.includes('Xiao') || v.name.includes('Yun') || v.name.includes('Microsoft')))
+            const selectJa = () =>
+                voices.find(v => v.lang === 'ja-JP' && (v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Microsoft')))
+                || voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google'))
+                || voices.find(v => v.lang === 'ja-JP')
+                || voices.find(v => v.lang.startsWith('ja'));
+            const selectZh = () =>
+                voices.find(v => v.lang === 'zh-CN' && (v.name.includes('Xiao') || v.name.includes('Yun') || v.name.includes('Microsoft')))
                 || voices.find(v => v.lang === 'zh-CN' && v.name.includes('Google'))
                 || voices.find(v => v.lang === 'zh-CN')
                 || voices.find(v => v.lang.startsWith('zh'));
+            if (lang === 'ja-JP') return selectJa() || selectZh(); // 回退中文引擎读日语
+            return selectZh();
         }
 
         function makeUtterance(text) {
@@ -435,19 +438,18 @@
 
         const panel = document.getElementById('settings-panel');
         const sliders = {
-            rate:     { el: document.getElementById('cfg-rate'),    val: document.getElementById('val-rate') },
-            pitch:    { el: document.getElementById('cfg-pitch'),   val: document.getElementById('val-pitch') },
-            volume:   { el: document.getElementById('cfg-volume'),  val: document.getElementById('val-volume') },
+            rate:     { el: document.getElementById('cfg-rate'),    num: document.getElementById('cfg-rate-num') },
+            pitch:    { el: document.getElementById('cfg-pitch'),   num: document.getElementById('cfg-pitch-num') },
+            volume:   { el: document.getElementById('cfg-volume'),  num: document.getElementById('cfg-volume-num') },
             minGift:  document.getElementById('cfg-minGift'),
             minLen:   document.getElementById('cfg-minLen'),
             maxLen:   document.getElementById('cfg-maxLen'),
         };
-        const cfgMap = { rate: 'rate', pitch: 'pitch', volume: 'volume', minGift: 'minGiftPrice', minLen: 'minTextLen', maxLen: 'maxTextLen' };
 
         function syncUI() {
-            sliders.rate.el.value = CONFIG.rate; sliders.rate.val.textContent = CONFIG.rate.toFixed(1);
-            sliders.pitch.el.value = CONFIG.pitch; sliders.pitch.val.textContent = CONFIG.pitch.toFixed(2);
-            sliders.volume.el.value = CONFIG.volume; sliders.volume.val.textContent = CONFIG.volume.toFixed(2);
+            sliders.rate.el.value = CONFIG.rate; sliders.rate.num.value = CONFIG.rate;
+            sliders.pitch.el.value = CONFIG.pitch; sliders.pitch.num.value = CONFIG.pitch;
+            sliders.volume.el.value = CONFIG.volume; sliders.volume.num.value = CONFIG.volume;
             sliders.minGift.value = CONFIG.minGiftPrice;
             sliders.minLen.value = CONFIG.minTextLen;
             sliders.maxLen.value = CONFIG.maxTextLen;
@@ -465,9 +467,18 @@
         document.addEventListener('click', e => { if (!panel.contains(e.target)) hidePanel(); });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') hidePanel(); });
 
-        sliders.rate.el.oninput = () => { CONFIG.rate = parseFloat(sliders.rate.el.value); sliders.rate.val.textContent = CONFIG.rate.toFixed(1); saveSettings(); };
-        sliders.pitch.el.oninput = () => { CONFIG.pitch = parseFloat(sliders.pitch.el.value); sliders.pitch.val.textContent = CONFIG.pitch.toFixed(2); saveSettings(); };
-        sliders.volume.el.oninput = () => { CONFIG.volume = parseFloat(sliders.volume.el.value); sliders.volume.val.textContent = CONFIG.volume.toFixed(2); saveSettings(); };
+        function bindSlider(key, decimals) {
+            const s = sliders[key];
+            const sync = (from) => {
+                const v = parseFloat(from.value); if (isNaN(v)) return;
+                CONFIG[key] = v; s.el.value = v; s.num.value = v; saveSettings();
+            };
+            s.el.oninput = () => sync(s.el);
+            s.num.onchange = () => sync(s.num);
+        }
+        bindSlider('rate', 1);
+        bindSlider('pitch', 2);
+        bindSlider('volume', 2);
         sliders.minGift.onchange = () => { CONFIG.minGiftPrice = parseInt(sliders.minGift.value) || 0; saveSettings(); };
         sliders.minLen.onchange = () => { CONFIG.minTextLen = parseInt(sliders.minLen.value) || 0; saveSettings(); };
         sliders.maxLen.onchange = () => { CONFIG.maxTextLen = parseInt(sliders.maxLen.value) || 80; saveSettings(); };
