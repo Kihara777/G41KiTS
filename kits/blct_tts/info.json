@@ -1,0 +1,8 @@
+{
+  "name": "TTS语音播报",
+  "desc": "基于 Web Speech API 的弹幕语音播报模板 — 弹幕/礼物/上舰/醒目留言实时朗读",
+  "depends": [
+    "blc"
+  ],
+  "compose": "none"
+}

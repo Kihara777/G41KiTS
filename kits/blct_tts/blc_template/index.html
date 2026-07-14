@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
+    <title>弹幕语音播报</title>
+</head>
+<body>
+    <!-- 页面无视觉元素，仅用于音频播报 -->
+    <script src="./blcsdk.js"></script>
+    <script>
+        // ==================== 配置 ====================
+        const CONFIG = {
+            rate: 0.9,              // 语速（0.1~10）
+            pitch: 1.0,             // 音调（0~2）
+            volume: 1.0,            // 音量（0~1）
+            lang: 'zh-CN',          // 播报语言
+            minGiftPrice: 0,        // 礼物最低价格（元），低于此不播报，0=全部播报
+            minTextLen: 1,          // 弹幕最短字符数，低于此不播报
+            maxTextLen: 80,         // 弹幕最长播报字符数，超出截断
+            debug: false,           // 调试模式（可通过 URL 参数 ?debug=1 开启）
+        };
+
+        // 从 URL 参数读取调试开关
+        if (/[?&]debug=1/.test(location.search)) {
+            CONFIG.debug = true;
+        }
+
+        // ==================== 消息处理器 ====================
+        class TTSMsgHandler extends blcsdk.MsgHandler {
+
+            addMsg(msg) {
+                if (CONFIG.debug) {
+                    console.debug('[TTS] 收到消息:', msg.type, msg);
+                }
+
+                const text = this.extractText(msg);
+                if (text) {
+                    if (CONFIG.debug) {
+                        console.debug('[TTS] 播报:', text);
+                    }
+                    this.speak(text);
+                }
+            }
+
+            /**
+             * 根据消息类型提取播报文本
+             * @param {Object} msg - blcsdk 消息对象
+             * @returns {string|null} 待播报文本，若为 null 则忽略
+             */
+            extractText(msg) {
+                const MT = blcsdk.MsgType;
+                const GL = blcsdk.GuardLevel;
+
+                switch (msg.type) {
+                    case MT.TEXT: {
+                        // 普通弹幕（内容可能含表情图片，取纯文本 content）
+                        const content = (msg.content || '').trim();
+                        if (!content || content.length < CONFIG.minTextLen) return null;
+                        const displayText = content.length > CONFIG.maxTextLen
+                            ? content.slice(0, CONFIG.maxTextLen) + '…等'
+                            : content;
+                        return `${msg.authorName || '有人'}：${displayText}`;
+                    }
+
+                    case MT.GIFT: {
+                        // 礼物消息
+                        const price = msg.price || 0;
+                        const totalFreeCoin = msg.totalFreeCoin || 0;
+
+                        // 价格阈值过滤（0 元 = 免费礼物或未知价格）
+                        if (price < CONFIG.minGiftPrice && totalFreeCoin === 0) return null;
+
+                        const name = msg.authorName || '有人';
+                        const giftName = msg.giftName || '礼物';
+                        const num = msg.num || 1;
+
+                        if (price > 0) {
+                            return `感谢 ${name} 送的 ${giftName}，${num}个，共${price}元`;
+                        }
+                        return `感谢 ${name} 送的 ${giftName} x ${num}`;
+                    }
+
+                    case MT.MEMBER: {
+                        // 上舰消息（提督/总督/舰长）
+                        const name = msg.authorName || '有人';
+                        const guardLevel = msg.privilegeType;
+                        const num = msg.num || 1;
+                        const unit = msg.unit || '月';
+
+                        let levelText = '';
+                        if (guardLevel === GL.LV3) levelText = '提督';
+                        else if (guardLevel === GL.LV2) levelText = '总督';
+                        else if (guardLevel === GL.LV1) levelText = '舰长';
+
+                        if (levelText) {
+                            return `感谢 ${name} 开通${levelText} ${num}${unit}`;
+                        }
+                        return `感谢 ${name} 上舰 ${num}${unit}`;
+                    }
+
+                    case MT.SUPER_CHAT: {
+                        // 醒目留言
+                        const name = msg.authorName || '有人';
+                        const content = (msg.content || '').trim();
+                        const price = msg.price || 0;
+
+                        if (price > 0) {
+                            return `${name} 的${price}元醒目留言：${content}`;
+                        }
+                        return `${name} 的醒目留言：${content}`;
+                    }
+
+                    default:
+                        return null;
+                }
+            }
+
+            /**
+             * 使用浏览器内置 TTS 播报文本
+             * @param {string} text
+             */
+            speak(text) {
+                if (!window.speechSynthesis) {
+                    console.warn('[TTS] 当前浏览器不支持 Web Speech API');
+                    return;
+                }
+
+                // 取消正在播放的语音，避免重叠
+                // 若希望排队播放，注释掉下面这行即可
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = CONFIG.lang;
+                utterance.rate = CONFIG.rate;
+                utterance.pitch = CONFIG.pitch;
+                utterance.volume = CONFIG.volume;
+
+                // 语音选择降级链：Edge 中文 → Google 中文 → 任意 zh-* → 默认
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    // 1) 优先 Edge 中文语音（如 Xiaoxiao，自然度最高）
+                    let voice = voices.find(v =>
+                        v.lang === 'zh-CN' &&
+                        (v.name.includes('Xiao') || v.name.includes('Yun') || v.name.includes('Microsoft'))
+                    );
+                    // 2) Google 中文语音
+                    if (!voice) {
+                        voice = voices.find(v =>
+                            v.lang === 'zh-CN' && v.name.includes('Google')
+                        );
+                    }
+                    // 3) 任意 zh-CN 语音
+                    if (!voice) {
+                        voice = voices.find(v => v.lang === 'zh-CN');
+                    }
+                    // 4) 任意中文语音
+                    if (!voice) {
+                        voice = voices.find(v => v.lang.startsWith('zh'));
+                    }
+
+                    if (voice) {
+                        utterance.voice = voice;
+                        if (CONFIG.debug) {
+                            console.debug('[TTS] 选用语音:', voice.name, voice.lang);
+                        }
+                    }
+                }
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // ==================== 初始化 ====================
+        (async function() {
+            try {
+                // 1. 先设置消息处理器（可以在 init 之前调用）
+                const handler = new TTSMsgHandler();
+                blcsdk.setMsgHandler(handler);
+
+                // 2. 预热语音引擎
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length === 0) {
+                    await new Promise(resolve => {
+                        window.speechSynthesis.onvoiceschanged = () => {
+                            resolve();
+                        };
+                    });
+                    voices = window.speechSynthesis.getVoices();
+                }
+
+                if (CONFIG.debug) {
+                    console.debug('[TTS] 可用语音列表（共' + voices.length + '个）:',
+                        voices.map(v => `${v.name} [${v.lang}]`));
+                }
+
+                // 3. 初始化 blcsdk
+                await blcsdk.init();
+                const version = blcsdk.getBlcVersion();
+                console.log('[TTS] 语音播报模板已就绪，blivechat 版本:', version);
+
+                if (CONFIG.debug) {
+                    console.debug('[TTS] SDK版本:', blcsdk.getVersion());
+                    console.debug('[TTS] 配置:', CONFIG);
+                }
+            } catch (err) {
+                console.error('[TTS] 初始化失败:', err);
+            }
+        })();
+    </script>
+</body>
+</html>
