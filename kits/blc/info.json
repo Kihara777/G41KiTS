@@ -7,6 +7,9 @@
   ],
   "docker": {"service": "blc", "container": "lc"},
   "compose": "hub",
+  "provides": [
+    {"dir": ".lc/custom_public/templates", "accepts": ["blc_template"], "file": "blc_template"}
+  ],
   "local": [{"file": "config.ini", "to": "config.ini"}],
   "persist": ".lc"
 }

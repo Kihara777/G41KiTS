@@ -5,6 +5,7 @@ services:
     volumes:
       - ../../.lc/config.ini:/mnt/data/data/config.ini
       - ../../.lc/database.db:/mnt/data/data/database.db
+      - ../../.lc/custom_public/templates:/mnt/data/data/custom_public/templates
     healthcheck:
       test: ["CMD", "sh", "-c", "wget -q -O /dev/null http://127.0.0.1:12450/ || exit 1"]
       interval: 30s
