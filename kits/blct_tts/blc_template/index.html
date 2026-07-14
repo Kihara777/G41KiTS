@@ -4,207 +4,336 @@
     <meta charset="UTF-8">
     <meta name="referrer" content="no-referrer">
     <title>弹幕语音播报</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: transparent;
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+            font-size: 16px;
+            line-height: 1.4;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,.7);
+        }
+        #chat-overlay {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            display: flex;
+            flex-direction: column-reverse;
+            padding: 0 12px 12px;
+            pointer-events: none;
+        }
+        .msg {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 4px 8px;
+            margin-bottom: 2px;
+            border-radius: 4px;
+            background: rgba(0,0,0,.35);
+            animation: msgIn .25s ease-out;
+            transition: opacity .5s, transform .5s;
+            max-width: 100%;
+            word-break: break-word;
+        }
+        .msg.removing { opacity: 0; transform: translateX(24px); }
+        .msg.gift { background: rgba(233,180,80,.25); }
+        .msg.member { background: rgba(220,80,120,.30); }
+        .msg.sc { background: rgba(230,180,30,.35); border-left: 3px solid #e6b41e; }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .msg-avatar {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: rgba(255,255,255,.1);
+            object-fit: cover;
+        }
+        .msg-body { flex: 1; min-width: 0; }
+        .msg-header { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .msg-name { font-weight: 700; color: #a0d8ef; }
+        .msg-name.owner { color: #ffd700; }
+        .msg-name.admin { color: #ff6b6b; }
+        .msg-badge {
+            font-size: 10px; padding: 0 4px; border-radius: 2px;
+            background: rgba(255,255,255,.15); color: #ccc;
+            line-height: 16px; white-space: nowrap;
+        }
+        .msg-badge.guard-lv3 { background: #d81e06; color: #fff; }
+        .msg-badge.guard-lv2 { background: #e67225; color: #fff; }
+        .msg-badge.guard-lv1 { background: #a068d1; color: #fff; }
+        .msg-badge.medal { background: rgba(255,255,255,.1); }
+        .msg-content { color: #eee; font-size: 15px; margin-top: 1px; }
+        .msg-content .emoji { display: inline-block; height: 1.2em; vertical-align: -.2em; }
+        .msg-price { color: #f5c842; font-weight: 700; }
+        .msg-gift-icon { width: 20px; height: 20px; vertical-align: -.4em; margin: 0 2px; }
+        .msg-translation { color: #8ec8a0; font-size: 13px; margin-top: 1px; font-style: italic; }
+        .msg-sc-content { background: rgba(255,215,0,.08); padding: 4px 8px; border-radius: 3px; margin-top: 2px; font-size: 15px; color: #ffeaa7; }
+    </style>
 </head>
 <body>
-    <!-- 页面无视觉元素，仅用于音频播报 -->
+    <div id="chat-overlay"></div>
     <script src="./blcsdk.js"></script>
     <script>
         // ==================== 配置 ====================
         const CONFIG = {
-            rate: 0.9,              // 语速（0.1~10）
-            pitch: 1.0,             // 音调（0~2）
-            volume: 1.0,            // 音量（0~1）
-            lang: 'zh-CN',          // 播报语言
-            minGiftPrice: 0,        // 礼物最低价格（元），低于此不播报，0=全部播报
-            minTextLen: 1,          // 弹幕最短字符数，低于此不播报
-            maxTextLen: 80,         // 弹幕最长播报字符数，超出截断
-            debug: false,           // 调试模式（可通过 URL 参数 ?debug=1 开启）
+            rate: 0.9, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80,
+            pitch: 1.0, volume: 1.0, lang: 'zh-CN',
+            maxMessages: 30, msgLifetime: 28000, fadeDuration: 500,
+            debug: /[?&]debug=1/.test(location.search),
         };
 
-        // 从 URL 参数读取调试开关
-        if (/[?&]debug=1/.test(location.search)) {
-            CONFIG.debug = true;
+        // ==================== DOM 工具 ====================
+        const overlay = document.getElementById('chat-overlay');
+        const msgMap = {}; // id -> DOM element
+
+        function removeMsg(id, animate = true) {
+            const el = msgMap[id];
+            if (!el) return;
+            if (animate) {
+                el.classList.add('removing');
+                setTimeout(() => { el.remove(); delete msgMap[id]; }, CONFIG.fadeDuration);
+            } else {
+                el.remove(); delete msgMap[id];
+            }
+        }
+
+        function pruneMessages() {
+            const msgs = overlay.querySelectorAll('.msg');
+            const excess = msgs.length - CONFIG.maxMessages;
+            if (excess > 0) {
+                for (let i = 0; i < excess; i++) {
+                    const el = msgs[msgs.length - 1 - i];
+                    if (el && el.dataset.id) removeMsg(el.dataset.id, false);
+                }
+            }
+        }
+
+        function addMsgDom(msg, html) {
+            const el = document.createElement('div');
+            el.className = 'msg ' + msg.typeClass;
+            el.dataset.id = msg.id;
+            el.innerHTML = html;
+            overlay.prepend(el);
+            msgMap[msg.id] = el;
+            pruneMessages();
+            if (msg.type !== blcsdk.MsgType.SUPER_CHAT) {
+                setTimeout(() => removeMsg(msg.id), CONFIG.msgLifetime);
+            }
+            return el;
+        }
+
+        // ==================== 视觉渲染 ====================
+        function guardBadge(level) {
+            const GL = blcsdk.GuardLevel;
+            if (level === GL.LV3) return '<span class="msg-badge guard-lv3">总督</span>';
+            if (level === GL.LV2) return '<span class="msg-badge guard-lv2">提督</span>';
+            if (level === GL.LV1) return '<span class="msg-badge guard-lv1">舰长</span>';
+            return '';
+        }
+
+        function medalBadge(name, level) {
+            if (!name || level <= 0) return '';
+            return `<span class="msg-badge medal">${esc(name)} ${level}</span>`;
+        }
+
+        function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        function authorHtml(msg) {
+            const AT = blcsdk.AuthorType;
+            const nameClass = msg.authorType === AT.OWNER ? 'owner' : (msg.authorType === AT.ADMIN ? 'admin' : '');
+            const name = esc(msg.authorName || '');
+            const gb = guardBadge(msg.privilegeType);
+            const mb = medalBadge(msg.medalName, msg.medalLevel);
+            return `<span class="msg-name ${nameClass}">${name}</span>${gb}${mb}`;
+        }
+
+        function contentPartsHtml(parts) {
+            if (!parts || !parts.length) return '';
+            const CPT = blcsdk.ContentPartType;
+            return parts.map(p => {
+                if (p.type === CPT.IMAGE) return `<img class="emoji" src="${esc(p.url)}" alt="${esc(p.text)}" onerror="this.style.display='none'">`;
+                return esc(p.text);
+            }).join('');
+        }
+
+        function renderText(msg) {
+            return `
+                <img class="msg-avatar" src="${esc(msg.avatarUrl)}" onerror="this.style.display='none'" loading="lazy">
+                <div class="msg-body">
+                    <div class="msg-header">${authorHtml(msg)}</div>
+                    <div class="msg-content">${contentPartsHtml(msg.contentParts) || esc(msg.content)}</div>
+                    ${msg.translation ? `<div class="msg-translation">${esc(msg.translation)}</div>` : ''}
+                </div>`;
+        }
+
+        function renderGift(msg) {
+            const price = msg.price || 0;
+            const priceStr = price > 0 ? ` <span class="msg-price">¥${price}</span>` : '';
+            return `
+                <img class="msg-avatar" src="${esc(msg.avatarUrl)}" onerror="this.style.display='none'" loading="lazy">
+                <div class="msg-body">
+                    <div class="msg-header">${authorHtml(msg)}</div>
+                    <div class="msg-content">
+                        ${msg.giftIconUrl ? `<img class="msg-gift-icon" src="${esc(msg.giftIconUrl)}" onerror="this.style.display='none'">` : ''}
+                        送出 ${esc(msg.giftName)} ×${msg.num}${priceStr}
+                    </div>
+                </div>`;
+        }
+
+        function renderMember(msg) {
+            const GL = blcsdk.GuardLevel;
+            const labels = { [GL.LV3]: '总督', [GL.LV2]: '提督', [GL.LV1]: '舰长' };
+            const label = labels[msg.privilegeType] || '舰长';
+            const price = msg.price > 0 ? ` <span class="msg-price">¥${msg.price}</span>` : '';
+            return `
+                <img class="msg-avatar" src="${esc(msg.avatarUrl)}" onerror="this.style.display='none'" loading="lazy">
+                <div class="msg-body">
+                    <div class="msg-header">${authorHtml(msg)}</div>
+                    <div class="msg-content">🎉 开通了 <b>${label}</b> ${msg.num}${msg.unit || '月'}${price}</div>
+                </div>`;
+        }
+
+        function renderSuperChat(msg) {
+            const price = msg.price > 0 ? ` <span class="msg-price">¥${msg.price}</span>` : '';
+            return `
+                <img class="msg-avatar" src="${esc(msg.avatarUrl)}" onerror="this.style.display='none'" loading="lazy">
+                <div class="msg-body">
+                    <div class="msg-header">${authorHtml(msg)} ${price}</div>
+                    <div class="msg-sc-content">${esc(msg.content)}</div>
+                    ${msg.translation ? `<div class="msg-translation">${esc(msg.translation)}</div>` : ''}
+                </div>`;
+        }
+
+        // ==================== TTS 引擎 ====================
+        function speak(text) {
+            if (!window.speechSynthesis) { console.warn('[TTS] 不支持 Web Speech API'); return; }
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = CONFIG.lang; u.rate = CONFIG.rate; u.pitch = CONFIG.pitch; u.volume = CONFIG.volume;
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length) {
+                let v = voices.find(v => v.lang === 'zh-CN' && (v.name.includes('Xiao') || v.name.includes('Yun') || v.name.includes('Microsoft')))
+                    || voices.find(v => v.lang === 'zh-CN' && v.name.includes('Google'))
+                    || voices.find(v => v.lang === 'zh-CN')
+                    || voices.find(v => v.lang.startsWith('zh'));
+                if (v) { u.voice = v; if (CONFIG.debug) console.debug('[TTS] 语音:', v.name, v.lang); }
+            }
+            window.speechSynthesis.speak(u);
+        }
+
+        function extractTtsText(msg) {
+            const MT = blcsdk.MsgType;
+            const GL = blcsdk.GuardLevel;
+            switch (msg.type) {
+                case MT.TEXT: {
+                    const c = (msg.content || '').trim();
+                    if (!c || c.length < CONFIG.minTextLen) return null;
+                    const t = c.length > CONFIG.maxTextLen ? c.slice(0, CONFIG.maxTextLen) + '…' : c;
+                    return `${msg.authorName || '有人'}：${t}`;
+                }
+                case MT.GIFT: {
+                    if (msg.price < CONFIG.minGiftPrice && !msg.totalFreeCoin) return null;
+                    const n = msg.authorName || '有人', g = msg.giftName || '礼物', c = msg.num || 1;
+                    return msg.price > 0 ? `感谢 ${n} 送的 ${g}，${c}个，共${msg.price}元` : `感谢 ${n} 送的 ${g} x ${c}`;
+                }
+                case MT.MEMBER: {
+                    const n = msg.authorName || '有人', c = msg.num || 1, u = msg.unit || '月';
+                    const labels = { [GL.LV3]: '提督', [GL.LV2]: '总督', [GL.LV1]: '舰长' };
+                    const l = labels[msg.privilegeType];
+                    return l ? `感谢 ${n} 开通${l} ${c}${u}` : `感谢 ${n} 上舰 ${c}${u}`;
+                }
+                case MT.SUPER_CHAT: {
+                    const n = msg.authorName || '有人', c = (msg.content || '').trim(), p = msg.price || 0;
+                    return p > 0 ? `${n} 的${p}元醒目留言：${c}` : `${n} 的醒目留言：${c}`;
+                }
+                default: return null;
+            }
         }
 
         // ==================== 消息处理器 ====================
-        class TTSMsgHandler extends blcsdk.MsgHandler {
-
+        class HybridHandler extends blcsdk.MsgHandler {
             addMsg(msg) {
-                if (CONFIG.debug) {
-                    console.debug('[TTS] 收到消息:', msg.type, msg);
-                }
-
-                const text = this.extractText(msg);
-                if (text) {
-                    if (CONFIG.debug) {
-                        console.debug('[TTS] 播报:', text);
-                    }
-                    this.speak(text);
-                }
-            }
-
-            /**
-             * 根据消息类型提取播报文本
-             * @param {Object} msg - blcsdk 消息对象
-             * @returns {string|null} 待播报文本，若为 null 则忽略
-             */
-            extractText(msg) {
+                if (CONFIG.debug) console.debug('[Hybrid]', msg.type, msg);
                 const MT = blcsdk.MsgType;
-                const GL = blcsdk.GuardLevel;
-
+                let typeClass = '';
+                let html = '';
                 switch (msg.type) {
-                    case MT.TEXT: {
-                        // 普通弹幕（内容可能含表情图片，取纯文本 content）
-                        const content = (msg.content || '').trim();
-                        if (!content || content.length < CONFIG.minTextLen) return null;
-                        const displayText = content.length > CONFIG.maxTextLen
-                            ? content.slice(0, CONFIG.maxTextLen) + '…等'
-                            : content;
-                        return `${msg.authorName || '有人'}：${displayText}`;
-                    }
-
-                    case MT.GIFT: {
-                        // 礼物消息
-                        const price = msg.price || 0;
-                        const totalFreeCoin = msg.totalFreeCoin || 0;
-
-                        // 价格阈值过滤（0 元 = 免费礼物或未知价格）
-                        if (price < CONFIG.minGiftPrice && totalFreeCoin === 0) return null;
-
-                        const name = msg.authorName || '有人';
-                        const giftName = msg.giftName || '礼物';
-                        const num = msg.num || 1;
-
-                        if (price > 0) {
-                            return `感谢 ${name} 送的 ${giftName}，${num}个，共${price}元`;
-                        }
-                        return `感谢 ${name} 送的 ${giftName} x ${num}`;
-                    }
-
-                    case MT.MEMBER: {
-                        // 上舰消息（提督/总督/舰长）
-                        const name = msg.authorName || '有人';
-                        const guardLevel = msg.privilegeType;
-                        const num = msg.num || 1;
-                        const unit = msg.unit || '月';
-
-                        let levelText = '';
-                        if (guardLevel === GL.LV3) levelText = '提督';
-                        else if (guardLevel === GL.LV2) levelText = '总督';
-                        else if (guardLevel === GL.LV1) levelText = '舰长';
-
-                        if (levelText) {
-                            return `感谢 ${name} 开通${levelText} ${num}${unit}`;
-                        }
-                        return `感谢 ${name} 上舰 ${num}${unit}`;
-                    }
-
-                    case MT.SUPER_CHAT: {
-                        // 醒目留言
-                        const name = msg.authorName || '有人';
-                        const content = (msg.content || '').trim();
-                        const price = msg.price || 0;
-
-                        if (price > 0) {
-                            return `${name} 的${price}元醒目留言：${content}`;
-                        }
-                        return `${name} 的醒目留言：${content}`;
-                    }
-
-                    default:
-                        return null;
+                    case MT.TEXT:
+                        typeClass = 'text';
+                        html = renderText(msg);
+                        break;
+                    case MT.GIFT:
+                        typeClass = 'gift';
+                        html = renderGift(msg);
+                        break;
+                    case MT.MEMBER:
+                        typeClass = 'member';
+                        html = renderMember(msg);
+                        break;
+                    case MT.SUPER_CHAT:
+                        typeClass = 'sc';
+                        html = renderSuperChat(msg);
+                        break;
+                    default: return;
                 }
+                msg.typeClass = typeClass;
+                addMsgDom(msg, html);
+
+                // TTS
+                const ttsText = extractTtsText(msg);
+                if (ttsText) speak(ttsText);
             }
 
-            /**
-             * 使用浏览器内置 TTS 播报文本
-             * @param {string} text
-             */
-            speak(text) {
-                if (!window.speechSynthesis) {
-                    console.warn('[TTS] 当前浏览器不支持 Web Speech API');
-                    return;
-                }
+            delMsgs(ids) {
+                if (ids) ids.forEach(id => removeMsg(id));
+            }
 
-                // 取消正在播放的语音，避免重叠
-                // 若希望排队播放，注释掉下面这行即可
-                window.speechSynthesis.cancel();
-
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = CONFIG.lang;
-                utterance.rate = CONFIG.rate;
-                utterance.pitch = CONFIG.pitch;
-                utterance.volume = CONFIG.volume;
-
-                // 语音选择降级链：Edge 中文 → Google 中文 → 任意 zh-* → 默认
-                const voices = window.speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    // 1) 优先 Edge 中文语音（如 Xiaoxiao，自然度最高）
-                    let voice = voices.find(v =>
-                        v.lang === 'zh-CN' &&
-                        (v.name.includes('Xiao') || v.name.includes('Yun') || v.name.includes('Microsoft'))
-                    );
-                    // 2) Google 中文语音
-                    if (!voice) {
-                        voice = voices.find(v =>
-                            v.lang === 'zh-CN' && v.name.includes('Google')
-                        );
-                    }
-                    // 3) 任意 zh-CN 语音
-                    if (!voice) {
-                        voice = voices.find(v => v.lang === 'zh-CN');
-                    }
-                    // 4) 任意中文语音
-                    if (!voice) {
-                        voice = voices.find(v => v.lang.startsWith('zh'));
-                    }
-
-                    if (voice) {
-                        utterance.voice = voice;
-                        if (CONFIG.debug) {
-                            console.debug('[TTS] 选用语音:', voice.name, voice.lang);
+            updateMsg(id, newValues) {
+                const el = msgMap[id];
+                if (!el) return;
+                // 更新翻译
+                if (newValues.translation) {
+                    let transEl = el.querySelector('.msg-translation');
+                    if (transEl) {
+                        transEl.textContent = newValues.translation;
+                    } else {
+                        const body = el.querySelector('.msg-body');
+                        if (body) {
+                            const div = document.createElement('div');
+                            div.className = 'msg-translation';
+                            div.textContent = newValues.translation;
+                            body.appendChild(div);
                         }
                     }
                 }
-
-                window.speechSynthesis.speak(utterance);
+                // 更新 SC 内容
+                if (newValues.content && el.classList.contains('sc')) {
+                    const scEl = el.querySelector('.msg-sc-content');
+                    if (scEl) scEl.textContent = newValues.content;
+                }
             }
         }
 
         // ==================== 初始化 ====================
         (async function() {
             try {
-                // 1. 先设置消息处理器（可以在 init 之前调用）
-                const handler = new TTSMsgHandler();
+                const handler = new HybridHandler();
                 blcsdk.setMsgHandler(handler);
 
-                // 2. 预热语音引擎
+                // 预热语音
                 let voices = window.speechSynthesis.getVoices();
-                if (voices.length === 0) {
-                    await new Promise(resolve => {
-                        window.speechSynthesis.onvoiceschanged = () => {
-                            resolve();
-                        };
-                    });
+                if (!voices.length) {
+                    await new Promise(r => { window.speechSynthesis.onvoiceschanged = r; });
                     voices = window.speechSynthesis.getVoices();
                 }
+                if (CONFIG.debug) console.debug('[Hybrid] 语音数:', voices.length);
 
-                if (CONFIG.debug) {
-                    console.debug('[TTS] 可用语音列表（共' + voices.length + '个）:',
-                        voices.map(v => `${v.name} [${v.lang}]`));
-                }
-
-                // 3. 初始化 blcsdk
                 await blcsdk.init();
-                const version = blcsdk.getBlcVersion();
-                console.log('[TTS] 语音播报模板已就绪，blivechat 版本:', version);
-
-                if (CONFIG.debug) {
-                    console.debug('[TTS] SDK版本:', blcsdk.getVersion());
-                    console.debug('[TTS] 配置:', CONFIG);
-                }
+                console.log('[Hybrid] 混合模板就绪，blivechat:', blcsdk.getBlcVersion());
+                if (CONFIG.debug) console.debug('[Hybrid] SDK版本:', blcsdk.getVersion(), '配置:', CONFIG);
             } catch (err) {
-                console.error('[TTS] 初始化失败:', err);
+                console.error('[Hybrid] 初始化失败:', err);
             }
         })();
     </script>
