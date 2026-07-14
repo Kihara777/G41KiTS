@@ -264,6 +264,10 @@ kits_check() {
       i18n)
         [ -d "${dr}/$(kit_provides_dir "i18n")/$m" ] && { echo "  [i18n] ${dr}/$(kit_provides_dir "i18n")/$m/"; found=$((found+1)); }
         ;;
+      blc_template)
+        local tdir="${dr}/$(kit_provides_dir "blc_template")/$m"
+        [ -d "$tdir" ] && { echo "  [blc_template] $tdir/"; found=$((found+1)); }
+        ;;
     esac
   done
 
@@ -556,6 +560,18 @@ kits_add() {
           kit_ln "$sconf" "$dst" && kit_log "$sub"
         done
         ;;
+      blc_template)
+        [ -d "$src" ] || continue
+        local tdir="${dr}/$pdir/$m"
+        [ -d "$tdir" ] && rm -rf "$tdir"
+        [ -z "$dry" ] && mkdir -p "$tdir"
+        for f in "$src"/*; do
+          [ -f "$f" ] || continue
+          kit_ln "$f" "$tdir/$(basename "$f")"
+        done
+        [ -n "$dry" ] && echo "  [dry] blc_template"
+        [ -z "$dry" ] && kit_log "blc_template"
+        ;;
     esac
   done
 
@@ -771,6 +787,10 @@ kits_del() {
         ;;
       i18n)
         [ -d "${dr}/$(kit_provides_dir "i18n")/$m" ] && { rm -rf "${dr}/$(kit_provides_dir "i18n")/$m"; echo "  - i18n"; removed=$((removed+1)); }
+        ;;
+      blc_template)
+        local tp="$(kit_provides_dir "blc_template")/$m"
+        [ -d "${dr}/$tp" ] && { rm -rf "${dr}/$tp"; echo "  - blc_template"; removed=$((removed+1)); }
         ;;
     esac
   done
