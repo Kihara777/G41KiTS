@@ -106,7 +106,7 @@
     <script>
         // ==================== 配置 ====================
         const CONFIG = {
-            rate: 4.0, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80,
+            rate: 2.5, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80,
             pitch: 1.0, volume: 1.0, lang: 'zh-CN',
             maxMessages: 30, msgLifetime: 28000, fadeDuration: 500,
             debug: /[?&]debug=1/.test(location.search),
@@ -421,7 +421,7 @@
         }
 
         // ==================== 右键设置面板 ====================
-        const DEFAULTS = { rate: 4.0, pitch: 1.0, volume: 1.0, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80 };
+        const DEFAULTS = { rate: 2.5, pitch: 1.0, volume: 1.0, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80 };
 
         function loadSettings() {
             try { const s = localStorage.getItem('blct_tts_cfg'); if (s) Object.assign(CONFIG, JSON.parse(s)); } catch(e) {}
