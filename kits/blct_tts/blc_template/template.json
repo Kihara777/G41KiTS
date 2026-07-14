@@ -1,7 +1,7 @@
 {
   "name": "TTS语音播报模板",
   "version": "1.1.0",
-  "author": "blcext",
+  "author": "狐莉家的小爪",
   "description": "基于Web Speech API的弹幕语音播报，支持弹幕/礼物/上舰/醒目留言，无外部TTS依赖",
   "url": "index.html"
 }
