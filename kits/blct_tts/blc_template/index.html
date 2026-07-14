@@ -77,7 +77,7 @@
     <script>
         // ==================== 配置 ====================
         const CONFIG = {
-            rate: 2.0, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80,
+            rate: 4.0, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80,
             pitch: 1.0, volume: 1.0, lang: 'zh-CN',
             maxMessages: 30, msgLifetime: 28000, fadeDuration: 500,
             debug: /[?&]debug=1/.test(location.search),
@@ -205,20 +205,38 @@
                 </div>`;
         }
 
-        // ==================== TTS 引擎（双队列：普通排队，礼物/进房独立队列可插队） ====================
+        // ==================== TTS 引擎（双队列 + 语言自适应） ====================
         const normalQueue = [];     // 弹幕、醒目留言
         const priorityQueue = [];   // 礼物、上舰（互不覆盖，内部排队）
         let currentSource = 'none'; // 'none' | 'normal' | 'priority'
 
+        /** 检测文本语言：含假名 → 日语，其余 → 中文 */
+        function detectLang(text) {
+            if (/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'ja-JP';
+            return 'zh-CN';
+        }
+
+        /** 按语言选择最优语音引擎 */
+        function pickVoice(lang, voices) {
+            if (lang === 'ja-JP') {
+                return voices.find(v => v.lang === 'ja-JP' && (v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Microsoft')))
+                    || voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google'))
+                    || voices.find(v => v.lang === 'ja-JP')
+                    || voices.find(v => v.lang.startsWith('ja'));
+            }
+            return voices.find(v => v.lang === 'zh-CN' && (v.name.includes('Xiao') || v.name.includes('Yun') || v.name.includes('Microsoft')))
+                || voices.find(v => v.lang === 'zh-CN' && v.name.includes('Google'))
+                || voices.find(v => v.lang === 'zh-CN')
+                || voices.find(v => v.lang.startsWith('zh'));
+        }
+
         function makeUtterance(text) {
             const u = new SpeechSynthesisUtterance(text);
-            u.lang = CONFIG.lang; u.rate = CONFIG.rate; u.pitch = CONFIG.pitch; u.volume = CONFIG.volume;
+            const lang = detectLang(text);
+            u.lang = lang; u.rate = CONFIG.rate; u.pitch = CONFIG.pitch; u.volume = CONFIG.volume;
             const voices = window.speechSynthesis.getVoices();
             if (voices.length) {
-                let v = voices.find(v => v.lang === 'zh-CN' && (v.name.includes('Xiao') || v.name.includes('Yun') || v.name.includes('Microsoft')))
-                    || voices.find(v => v.lang === 'zh-CN' && v.name.includes('Google'))
-                    || voices.find(v => v.lang === 'zh-CN')
-                    || voices.find(v => v.lang.startsWith('zh'));
+                const v = pickVoice(lang, voices);
                 if (v) { u.voice = v; if (CONFIG.debug) console.debug('[TTS] 语音:', v.name, v.lang); }
             }
             return u;
