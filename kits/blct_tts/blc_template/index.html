@@ -69,10 +69,39 @@
         .msg-gift-icon { width: 20px; height: 20px; vertical-align: -.4em; margin: 0 2px; }
         .msg-translation { color: #8ec8a0; font-size: 13px; margin-top: 1px; font-style: italic; }
         .msg-sc-content { background: rgba(255,215,0,.08); padding: 4px 8px; border-radius: 3px; margin-top: 2px; font-size: 15px; color: #ffeaa7; }
+
+        /* 右键设置面板 */
+        #settings-panel {
+            display: none; position: fixed; z-index: 9999;
+            background: rgba(20,20,30,.95); color: #ccc;
+            border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
+            padding: 16px; min-width: 240px; font-size: 13px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.6);
+            pointer-events: auto; user-select: none;
+        }
+        #settings-panel.show { display: block; }
+        #settings-panel h3 { margin: 0 0 10px; color: #fff; font-size: 14px; }
+        #settings-panel label { display: flex; justify-content: space-between; align-items: center; margin: 6px 0; }
+        #settings-panel label span { flex: 0 0 80px; }
+        #settings-panel input[type=range] { width: 100px; accent-color: #a0d8ef; }
+        #settings-panel input[type=number] { width: 60px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 3px; color: #fff; padding: 2px 4px; font-size: 12px; }
+        #settings-panel .val { color: #a0d8ef; font-size: 11px; min-width: 30px; text-align: right; }
+        #settings-panel button { margin-top: 10px; padding: 4px 12px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 4px; color: #ccc; cursor: pointer; font-size: 12px; }
+        #settings-panel button:hover { background: rgba(255,255,255,.2); }
     </style>
 </head>
 <body>
     <div id="chat-overlay"></div>
+    <div id="settings-panel">
+        <h3>⚙ TTS 设置</h3>
+        <label><span>语速 rate</span><input type="range" id="cfg-rate" min="0.5" max="10" step="0.1"><span class="val" id="val-rate"></span></label>
+        <label><span>音调 pitch</span><input type="range" id="cfg-pitch" min="0" max="2" step="0.05"><span class="val" id="val-pitch"></span></label>
+        <label><span>音量 volume</span><input type="range" id="cfg-volume" min="0" max="1" step="0.05"><span class="val" id="val-volume"></span></label>
+        <label><span>最低礼物价</span><input type="number" id="cfg-minGift" min="0" step="1"><span class="val">元</span></label>
+        <label><span>最短弹幕</span><input type="number" id="cfg-minLen" min="0" max="50"><span class="val">字</span></label>
+        <label><span>最长播报</span><input type="number" id="cfg-maxLen" min="10" max="200"><span class="val">字</span></label>
+        <button id="cfg-reset">恢复默认</button>
+    </div>
     <script src="./blcsdk.js"></script>
     <script>
         // ==================== 配置 ====================
@@ -205,10 +234,11 @@
                 </div>`;
         }
 
-        // ==================== TTS 引擎（双队列 + 语言自适应） ====================
+        // ==================== TTS 引擎（双队列 + 语言自适应 + 中断重播） ====================
         const normalQueue = [];     // 弹幕、醒目留言
         const priorityQueue = [];   // 礼物、上舰（互不覆盖，内部排队）
         let currentSource = 'none'; // 'none' | 'normal' | 'priority'
+        let interruptedText = null; // 被插队打断的弹幕文本
 
         /** 检测文本语言：含假名 → 日语，其余 → 中文 */
         function detectLang(text) {
@@ -243,7 +273,18 @@
         }
 
         function speakNext() {
-            // 优先消费 priority 队列
+            // 优先重播被插队打断的弹幕
+            if (interruptedText) {
+                const text = interruptedText;
+                interruptedText = null;
+                currentSource = 'normal';
+                const u = makeUtterance(text);
+                u.onend = u.onerror = () => speakNext();
+                if (CONFIG.debug) console.debug('[TTS] 重播被打断的弹幕:', text.slice(0, 30));
+                window.speechSynthesis.speak(u);
+                return;
+            }
+            // 其次消费 priority 队列
             if (priorityQueue.length > 0) {
                 currentSource = 'priority';
                 const u = priorityQueue.shift();
@@ -252,7 +293,7 @@
                 window.speechSynthesis.speak(u);
                 return;
             }
-            // 其次消费 normal 队列
+            // 最后消费 normal 队列
             if (normalQueue.length > 0) {
                 currentSource = 'normal';
                 const u = normalQueue.shift();
@@ -271,8 +312,10 @@
             if (priority) {
                 // 礼物/进房：只有当前在播 normal 时才打断；若已在播 priority，则排队等
                 if (currentSource === 'normal') {
+                    interruptedText = u.text; // 记录被中断的文本，优先重播
                     window.speechSynthesis.cancel();
                     currentSource = 'none';
+                    if (CONFIG.debug) console.debug('[TTS] 打断 normal，已保存:', interruptedText.slice(0, 30));
                 }
                 priorityQueue.push(u);
                 if (CONFIG.debug) console.debug('[TTS] priority 入队, 队列长度:', priorityQueue.length);
@@ -376,6 +419,61 @@
                 }
             }
         }
+
+        // ==================== 右键设置面板 ====================
+        const DEFAULTS = { rate: 4.0, pitch: 1.0, volume: 1.0, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80 };
+
+        function loadSettings() {
+            try { const s = localStorage.getItem('blct_tts_cfg'); if (s) Object.assign(CONFIG, JSON.parse(s)); } catch(e) {}
+        }
+        function saveSettings() {
+            try { localStorage.setItem('blct_tts_cfg', JSON.stringify({
+                rate: CONFIG.rate, pitch: CONFIG.pitch, volume: CONFIG.volume,
+                minGiftPrice: CONFIG.minGiftPrice, minTextLen: CONFIG.minTextLen, maxTextLen: CONFIG.maxTextLen
+            })); } catch(e) {}
+        }
+
+        const panel = document.getElementById('settings-panel');
+        const sliders = {
+            rate:     { el: document.getElementById('cfg-rate'),    val: document.getElementById('val-rate') },
+            pitch:    { el: document.getElementById('cfg-pitch'),   val: document.getElementById('val-pitch') },
+            volume:   { el: document.getElementById('cfg-volume'),  val: document.getElementById('val-volume') },
+            minGift:  document.getElementById('cfg-minGift'),
+            minLen:   document.getElementById('cfg-minLen'),
+            maxLen:   document.getElementById('cfg-maxLen'),
+        };
+        const cfgMap = { rate: 'rate', pitch: 'pitch', volume: 'volume', minGift: 'minGiftPrice', minLen: 'minTextLen', maxLen: 'maxTextLen' };
+
+        function syncUI() {
+            sliders.rate.el.value = CONFIG.rate; sliders.rate.val.textContent = CONFIG.rate.toFixed(1);
+            sliders.pitch.el.value = CONFIG.pitch; sliders.pitch.val.textContent = CONFIG.pitch.toFixed(2);
+            sliders.volume.el.value = CONFIG.volume; sliders.volume.val.textContent = CONFIG.volume.toFixed(2);
+            sliders.minGift.value = CONFIG.minGiftPrice;
+            sliders.minLen.value = CONFIG.minTextLen;
+            sliders.maxLen.value = CONFIG.maxTextLen;
+        }
+
+        function showPanel(x, y) {
+            syncUI();
+            panel.style.left = Math.min(x, window.innerWidth - 260) + 'px';
+            panel.style.top = Math.min(y, window.innerHeight - 300) + 'px';
+            panel.classList.add('show');
+        }
+        function hidePanel() { panel.classList.remove('show'); }
+
+        document.addEventListener('contextmenu', e => { e.preventDefault(); showPanel(e.clientX, e.clientY); });
+        document.addEventListener('click', e => { if (!panel.contains(e.target)) hidePanel(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') hidePanel(); });
+
+        sliders.rate.el.oninput = () => { CONFIG.rate = parseFloat(sliders.rate.el.value); sliders.rate.val.textContent = CONFIG.rate.toFixed(1); saveSettings(); };
+        sliders.pitch.el.oninput = () => { CONFIG.pitch = parseFloat(sliders.pitch.el.value); sliders.pitch.val.textContent = CONFIG.pitch.toFixed(2); saveSettings(); };
+        sliders.volume.el.oninput = () => { CONFIG.volume = parseFloat(sliders.volume.el.value); sliders.volume.val.textContent = CONFIG.volume.toFixed(2); saveSettings(); };
+        sliders.minGift.onchange = () => { CONFIG.minGiftPrice = parseInt(sliders.minGift.value) || 0; saveSettings(); };
+        sliders.minLen.onchange = () => { CONFIG.minTextLen = parseInt(sliders.minLen.value) || 0; saveSettings(); };
+        sliders.maxLen.onchange = () => { CONFIG.maxTextLen = parseInt(sliders.maxLen.value) || 80; saveSettings(); };
+        document.getElementById('cfg-reset').onclick = () => { Object.assign(CONFIG, DEFAULTS); syncUI(); saveSettings(); };
+
+        loadSettings(); // 从 localStorage 恢复设置
 
         // ==================== 初始化 ====================
         (async function() {
