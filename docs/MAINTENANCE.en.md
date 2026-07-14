@@ -2,6 +2,13 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-07-14
+
+- Added `blc_template` provides type to blc module: dependent modules can distribute blivechat custom templates via `blc_template/` directory
+- Added `custom_public/templates` volume mount to blc compose.yaml (container path `/mnt/data/data/custom_public/templates`)
+- Added full blc_template type handling to g41.sh: install, uninstall, and check (kits_add / kits_del / kits_check)
+- Updated blc trilingual docs (ja/en/zh) with template distribution usage
+
 ## 2026-06-20
 
 - Open-sourced: pushed `main` branch to GitHub

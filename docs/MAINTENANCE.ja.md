@@ -2,6 +2,13 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-07-14
+
+- blc モジュールに `blc_template` provides タイプを追加: 依存モジュールが `blc_template/` ディレクトリ経由で blivechat カスタムテンプレートを配布可能に
+- blc compose.yaml に `custom_public/templates` ボリュームマウントを追加（コンテナパス `/mnt/data/data/custom_public/templates`）
+- g41.sh に `blc_template` タイプのインストール・アンインストール・チェックの全処理を追加（kits_add / kits_del / kits_check）
+- blc 三言語ドキュメント（ja/en/zh）にテンプレート配布の使い方を追記
+
 ## 2026-06-20
 
 - オープンソース化: `main` ブランチを GitHub にプッシュ
