@@ -77,7 +77,7 @@
     <script>
         // ==================== 配置 ====================
         const CONFIG = {
-            rate: 0.9, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80,
+            rate: 2.0, minGiftPrice: 0, minTextLen: 1, maxTextLen: 80,
             pitch: 1.0, volume: 1.0, lang: 'zh-CN',
             maxMessages: 30, msgLifetime: 28000, fadeDuration: 500,
             debug: /[?&]debug=1/.test(location.search),
@@ -205,10 +205,11 @@
                 </div>`;
         }
 
-        // ==================== TTS 引擎 ====================
-        function speak(text) {
-            if (!window.speechSynthesis) { console.warn('[TTS] 不支持 Web Speech API'); return; }
-            window.speechSynthesis.cancel();
+        // ==================== TTS 引擎（队列模式，礼物/上舰可插队） ====================
+        const ttsQueue = [];
+        let ttsSpeaking = false;
+
+        function makeUtterance(text) {
             const u = new SpeechSynthesisUtterance(text);
             u.lang = CONFIG.lang; u.rate = CONFIG.rate; u.pitch = CONFIG.pitch; u.volume = CONFIG.volume;
             const voices = window.speechSynthesis.getVoices();
@@ -219,7 +220,30 @@
                     || voices.find(v => v.lang.startsWith('zh'));
                 if (v) { u.voice = v; if (CONFIG.debug) console.debug('[TTS] 语音:', v.name, v.lang); }
             }
+            return u;
+        }
+
+        function speakNext() {
+            if (ttsQueue.length === 0) { ttsSpeaking = false; return; }
+            ttsSpeaking = true;
+            const u = ttsQueue.shift();
+            u.onend = u.onerror = () => speakNext();
             window.speechSynthesis.speak(u);
+        }
+
+        /** @param {string} text @param {boolean} priority — true 时清空队列并立即播报 */
+        function speak(text, priority = false) {
+            if (!window.speechSynthesis) { console.warn('[TTS] 不支持 Web Speech API'); return; }
+            const u = makeUtterance(text);
+            if (priority) {
+                window.speechSynthesis.cancel();
+                ttsQueue.length = 0;
+                ttsSpeaking = false;
+                ttsQueue.unshift(u);
+            } else {
+                ttsQueue.push(u);
+            }
+            if (!ttsSpeaking) speakNext();
         }
 
         function extractTtsText(msg) {
@@ -280,9 +304,10 @@
                 msg.typeClass = typeClass;
                 addMsgDom(msg, html);
 
-                // TTS
+                // TTS — 礼物和上舰允许插队（打断当前语音）
                 const ttsText = extractTtsText(msg);
-                if (ttsText) speak(ttsText);
+                const isPriority = (msg.type === MT.GIFT || msg.type === MT.MEMBER);
+                if (ttsText) speak(ttsText, isPriority);
             }
 
             delMsgs(ids) {
