@@ -205,9 +205,10 @@
                 </div>`;
         }
 
-        // ==================== TTS 引擎（队列模式，礼物/上舰可插队） ====================
-        const ttsQueue = [];
-        let ttsSpeaking = false;
+        // ==================== TTS 引擎（双队列：普通排队，礼物/进房独立队列可插队） ====================
+        const normalQueue = [];     // 弹幕、醒目留言
+        const priorityQueue = [];   // 礼物、上舰（互不覆盖，内部排队）
+        let currentSource = 'none'; // 'none' | 'normal' | 'priority'
 
         function makeUtterance(text) {
             const u = new SpeechSynthesisUtterance(text);
@@ -224,26 +225,44 @@
         }
 
         function speakNext() {
-            if (ttsQueue.length === 0) { ttsSpeaking = false; return; }
-            ttsSpeaking = true;
-            const u = ttsQueue.shift();
-            u.onend = u.onerror = () => speakNext();
-            window.speechSynthesis.speak(u);
+            // 优先消费 priority 队列
+            if (priorityQueue.length > 0) {
+                currentSource = 'priority';
+                const u = priorityQueue.shift();
+                u.onend = u.onerror = () => speakNext();
+                if (CONFIG.debug) console.debug('[TTS] priority 播报, 剩余:', priorityQueue.length);
+                window.speechSynthesis.speak(u);
+                return;
+            }
+            // 其次消费 normal 队列
+            if (normalQueue.length > 0) {
+                currentSource = 'normal';
+                const u = normalQueue.shift();
+                u.onend = u.onerror = () => speakNext();
+                if (CONFIG.debug) console.debug('[TTS] normal 播报, 剩余:', normalQueue.length);
+                window.speechSynthesis.speak(u);
+                return;
+            }
+            currentSource = 'none';
         }
 
-        /** @param {string} text @param {boolean} priority — true 时清空队列并立即播报 */
+        /** @param {string} text @param {boolean} priority */
         function speak(text, priority = false) {
             if (!window.speechSynthesis) { console.warn('[TTS] 不支持 Web Speech API'); return; }
             const u = makeUtterance(text);
             if (priority) {
-                window.speechSynthesis.cancel();
-                ttsQueue.length = 0;
-                ttsSpeaking = false;
-                ttsQueue.unshift(u);
+                // 礼物/进房：只有当前在播 normal 时才打断；若已在播 priority，则排队等
+                if (currentSource === 'normal') {
+                    window.speechSynthesis.cancel();
+                    currentSource = 'none';
+                }
+                priorityQueue.push(u);
+                if (CONFIG.debug) console.debug('[TTS] priority 入队, 队列长度:', priorityQueue.length);
             } else {
-                ttsQueue.push(u);
+                normalQueue.push(u);
+                if (CONFIG.debug) console.debug('[TTS] normal 入队, 队列长度:', normalQueue.length);
             }
-            if (!ttsSpeaking) speakNext();
+            if (currentSource === 'none') speakNext();
         }
 
         function extractTtsText(msg) {
