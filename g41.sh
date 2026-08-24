@@ -1181,7 +1181,7 @@ main() {
       case "${2:-}" in
         apply) shift 2; k8s_apply "$@";;
         base) k8s_apply_base_only;;
-        build) shift 2; for m in $(kits_installed_list); do [ -d "kits/$m/k8s" ] && k8s_build "$m"; done;;
+        build) shift 2; if [ -n "${1:-}" ]; then k8s_build "$1"; else for m in $(kits_installed_list); do [ -d "kits/$m/k8s" ] && k8s_build "$m"; done; fi;;
         status) k8s_status;;
         ""|--help|-h) echo "Usage: $0 k8s [apply|base|build|status]  (apply --all = bootstrap all kits)";;
         *) echo "Unknown k8s command: $2";;

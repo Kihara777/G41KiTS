@@ -20,7 +20,7 @@ kits/<module>/k8s/        # 每个容器模块的 Deployment/Service
 |---|---|
 | include 痛点 | k8s 无中央清单：`g41.sh k8s apply` 自动遍历 `kits/*/k8s/`；纯 kubectl 等价于 `kubectl apply $(for d in k8s/base kits/*/k8s; do printf -- '-f %s ' "$d"; done)`（shell glob，零编辑） |
 | 数据 | hostPath 挂载 `/opt/g41/.rd` 等 → **零数据迁移**，与 compose 共用同一批目录 |
-| 证书 | cert-manager（Cloudflare DNS01）替代 acme.sh；轮换靠 Reloader 滚动重启 |
+| 证书 | cert-manager（Cloudflare DNS01）替代 acme.sh；轮换后手动 `kubectl rollout restart deploy/{nginx,dns,hy2} -n g41`（每 ~60 天一次） |
 | acme/autoheal/dsock | 无 k8s manifest，整体退役（探针/cert-manager 原生替代） |
 | 网关 | 保留 nginx（hostPort 80/443），配置仍来自 .gx 装配 |
 | hy2 | hostNetwork（443/udp 与 nginx 共存，同现状） |
