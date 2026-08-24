@@ -2,6 +2,16 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-08-24
+
+- 新增 k8s/k3s 部署层：12 个容器模块的 Deployment/Service manifest（kits/*/k8s/）
+- g41.sh 双后端支持：`backend compose|k8s` + `k8s apply|build|status` 子命令
+- compose include 改为生成式重写（compose_include_regenerate），废除 sed 行编辑
+- 证书方案：acme.sh 标签钩子 → cert-manager（Cloudflare DNS01）+ Reloader
+- autoheal/dsock/acme 三模块在 k8s 下退役（原生探针/cert-manager 替代）
+- 新增 docs/zh/k8s-migration.md 迁移 runbook 与 k8s/README.md 架构说明
+- 发现并记录：VPS 上 G41_KITS 曾遗漏 attic 记账；内存 1GB 需先升级才能迁移
+
 ## 2026-06-24
 
 - tile_mail / tile_kihara777 三语文档补全（zh/en/ja，共 6 篇）

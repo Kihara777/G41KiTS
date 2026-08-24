@@ -1,0 +1,49 @@
+# Hysteria2 — hostNetwork 与 nginx 共享 443（TCP/nginx + UDP/hy2，同 compose 现状）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hy2
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: hy2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hy2
+  template:
+    metadata:
+      labels:
+        app: hy2
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: hy2
+          image: tobyxdd/hysteria
+          command: ["server", "-c", "/etc/hysteria.yaml"]
+          volumeMounts:
+            - { name: certs, mountPath: /certs, readOnly: true }
+            - { name: config, mountPath: /etc/hysteria.yaml, readOnly: true }
+          resources:
+            limits: { memory: 512Mi, cpu: "2" }
+            requests: { memory: 256Mi, cpu: 500m }
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "kill -0 1 || exit 1"]
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: certs
+          secret:
+            secretName: g41-tls
+            items:
+              - { key: tls.crt, path: fc }
+              - { key: tls.key, path: k }
+        - name: config
+          hostPath: { path: /opt/g41/.hq/hysteria.yaml, type: FileOrCreate }

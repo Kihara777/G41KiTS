@@ -1,0 +1,14 @@
+# dns Service — 对应 nginx upstream "ns { server dns:53443; }"（DoH 内网端口）
+apiVersion: v1
+kind: Service
+metadata:
+  name: dns
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: dns
+spec:
+  selector:
+    app: dns
+  ports:
+    - { name: doh, port: 53443, targetPort: 53443 }

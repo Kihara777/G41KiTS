@@ -1,0 +1,15 @@
+# k3s 内置 helm-controller 自动部署 cert-manager（替代 acme 模块）。
+# 应用后 watch：kubectl get pods -n cert-manager
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cert-manager
+  namespace: kube-system
+spec:
+  chart: cert-manager
+  repo: https://charts.jetstack.io
+  targetNamespace: cert-manager
+  createNamespace: true
+  version: v1.17.1
+  valuesContent: |-
+    installCRDs: "true"

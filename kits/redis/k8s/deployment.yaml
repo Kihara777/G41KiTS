@@ -1,0 +1,55 @@
+# redis — AOF 持久化于 /opt/g41/.rd（与 compose 共用同一数据目录）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis
+          args:
+            - "redis-server"
+            - "--appendonly"
+            - "yes"
+            - "--save"
+            - "900"
+            - "1"
+            - "--save"
+            - "300"
+            - "10"
+            - "--requirepass"
+            - "$(REDIS_PASSWORD)"
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD }
+          ports:
+            - { containerPort: 6379 }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+          resources:
+            limits: { memory: 256Mi, cpu: "1" }
+            requests: { memory: 128Mi, cpu: 250m }
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep -q PONG"]
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: data
+          hostPath: { path: /opt/g41/.rd, type: DirectoryOrCreate }

@@ -1,0 +1,53 @@
+# redis API（Node.js 桥接，compose=file，镜像 g41k8s/redis:local）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: g41k8s/redis:local
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD }
+            - name: G41_DOMAIN
+              valueFrom:
+                secretKeyRef: { name: g41-env, key: G41_DOMAIN }
+            - name: RELOAD_SECRET
+              valueFrom:
+                secretKeyRef: { name: g41-env, key: RELOAD_SECRET }
+          ports:
+            - { containerPort: 5800 }
+          volumeMounts:
+            - { name: server-js, mountPath: /app/server.js, readOnly: true }
+            - { name: conf-data, mountPath: /conf-data, readOnly: true }
+          resources:
+            limits: { memory: 256Mi, cpu: "1" }
+            requests: { memory: 128Mi, cpu: 250m }
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "wget -q -O /dev/null http://127.0.0.1:5800/data/tiles || exit 1"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: server-js
+          hostPath: { path: /opt/g41/.rd/server.js, type: FileOrCreate }
+        - name: conf-data
+          hostPath: { path: /opt/g41/.rd/data, type: DirectoryOrCreate }

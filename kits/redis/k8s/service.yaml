@@ -1,0 +1,14 @@
+# redis Service — api 容器按 hostname "redis" 连接
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: redis
+spec:
+  selector:
+    app: redis
+  ports:
+    - { name: redis, port: 6379, targetPort: 6379 }

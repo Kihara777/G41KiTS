@@ -1,0 +1,14 @@
+# blc Service — 对应 nginx upstream "lc { server blc:12450; }"
+apiVersion: v1
+kind: Service
+metadata:
+  name: blc
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: blc
+spec:
+  selector:
+    app: blc
+  ports:
+    - { name: http, port: 12450, targetPort: 12450 }

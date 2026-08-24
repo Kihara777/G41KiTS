@@ -1,0 +1,48 @@
+# hako (filebrowser) — 共享 webroot /opt/g41/.wr 挂载为 /srv
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hako
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: hako
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hako
+  template:
+    metadata:
+      labels:
+        app: hako
+    spec:
+      containers:
+        - name: hako
+          image: filebrowser/filebrowser
+          ports:
+            - { containerPort: 80 }
+          volumeMounts:
+            - { name: srv, mountPath: /srv }
+            - { name: branding, mountPath: /branding, readOnly: true }
+            - { name: db, mountPath: /database/filebrowser.db }
+            - { name: settings, mountPath: /config/settings.json }
+          resources:
+            limits: { memory: 256Mi, cpu: "1" }
+            requests: { memory: 128Mi, cpu: 250m }
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "wget -q -O /dev/null http://127.0.0.1:80/ || exit 1"]
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: srv
+          hostPath: { path: /opt/g41/.wr, type: DirectoryOrCreate }
+        - name: branding
+          hostPath: { path: /opt/g41/.fb/branding, type: DirectoryOrCreate }
+        - name: db
+          hostPath: { path: /opt/g41/.fb/filebrowser.db, type: FileOrCreate }
+        - name: settings
+          hostPath: { path: /opt/g41/.fb/settings.json, type: FileOrCreate }

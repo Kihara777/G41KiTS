@@ -1,0 +1,52 @@
+# nginx 网关 — hostPort 80/443；配置来自 g41.sh 装配的 /opt/g41/.gx（同 compose）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - { name: http, containerPort: 80, hostPort: 80, protocol: TCP }
+            - { name: https, containerPort: 443, hostPort: 443, protocol: TCP }
+          volumeMounts:
+            - { name: certs, mountPath: /certs, readOnly: true }
+            - { name: conf, mountPath: /etc/nginx }
+            - { name: webroot, mountPath: /webroot }
+          resources:
+            limits: { memory: 256Mi, cpu: "1" }
+            requests: { memory: 128Mi, cpu: 250m }
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "wget -q -O /dev/null --no-check-certificate http://127.0.0.1:80/ || exit 1"]
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: certs
+          secret:
+            secretName: g41-tls
+            items:
+              - { key: tls.crt, path: fc }
+              - { key: tls.key, path: k }
+        - name: conf
+          hostPath: { path: /opt/g41/.gx, type: DirectoryOrCreate }
+        - name: webroot
+          hostPath: { path: /opt/g41/.wr, type: DirectoryOrCreate }

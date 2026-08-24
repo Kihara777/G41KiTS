@@ -1,0 +1,45 @@
+# bt (Transmission) — compose=file，镜像 g41k8s/bt:local；hostPort 51413（BT 对等端口）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bt
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: bt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bt
+  template:
+    metadata:
+      labels:
+        app: bt
+    spec:
+      containers:
+        - name: bt
+          image: g41k8s/bt:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: peer-tcp, containerPort: 51413, hostPort: 51413, protocol: TCP }
+            - { name: peer-udp, containerPort: 51413, hostPort: 51413, protocol: UDP }
+            - { name: rpc, containerPort: 9091 }
+          volumeMounts:
+            - { name: settings, mountPath: /bt/settings.json, readOnly: true }
+            - { name: webroot, mountPath: /webroot }
+          resources:
+            limits: { memory: 512Mi, cpu: "2" }
+            requests: { memory: 256Mi, cpu: 500m }
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "nc -zw1 127.0.0.1 9091 || exit 1"]
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: settings
+          hostPath: { path: /opt/g41/.tr/settings.json, type: FileOrCreate }
+        - name: webroot
+          hostPath: { path: /opt/g41/.wr, type: DirectoryOrCreate }

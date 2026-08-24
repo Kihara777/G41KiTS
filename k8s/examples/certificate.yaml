@@ -1,0 +1,17 @@
+# 示例：Certificate（真实对象由 `g41.sh k8s apply` 从 .env 动态生成）
+# 生成 Secret g41-tls（key: tls.crt / tls.key），
+# nginx/dns/hy2 通过 items 映射挂载为 /certs/fc 与 /certs/k（与 acme.sh 输出路径一致）。
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: g41-tls
+  namespace: g41
+spec:
+  secretName: g41-tls
+  issuerRef:
+    name: g41-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - "<G41_DOMAIN>"
+    - "*.<G41_DOMAIN>"
+    # G41_EXTRA_DOMAINS 每个条目一行

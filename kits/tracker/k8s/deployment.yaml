@@ -1,0 +1,35 @@
+# tracker — compose=file，镜像 g41k8s/tracker:local（无状态）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracker
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: tracker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tracker
+  template:
+    metadata:
+      labels:
+        app: tracker
+    spec:
+      containers:
+        - name: tracker
+          image: g41k8s/tracker:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { containerPort: 8000 }
+          resources:
+            limits: { memory: 256Mi, cpu: "1" }
+            requests: { memory: 128Mi, cpu: 250m }
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "wget -q -O /dev/null http://127.0.0.1:8000/stats || exit 1"]
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3

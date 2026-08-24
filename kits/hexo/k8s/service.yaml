@@ -1,0 +1,14 @@
+# hexo Service — 名称必须为 "hx"：nginx upstream 引用 compose 容器名缩写
+apiVersion: v1
+kind: Service
+metadata:
+  name: hx
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: hexo
+spec:
+  selector:
+    app: hexo
+  ports:
+    - { name: http, port: 4000, targetPort: 4000 }

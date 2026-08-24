@@ -1,0 +1,46 @@
+# attic (Nix 二进制缓存) — hub 镜像；数据于 /opt/g41/.attic
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: attic
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: attic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: attic
+  template:
+    metadata:
+      labels:
+        app: attic
+    spec:
+      containers:
+        - name: attic
+          image: ghcr.io/zhaofengli/attic:latest
+          ports:
+            - { containerPort: 8080 }
+          env:
+            - name: ATTIC_SERVER_TOKEN_HS256_SECRET_BASE64
+              valueFrom:
+                secretKeyRef: { name: g41-env, key: ATTIC_TOKEN_SECRET }
+            - { name: ATTIC_DATABASE, value: /data/attic.db }
+            - { name: ATTIC_STORAGE_DIR, value: /data/storage }
+            - { name: ATTIC_LISTEN, value: "0.0.0.0:8080" }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+          resources:
+            limits: { memory: 512Mi, cpu: "2" }
+            requests: { memory: 256Mi, cpu: 500m }
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: data
+          hostPath: { path: /opt/g41/.attic, type: DirectoryOrCreate }

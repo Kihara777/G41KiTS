@@ -1,0 +1,14 @@
+# tracker Service — 对应 nginx upstream "wt { server tracker:8000; }"
+apiVersion: v1
+kind: Service
+metadata:
+  name: tracker
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: tracker
+spec:
+  selector:
+    app: tracker
+  ports:
+    - { name: http, port: 8000, targetPort: 8000 }

@@ -1,0 +1,19 @@
+# 示例：ClusterIssuer（真实对象由 `g41.sh k8s apply` 从 .env 动态生成）
+# cert-manager + Cloudflare DNS01（沿用旧版全局 API Key 对，即 .env 的 CF_Key/CF_Email）
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: g41-issuer
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: <ACME_EMAIL>
+    privateKeySecretRef:
+      name: g41-issuer-key
+    solvers:
+      - dns01:
+          cloudflare:
+            email: <CF_Email>
+            apiKeySecretRef:
+              name: g41-env
+              key: CF_Key

@@ -26,6 +26,20 @@ gh auth status 2>/dev/null && \
 source .env && echo "ssh root@${G41_DOMAIN} 'cd ~/G41KiTS && ./g41.sh kits list'"
 ```
 
+## k8s/k3s 后端
+
+g41.sh 支持双后端：`compose`（默认）与 `k8s`（k3s）。切换：`./g41.sh backend k8s`（写入 `.env` 的 `G41_BACKEND`）。
+
+- **模块 manifest 位于 `kits/<m>/k8s/`**（Deployment/Service）；集群级资源在 `k8s/base/`。
+- **无中央清单**：安装模块 = `kits/<m>/k8s/` 存在即被 `./g41.sh k8s apply` 自动纳入
+  （等价于 `kubectl apply -f k8s/base -f kits/*/k8s` 的 shell glob 形态）——
+  compose include 的痛点不复存在。
+- 内容装配（硬链接 tile/i18n/site）逻辑不变，宿主机目录经 `/opt/g41` 符号链接以
+  hostPath 挂载进 Pod，**与 compose 共用同一批数据目录**。
+- `compose: file` 模块由 `k8s build` 走 `docker build` + `k3s ctr images import`。
+- acme/autoheal/dsock 在 k8s 下退役（cert-manager + 探针替代），无 k8s manifest。
+- 迁移操作详见 `docs/zh/k8s-migration.md`，架构决策见 `k8s/README.md`。
+
 ## 目标
 
 构建和维护 G41KiTS —— 模块化自托管 Docker Compose 技术栈，包含 Metro/WP8.1 风格首页、Redis 配置 API、多语言 i18n、KITS 模块系统。

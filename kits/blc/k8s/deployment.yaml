@@ -1,0 +1,45 @@
+# blc (Bilibili 直播聊天) — hub 镜像，数据文件挂载同 compose
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blc
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: blc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blc
+  template:
+    metadata:
+      labels:
+        app: blc
+    spec:
+      containers:
+        - name: blc
+          image: xfgryujk/blivechat
+          ports:
+            - { containerPort: 12450 }
+          volumeMounts:
+            - { name: config, mountPath: /mnt/data/data/config.ini }
+            - { name: db, mountPath: /mnt/data/data/database.db }
+            - { name: templates, mountPath: /mnt/data/data/custom_public/templates }
+          resources:
+            limits: { memory: 256Mi, cpu: "1" }
+            requests: { memory: 128Mi, cpu: 250m }
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "wget -q -O /dev/null http://127.0.0.1:12450/ || exit 1"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: config
+          hostPath: { path: /opt/g41/.lc/config.ini, type: FileOrCreate }
+        - name: db
+          hostPath: { path: /opt/g41/.lc/database.db, type: FileOrCreate }
+        - name: templates
+          hostPath: { path: /opt/g41/.lc/custom_public/templates, type: DirectoryOrCreate }

@@ -1,0 +1,15 @@
+# attic Service — 对应 nginx upstream "attic { server attic:8080; }"
+# （compose 原 127.0.0.1:8188 宿主端口映射在 k8s 下不再需要，集群内直连）
+apiVersion: v1
+kind: Service
+metadata:
+  name: attic
+  namespace: g41
+  labels:
+    app.kubernetes.io/part-of: g41
+    app.kubernetes.io/name: attic
+spec:
+  selector:
+    app: attic
+  ports:
+    - { name: http, port: 8080, targetPort: 8080 }

@@ -155,6 +155,8 @@ kits_help() {
   echo "  kits reload       Hot-reload tile/i18n/link data into Redis (zero downtime)"
   echo "  kits pack [-L] [-S] [-A] [-D]  Build archive (-L .local, -S store, -A agents, -D docs)"
   echo "  kits simulate       Trace mode (--dry-run)"
+  echo "  backend [get|compose|k8s]  Select deployment backend"
+  echo "  k8s [apply|build|status]   k8s backend operations (apply --all = bootstrap all kits)"
   exit 0
 }
 
@@ -247,11 +249,21 @@ kits_check() {
     echo "  WARN: not in G41_KITS — module not installed"
   fi
 
-  # compose include
-  if grep -q "kits/$m/compose.yaml" compose.yaml 2>/dev/null; then
-    echo "  [compose] compose.yaml include"
-    found=$((found+1))
-  fi
+  # backend artifacts
+  case "$(backend_get)" in
+    k8s)
+      [ -d "kits/$m/k8s" ] && [ -n "$(ls kits/$m/k8s/*.yaml 2>/dev/null)" ] && { echo "  [k8s] manifests: kits/$m/k8s/"; found=$((found+1)); }
+      if command -v kubectl >/dev/null 2>&1 && kubectl get deploy -n g41 "$m" >/dev/null 2>&1; then
+        echo "  [k8s] deployment $m"; found=$((found+1))
+      fi
+      ;;
+    *)
+      if grep -q "kits/$m/compose.yaml" compose.yaml 2>/dev/null; then
+        echo "  [compose] compose.yaml include"
+        found=$((found+1))
+      fi
+      ;;
+  esac
 
   # discover installed files by type from dependency provides
   local type_list=$(kit_type_list "$m")
@@ -332,6 +344,133 @@ kits_mark() {
   sed "/^G41_KITS=/d" .env > "$tmp"
   [ -n "$current" ] && echo "G41_KITS=\"$current\"" >> "$tmp"
   mv "$tmp" .env
+}
+
+# ==== Backend (compose | k8s) ====
+backend_get() {
+  local v=$(grep "^G41_BACKEND=" .env 2>/dev/null | sed 's/^G41_BACKEND=//;s/"//g' | tr -d '\r\n')
+  [ -n "$v" ] && { echo "$v"; return 0; }
+  echo "compose"
+}
+backend_set() {
+  local v="$1" tmp=$(mktemp)
+  case "$v" in compose|k8s) ;; *) echo "ERROR: backend must be 'compose' or 'k8s'"; return 1;; esac
+  sed "/^G41_BACKEND=/d" .env > "$tmp"
+  echo "G41_BACKEND=$v" >> "$tmp"
+  mv "$tmp" .env
+  echo "Backend: $v"
+}
+
+# Regenerate compose.yaml include block from installed state.
+# Replaces fragile sed line-editing: idempotent, order-preserving,
+# and keeps entries that exist in include but not in G41_KITS.
+# op: add <m> | del <m> — reflects the pending G41_KITS change (before kits_mark).
+compose_include_regenerate() {
+  local op="$1" m="$2" tmp=$(mktemp)
+  local existing=$(awk '/^include:/{f=1;next} f && /^  - /{sub(/^  - /,"");sub(/[[:space:]]*$/,"");print; next} f && /^[^[:space:]]/{exit}' compose.yaml)
+  local paths="" m2
+  for m2 in $(kits_installed_list); do
+    [ -f "kits/$m2/compose.yaml" ] && paths="$paths\nkits/$m2/compose.yaml"
+  done
+  # union: file entries ∪ G41_KITS entries (preserves entries not tracked in G41_KITS)
+  local union=$(printf '%s\n%s' "$existing" "$(printf '%b' "$paths")" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | awk '!seen[$0]++')
+  case "$op" in
+    add) printf '%s' "$union" | grep -qx "kits/$m/compose.yaml" || union=$(printf '%s\nkits/%s/compose.yaml' "$union" "$m");;
+    del) union=$(printf '%s' "$union" | grep -vx "kits/$m/compose.yaml");;
+    *) echo "ERROR: compose_include_regenerate: op must be add|del"; return 1;;
+  esac
+  local rendered=""
+  while IFS= read -r e; do
+    [ -f "$e" ] || continue
+    rendered="$rendered  - $e\n"
+  done <<< "$union"
+  [ -z "$rendered" ] && rendered="  # (no container modules installed)\n"
+  awk -v r="$rendered" '
+    /^include:/ { print; printf "%s", r; f=1; next }
+    f && /^  - / { next }
+    f && /^[^[:space:]]/ { f=0 }
+    { print }
+  ' compose.yaml > "$tmp"
+  mv "$tmp" compose.yaml
+  echo "  [compose] include regenerated"
+}
+
+# ==== k8s backend helpers ====
+G41K8S_ROOT="/opt/g41"
+
+k8s_ready() {
+  command -v kubectl >/dev/null 2>&1 || { echo "ERROR: kubectl not found — install k3s first"; return 1; }
+  kubectl cluster-info >/dev/null 2>&1 || { echo "ERROR: k3s API unreachable — is k3s running?"; return 1; }
+  return 0
+}
+
+k8s_link_root() {
+  # stable absolute path for hostPath volumes, independent of the checkout location
+  if [ "$(readlink -f "$G41K8S_ROOT" 2>/dev/null)" != "$(pwd)" ]; then
+    ln -sfn "$(pwd)" "$G41K8S_ROOT"
+    echo "  [k8s] $G41K8S_ROOT -> $(pwd)"
+  fi
+}
+
+k8s_apply_base() {
+  # secret: whole .env as g41-env (declarative, idempotent, self-updating)
+  kubectl create secret generic g41-env --from-env-file=.env \
+    --dry-run=client -o yaml | kubectl apply -f -
+  # ClusterIssuer + Certificate rendered from .env (domains are deployment-specific)
+  local dns="" d
+  source .env 2>/dev/null
+  dns="    - \"$G41_DOMAIN\"\n    - \"*.$G41_DOMAIN\""
+  for d in $G41_EXTRA_DOMAINS; do
+    [ -n "$d" ] && dns="$dns\n    - \"$d\""
+  done
+  printf 'apiVersion: cert-manager.io/v1\nkind: ClusterIssuer\nmetadata:\n  name: g41-issuer\nspec:\n  acme:\n    server: https://acme-v02.api.letsencrypt.org/directory\n    email: %s\n    privateKeySecretRef:\n      name: g41-issuer-key\n    solvers:\n    - dns01:\n        cloudflare:\n          email: %s\n          apiKeySecretRef:\n            name: g41-env\n            key: CF_Key\n' "$ACME_EMAIL" "$CF_Email" | kubectl apply -f -
+  printf 'apiVersion: cert-manager.io/v1\nkind: Certificate\nmetadata:\n  name: g41-tls\n  namespace: g41\nspec:\n  secretName: g41-tls\n  issuerRef:\n    name: g41-issuer\n    kind: ClusterIssuer\n  dnsNames:\n%b' "$dns" | kubectl apply -f -
+}
+
+k8s_build() {
+  local m="$1"
+  local mode=$(jq -r '.compose // "none"' "kits/$m/info.json" 2>/dev/null)
+  [ "$mode" = "file" ] || return 0
+  local tag="g41k8s/$m:local"
+  echo "  [k8s] build $tag (kits/$m/Dockerfile)"
+  docker build -q -f "kits/$m/Dockerfile" -t "$tag" . || { echo "ERROR: docker build failed for $m"; return 1; }
+  docker save "$tag" | k3s ctr images import - || { echo "ERROR: image import failed for $m"; return 1; }
+}
+
+k8s_apply_module() {
+  k8s_ready || return 1
+  k8s_link_root
+  k8s_apply_base
+  local f
+  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+  for f in "kits/$1/k8s"/*.yaml; do
+    [ -f "$f" ] && kubectl apply -f "$f"
+  done
+}
+
+k8s_apply() {
+  k8s_ready || return 1
+  k8s_link_root
+  k8s_apply_base
+  local f m dir
+  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+  if [ "$1" = "--all" ]; then
+    for m in kits/*/; do
+      dir="${m%/}/k8s"
+      [ -d "$dir" ] && for f in "$dir"/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+    done
+  else
+    for m in $(kits_installed_list); do
+      dir="kits/$m/k8s"
+      [ -d "$dir" ] && for f in "$dir"/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+    done
+  fi
+  echo "k8s apply done."
+}
+
+k8s_status() {
+  k8s_ready || return 1
+  kubectl get -n g41 pods,svc,deploy 2>/dev/null
 }
 
 # ==== Resolver Helpers (recursive — walk full dependency tree) ====
@@ -488,22 +627,12 @@ kits_add() {
   fi
   kits_confirm "$skip" "Install module '$m'?" || { echo "Cancelled."; return 0; }
 
-  # Compose include
-  if [ -f "kits/$m/compose.yaml" ]; then
+  # Backend: compose include (regenerated) — k8s handled after content assembly
+  if [ "$(backend_get)" = "compose" ] && [ -f "kits/$m/compose.yaml" ]; then
     if [ -n "$dry" ]; then
       echo "  [dry] compose include"
     else
-      grep -q "kits/$m/compose.yaml" compose.yaml 2>/dev/null || {
-        local last_ln
-        last_ln=$(grep -n '^  - kits/' compose.yaml | tail -1 | cut -d: -f1)
-        if [ -n "$last_ln" ]; then
-          sed "${last_ln}a\  - kits/$m/compose.yaml" compose.yaml > compose.yaml.tmp && mv compose.yaml.tmp compose.yaml
-        else
-          # no existing module entries: append after include: line
-          sed "/^include:/a\  - kits/$m/compose.yaml" compose.yaml > compose.yaml.tmp && mv compose.yaml.tmp compose.yaml
-        fi
-      }
-      echo "  + compose include"
+      compose_include_regenerate add "$m"
     fi
   fi
 
@@ -721,6 +850,17 @@ kits_add() {
   fi
 
   kits_mark "$m" "add"
+
+  # k8s backend: build local images and apply manifests (after content assembly)
+  if [ "$(backend_get)" = "k8s" ]; then
+    if [ -n "$dry" ]; then
+      echo "  [dry] k8s build + apply"
+    else
+      k8s_build "$m" || return 1
+      [ -d "kits/$m/k8s" ] && k8s_apply_module "$m"
+    fi
+  fi
+
   echo "Module '$m' installed."
 }
 
@@ -770,10 +910,22 @@ kits_del() {
   kits_confirm "$skip" "Uninstall module '$m'?" || { echo "Cancelled."; return 0; }
   local removed=0
 
-  # compose include
-  if grep -q "kits/$m/compose.yaml" compose.yaml 2>/dev/null; then
-    sed "\|kits/$m/compose.yaml|d" compose.yaml > compose.yaml.tmp && mv compose.yaml.tmp compose.yaml
-    echo "  - compose include"; removed=$((removed+1))
+  # Backend: compose include (regenerated) / k8s manifests
+  if [ "$(backend_get)" = "compose" ]; then
+    if grep -q "kits/$m/compose.yaml" compose.yaml 2>/dev/null; then
+      compose_include_regenerate del "$m"
+      echo "  - compose include"; removed=$((removed+1))
+    fi
+  elif [ -d "kits/$m/k8s" ]; then
+    if command -v kubectl >/dev/null 2>&1; then
+      local f
+      for f in "kits/$m/k8s"/*.yaml; do
+        [ -f "$f" ] && kubectl delete -f "$f" --ignore-not-found=true
+      done
+      echo "  - k8s manifests"; removed=$((removed+1))
+    else
+      echo "  WARN: kubectl not found — skip k8s manifest removal"
+    fi
   fi
 
   # discover and remove installed files by type
@@ -967,7 +1119,7 @@ kits_reload() {
     return 1
   fi
   echo "Hot-reloading Redis data..."
-  docker compose exec -T api node -e "
+  local node_script="
     var http=require('http');
     var data=JSON.stringify({secret:'$secret'});
     var req=http.request({hostname:'127.0.0.1',port:5800,path:'/admin/reload',method:'POST',headers:{'Content-Type':'application/json','Content-Length':data.length}},function(res){
@@ -976,10 +1128,22 @@ kits_reload() {
     });
     req.on('error',function(e){console.error(e.message);process.exit(1);});
     req.write(data);req.end();
-  " 2>/dev/null || {
-    echo "ERROR: Reload failed. Ensure api container is running."
-    return 1
-  }
+  "
+  case "$(backend_get)" in
+    k8s)
+      k8s_ready >/dev/null 2>&1 || return 1
+      kubectl exec -n g41 deploy/api -- node -e "$node_script" 2>/dev/null || {
+        echo "ERROR: Reload failed. Ensure api deployment is running."
+        return 1
+      }
+      ;;
+    *)
+      docker compose exec -T api node -e "$node_script" 2>/dev/null || {
+        echo "ERROR: Reload failed. Ensure api container is running."
+        return 1
+      }
+      ;;
+  esac
   echo
   echo "Reload complete. Tiles, i18n, and links refreshed."
 }
@@ -1004,11 +1168,29 @@ main() {
         *) echo "Unknown kits command: $2"; kits_help;;
       esac
       ;;
+    k8s)
+      case "${2:-}" in
+        apply) shift 2; k8s_apply "$@";;
+        build) shift 2; for m in $(kits_installed_list); do k8s_build "$m"; done;;
+        status) k8s_status;;
+        ""|--help|-h) echo "Usage: $0 k8s [apply|build|status]  (apply --all = bootstrap all kits)";;
+        *) echo "Unknown k8s command: $2";;
+      esac
+      ;;
+    backend)
+      case "${2:-}" in
+        ""|get) backend_get;;
+        compose|k8s) backend_set "$2";;
+        *) echo "Usage: $0 backend [get|compose|k8s]";;
+      esac
+      ;;
     --help|-h)
-      echo "Usage: $0 [init|kits|--help]"
+      echo "Usage: $0 [init|kits|backend|k8s|--help]"
       echo "  (no args)   Show G41 ASCII art"
       echo "  init        Run full server setup"
       echo "  kits        Module management"
+      echo "  backend     Select deployment backend (compose|k8s)"
+      echo "  k8s         k8s backend operations"
       exit 0
       ;;
     "")
