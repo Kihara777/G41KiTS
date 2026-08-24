@@ -440,9 +440,9 @@ k8s_build() {
 k8s_apply_module() {
   k8s_ready || return 1
   k8s_link_root
-  k8s_apply_base
   local f
   [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+  k8s_apply_base
   for f in "kits/$1/k8s"/*.yaml; do
     [ -f "$f" ] && kubectl apply -f "$f"
   done
@@ -451,9 +451,9 @@ k8s_apply_module() {
 k8s_apply() {
   k8s_ready || return 1
   k8s_link_root
-  k8s_apply_base
   local f m dir
   [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+  k8s_apply_base
   if [ "$1" = "--all" ]; then
     for m in kits/*/; do
       dir="${m%/}/k8s"
@@ -471,9 +471,9 @@ k8s_apply() {
 k8s_apply_base_only() {
   k8s_ready || return 1
   k8s_link_root
-  k8s_apply_base
   local f
   [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+  k8s_apply_base
   echo "k8s base applied."
 }
 
