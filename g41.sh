@@ -468,6 +468,15 @@ k8s_apply() {
   echo "k8s apply done."
 }
 
+k8s_apply_base_only() {
+  k8s_ready || return 1
+  k8s_link_root
+  k8s_apply_base
+  local f
+  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+  echo "k8s base applied."
+}
+
 k8s_status() {
   k8s_ready || return 1
   kubectl get -n g41 pods,svc,deploy 2>/dev/null
@@ -1171,9 +1180,10 @@ main() {
     k8s)
       case "${2:-}" in
         apply) shift 2; k8s_apply "$@";;
-        build) shift 2; for m in $(kits_installed_list); do k8s_build "$m"; done;;
+        base) k8s_apply_base_only;;
+        build) shift 2; for m in $(kits_installed_list); do [ -d "kits/$m/k8s" ] && k8s_build "$m"; done;;
         status) k8s_status;;
-        ""|--help|-h) echo "Usage: $0 k8s [apply|build|status]  (apply --all = bootstrap all kits)";;
+        ""|--help|-h) echo "Usage: $0 k8s [apply|base|build|status]  (apply --all = bootstrap all kits)";;
         *) echo "Unknown k8s command: $2";;
       esac
       ;;

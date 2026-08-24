@@ -24,7 +24,7 @@ spec:
           image: adguard/dnsproxy
           ports:
             - { name: dns-tcp, containerPort: 53, hostPort: 53, protocol: TCP }
-            - { name: dns-udp, containerPort: 53, hostPort: 53, protocol: UDP }
+            - { name: dns-udp, containerPort: 53, protocol: UDP }
             - { name: dot-tcp, containerPort: 853, hostPort: 853, protocol: TCP }
             - { name: dot-udp, containerPort: 853, hostPort: 853, protocol: UDP }
             - { name: doh, containerPort: 53443 }
