@@ -414,8 +414,14 @@ k8s_link_root() {
 
 k8s_apply_base() {
   # secret: whole .env as g41-env (declarative, idempotent, self-updating)
+  #   - namespace g41: workloads (redis/api/attic)
+  #   - namespace cert-manager: ClusterIssuer 的 apiKeySecretRef 要求 Secret
+  #     与 cert-manager 部署同命名空间
   kubectl create secret generic g41-env --from-env-file=.env \
     --namespace g41 --dry-run=client -o yaml | kubectl apply -f -
+  kubectl get ns cert-manager >/dev/null 2>&1 && \
+    kubectl create secret generic g41-env --from-env-file=.env \
+    --namespace cert-manager --dry-run=client -o yaml | kubectl apply -f -
   # ClusterIssuer + Certificate rendered from .env (domains are deployment-specific)
   local dns="" d
   source .env 2>/dev/null
