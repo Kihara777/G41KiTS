@@ -25,7 +25,7 @@ spec:
           env:
             - name: ATTIC_SERVER_TOKEN_HS256_SECRET_BASE64
               valueFrom:
-                secretKeyRef: { name: g41-env, key: ATTIC_TOKEN_SECRET }
+                secretKeyRef: { name: g41-env, key: ATTIC_TOKEN_SECRET, optional: true }
             - { name: ATTIC_DATABASE, value: /data/attic.db }
             - { name: ATTIC_STORAGE_DIR, value: /data/storage }
             - { name: ATTIC_LISTEN, value: "0.0.0.0:8080" }
