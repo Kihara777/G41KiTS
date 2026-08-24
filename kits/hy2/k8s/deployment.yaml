@@ -30,7 +30,7 @@ spec:
             - { name: config, mountPath: /etc/hysteria.yaml, readOnly: true }
           resources:
             limits: { memory: 512Mi, cpu: "2" }
-            requests: { memory: 256Mi, cpu: 500m }
+            requests: { memory: 64Mi, cpu: 100m }
           livenessProbe:
             exec:
               command: ["sh", "-c", "kill -0 1 || exit 1"]

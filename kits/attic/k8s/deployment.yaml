@@ -33,7 +33,7 @@ spec:
             - { name: data, mountPath: /data }
           resources:
             limits: { memory: 512Mi, cpu: "2" }
-            requests: { memory: 256Mi, cpu: 500m }
+            requests: { memory: 64Mi, cpu: 100m }
           livenessProbe:
             tcpSocket:
               port: 8080

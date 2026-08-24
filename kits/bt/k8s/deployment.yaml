@@ -30,7 +30,7 @@ spec:
             - { name: webroot, mountPath: /webroot }
           resources:
             limits: { memory: 512Mi, cpu: "2" }
-            requests: { memory: 256Mi, cpu: 500m }
+            requests: { memory: 64Mi, cpu: 100m }
           livenessProbe:
             exec:
               command: ["sh", "-c", "nc -zw1 127.0.0.1 9091 || exit 1"]

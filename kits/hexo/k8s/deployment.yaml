@@ -30,7 +30,7 @@ spec:
             - { name: scaffolds, mountPath: /blog/scaffolds }
           resources:
             limits: { memory: 256Mi, cpu: "1" }
-            requests: { memory: 128Mi, cpu: 250m }
+            requests: { memory: 32Mi, cpu: 50m }
           livenessProbe:
             exec:
               command: ["sh", "-c", "wget -q -O /dev/null http://127.0.0.1:4000/ || exit 1"]

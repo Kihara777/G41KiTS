@@ -33,7 +33,7 @@ spec:
             - { name: config, mountPath: /opt/dnsproxy/config.yaml, readOnly: true }
           resources:
             limits: { memory: 256Mi, cpu: "1" }
-            requests: { memory: 128Mi, cpu: 250m }
+            requests: { memory: 32Mi, cpu: 50m }
           livenessProbe:
             exec:
               command: ["sh", "-c", "echo | nc -zw1 127.0.0.1 53 || exit 1"]

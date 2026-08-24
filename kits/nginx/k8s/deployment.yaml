@@ -31,7 +31,7 @@ spec:
             - { name: webroot, mountPath: /webroot }
           resources:
             limits: { memory: 256Mi, cpu: "1" }
-            requests: { memory: 128Mi, cpu: 250m }
+            requests: { memory: 32Mi, cpu: 50m }
           livenessProbe:
             exec:
               command: ["sh", "-c", "wget -q -O /dev/null --no-check-certificate http://127.0.0.1:80/ || exit 1"]

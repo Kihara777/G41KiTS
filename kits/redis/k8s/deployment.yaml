@@ -42,7 +42,7 @@ spec:
             - { name: data, mountPath: /data }
           resources:
             limits: { memory: 256Mi, cpu: "1" }
-            requests: { memory: 128Mi, cpu: 250m }
+            requests: { memory: 32Mi, cpu: 50m }
           livenessProbe:
             exec:
               command: ["sh", "-c", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep -q PONG"]
