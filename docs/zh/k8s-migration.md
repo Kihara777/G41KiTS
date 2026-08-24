@@ -4,10 +4,48 @@ Docker Compose 架构向 k3s 的迁移 runbook。**双轨共存、数据零迁�
 
 ## 0. 前置条件（必须先做）
 
-- **内存 ≥ 2GB**。当前 VPS 为 1GB（可用 ~360MB），k3s 控制面约需 300MB——
-  **先在 Conoha 控制台把 VPS 升级到 ≥2GB 再继续**。
+- **内存 ≥ 2GB**。1GB VPS 实测可跑（见下方"1GB 实战配置"），但长期仍建议升级。
 - 仓库已同步至最新（含 `k8s/`、`kits/*/k8s/`、新 `g41.sh`）。
 - 建议先做一次全量备份：`./g41.sh kits pack -SAL`
+
+## 0.1 1GB VPS 实战配置（本次迁移所用）
+
+在 958MB VPS 上让 k3s 稳定运行的三件套：
+
+1. **只用 zram，不用磁盘 swap**（磁盘 swap 的 I/O 会饿死 kine/sqlite，
+   表现为 apiserver TLS 握手超时、k3s 日志出现 "Slow SQL" 数秒）：
+   ```bash
+   apt-get install -y zram-tools
+   sed -i 's/^#\?PERCENT=.*/PERCENT=75/' /etc/default/zramswap
+   systemctl enable --now zramswap
+   # 追加第二块 zram（zramswap 实际产出约 50%）
+   cat > /etc/systemd/system/zram1-swap.service <<'EOF'
+[Unit]
+Description=Extra zram swap device (240M)
+After=zramswap.service
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c "[ -e /dev/zram1 ] || zramctl -f -s 240M; mkswap /dev/zram1 >/dev/null; swapon -p 90 /dev/zram1"
+ExecStop=/bin/sh -c "swapoff /dev/zram1 2>/dev/null; [ -e /dev/zram1 ] && zramctl -r /dev/zram1"
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload && systemctl enable zram1-swap
+   sysctl -w vm.swappiness=10
+   echo "vm.swappiness=10" > /etc/sysctl.d/99-g41.conf
+   sed -i 's|^/var/spool/swap/swapfile|#/var/spool/swap/swapfile|' /etc/fstab
+   swapoff /var/spool/swap/swapfile   # 立即卸载（页面转入 zram）
+   ```
+2. **kine/sqlite 降低同步强度**（`/etc/rancher/k3s/config.yaml`）：
+   ```yaml
+   datastore-endpoint: "sqlite:///var/lib/rancher/k3s/server/db/state.db?_pragma_busy_timeout(5000)&_pragma_journal_mode(WAL)&_pragma_synchronous(NORMAL)&_pragma_cache_size(2000)"
+   ```
+3. **fail2ban 白名单**（迁移期大量 SSH 会话会触发误封，导致连接被掐断）：
+   ```bash
+   printf "[DEFAULT]\nignoreip = 127.0.0.1/8 ::1 <你的出口IP>\n" > /etc/fail2ban/jail.d/99-g41.local
+   systemctl reload fail2ban
+   ```
 
 ## 1. 安装 k3s
 
@@ -115,5 +153,7 @@ docker compose down                 # 清理 compose 网络/容器（数据目�
 
 1. **证书签发从 ZeroSSL 换为 Let's Encrypt**（cert-manager 默认）。如需 ZeroSSL 可后续配置 issuer server URL。
 2. **attic 原 127.0.0.1:8188 宿主映射不再需要**（集群内直连 8080）。
-3. **证书轮换 = 秒级重启**（Reloader 滚动重启），不再是无缝 reload；如需无缝可后续加 nginx inotify sidecar。
-4. 1GB 内存 VPS 不升级则**不要执行 cutover**；升级后 k3s 与 docker（仅构建）共存无碍。
+3. **证书轮换 = 手动滚动重启**：`kubectl rollout restart deploy/{nginx,dns,hy2} -n g41`（约每 60 天一次；Reloader 因 k3s SSA 兼容问题及 1GB 内存未采用）。
+4. **G41_EXTRA_DOMAINS 暂缓**：多个附加域名共用 `_acme-challenge.g41.moe` 委托目标时，cert-manager 并发签发的清理竞态会导致部分 challenge 失败。需在各自 DNS 把 CNAME 改为**独立目标**（如 `_acme-challenge.maidkihara.g41.moe`）后恢复 `G41_EXTRA_DOMAINS` 并 `./g41.sh k8s base` 重新签发。旧 acme.sh 证书到期前（.ca 目录）仍可回退使用。
+5. **cron 清理**：迁移验证完成后移除旧栈周任务 `0 0 * * 7 docker compose build`（`crontab -e`）。
+6. **镜像构建**：`g41.sh k8s build` 已启用 BuildKit（`DOCKER_BUILDKIT=1`，Dockerfile 使用 heredoc COPY）；构建期间 docker 守护进程按需启停（`systemctl start docker` / `stop`），常态保持停止以省内存。
