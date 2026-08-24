@@ -17,3 +17,7 @@ spec:
             apiKeySecretRef:
               name: g41-env
               key: CF_Key
+          cnameStrategy: Follow
+          selector:
+            dnsZones:
+              - <G41_DOMAIN>   # G41_EXTRA_DOMAINS 经 _acme-challenge CNAME 委托到该 zone
