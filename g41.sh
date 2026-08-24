@@ -415,7 +415,7 @@ k8s_link_root() {
 k8s_apply_base() {
   # secret: whole .env as g41-env (declarative, idempotent, self-updating)
   kubectl create secret generic g41-env --from-env-file=.env \
-    --dry-run=client -o yaml | kubectl apply -f -
+    --namespace g41 --dry-run=client -o yaml | kubectl apply -f -
   # ClusterIssuer + Certificate rendered from .env (domains are deployment-specific)
   local dns="" d
   source .env 2>/dev/null
