@@ -35,7 +35,7 @@ spec:
           env:
             - name: REDIS_PASSWORD
               valueFrom:
-                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD }
+                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD, optional: true }
           ports:
             - { containerPort: 6379 }
           volumeMounts:

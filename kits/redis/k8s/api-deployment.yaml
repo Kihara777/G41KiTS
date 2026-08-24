@@ -24,13 +24,13 @@ spec:
           env:
             - name: REDIS_PASSWORD
               valueFrom:
-                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD }
+                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD, optional: true }
             - name: G41_DOMAIN
               valueFrom:
-                secretKeyRef: { name: g41-env, key: G41_DOMAIN }
+                secretKeyRef: { name: g41-env, key: G41_DOMAIN, optional: true }
             - name: RELOAD_SECRET
               valueFrom:
-                secretKeyRef: { name: g41-env, key: RELOAD_SECRET }
+                secretKeyRef: { name: g41-env, key: RELOAD_SECRET, optional: true }
           ports:
             - { containerPort: 5800 }
           volumeMounts:
