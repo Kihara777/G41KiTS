@@ -107,11 +107,12 @@ Node.js 服务禁用 `kill -0 1`（事件循环阻塞不崩溃）。
 
 ## 镜像版本
 
-- `FROM alpine` → 不允许 `FROM alpine:latest`
-- `FROM node:alpine` → 不允许 `FROM node:lts-alpine`
-- compose `image:` 不允许浮动标签
-- `ADD --checksum=sha256:` 用于远程 URL
-- `npm install -g <pkg>@<version>` 用于 npm 包
+采用**浮动标签策略**（跟随上游最新，不锁定版本）：
+
+- `FROM alpine` / `FROM node` / `FROM node:24-alpine` — 不锁定 patch
+- compose `image:` 浮动标签
+- 有兼容性需求时按需锁定（如 `bittorrent-tracker@10.0.1`）
+- `ADD --checksum=sha256:` 用于远程 URL 内容校验
 
 ## i18n
 

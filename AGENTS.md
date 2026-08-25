@@ -160,15 +160,14 @@ G41KiTS/
 
 禁止对 Node.js 服务使用 `kill -0 1`（事件循环可能在进程不崩溃的情况下阻塞）。
 
-### 镜像版本锁定
+### 镜像版本策略（浮动）
 
-所有镜像和基础镜像必须固定为**精确版本标签**：
+镜像标签采用**浮动策略**，跟随上游最新版本：
 
-- `FROM alpine:3.23.4` — 不允许 `FROM alpine` 或 `FROM alpine:latest`
-- `FROM node:24.16.0-alpine` — 不允许 `FROM node:lts-alpine`
-- compose.yaml 中的 `image: adguard/dnsproxy:v0.81.3` — 不允许浮动标签
-- Dockerfile 中的远程 URL 下载需使用 `ADD --checksum=sha256:...`
-- 全局 npm 包需使用 `npm install -g <pkg>@<version>`
+- `FROM alpine` / `FROM node` / `FROM node:24-alpine` — 不锁定 patch 版本
+- compose.yaml 的 `image: redis`、`image: adguard/dnsproxy` 等 — 浮动标签
+- `npm install <pkg>` 不锁定版本；有兼容性需求时按需锁定（如 `bittorrent-tracker@10.0.1`）
+- 远程 URL 下载仍使用 `ADD --checksum=sha256:...`（内容完整性校验，与版本策略无关）
 
 ### `provides` 系统
 模块声明它们提供的目录以及接受的文件类型。安装器通过完整依赖树递归解析所有 `provides`。路径不硬编码——每个目标目录在安装时通过 `kit_resolve` 从 `info.json` 中发现。
