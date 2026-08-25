@@ -477,8 +477,39 @@ k8s_apply() {
   echo "k8s apply done."
 }
 
+k8s_stage() {
+  # 分阶段部署（1GB 机防 Pod 启动风暴）：
+  # 应用全部 manifest → 全部缩 0 → 按依赖顺序逐个拉起并等待 Ready
+  # attic 暂缓（内存不足时优先让出）
+  k8s_ready || return 1
+  k8s_link_root
+  local f m dir
+  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply --validate=false -f "$f"; done
+  k8s_apply_base
+  for m in kits/*/; do
+    dir="${m%/}/k8s"
+    [ -d "$dir" ] && for f in "$dir"/*.yaml; do [ -f "$f" ] && kubectl apply --validate=false -f "$f"; done
+  done
+  k8s_nginx_conf_apply
+  kubectl scale deployment -n g41 --replicas=0 --all 2>/dev/null
+  local order="redis nginx dns download hako blc hy2"
+  for m in $order; do
+    echo "  [stage] scale up $m"
+    kubectl scale deployment -n g41 "$m" --replicas=1 2>/dev/null
+    local tries=0 ready=""
+    while [ $tries -lt 36 ]; do
+      ready=$(kubectl get deploy -n g41 "$m" -o jsonpath='{.status.readyReplicas}' 2>/dev/null)
+      [ "$ready" = "1" ] && break
+      sleep 10; tries=$((tries+1))
+    done
+    [ "$ready" = "1" ] && echo "  [stage] $m ready" || echo "  [stage] $m 未就绪（继续下一个）"
+  done
+  echo "stage done.（attic 暂缓：kubectl scale deployment attic --replicas=1 恢复）"
+}
+
 k8s_nginx_conf_apply() {
   # 将 g41.sh 装配进 .gx 的 nginx 配置渲染为 ConfigMap 并应用
+  # （nginx-main: nginx.conf+mime.types；conf.d 下 4 个固定子目录各一个 ConfigMap）
   # （nginx-main: nginx.conf+mime.types；conf.d 下 4 个固定子目录各一个 ConfigMap）
   # delete+apply 确保移除的 site 片段不会残留在 ConfigMap 中
   [ -d .gx ] || { echo "  [k8s] nginx conf: .gx 未装配，跳过"; return 0; }
@@ -1211,12 +1242,13 @@ main() {
     k8s)
       case "${2:-}" in
         apply) shift 2; k8s_apply "$@";;
+        stage) k8s_stage;;
         base) k8s_apply_base_only;;
         conf) k8s_nginx_conf_apply;;
         hexo) kubectl delete job hexo-build -n g41 --ignore-not-found >/dev/null 2>&1; kubectl apply --validate=false -f kits/hexo/k8s/build-job.yaml.tmpl;;
         build) shift 2; if [ -n "${1:-}" ]; then k8s_build "$1"; else for m in $(kits_installed_list); do [ -d "kits/$m/k8s" ] && k8s_build "$m"; done; fi;;
         status) k8s_status;;
-        ""|--help|-h) echo "Usage: $0 k8s [apply|base|conf|hexo|build|status]  (apply --all = bootstrap all kits)";;
+        ""|--help|-h) echo "Usage: $0 k8s [apply|stage|base|conf|hexo|build|status]  (stage = 分阶段部署，1GB 机推荐)";;
         *) echo "Unknown k8s command: $2";;
       esac
       ;;
