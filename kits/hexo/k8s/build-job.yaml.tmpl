@@ -19,8 +19,8 @@ spec:
             - -ec
             - |
               [ -s /blog/_config.yml ] || cp /hexo-init/_config.yml /blog/_config.yml
-              cd /blog && npm install --no-audit --no-fund >/dev/null 2>&1 || true
-              hexo generate
+              cp -a /hexo-init/node_modules /blog/ 2>/dev/null || true
+              cd /blog && hexo generate
               mkdir -p /out && rm -rf /out/* && cp -a public/. /out/
           volumeMounts:
             - { name: source, mountPath: /blog/source }
