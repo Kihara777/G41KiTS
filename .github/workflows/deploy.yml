@@ -25,7 +25,7 @@ jobs:
           REMOTE_HOST: ${{ secrets.VPS_HOST }}
           REMOTE_USER: ${{ secrets.VPS_USER }}
           TARGET: ${{ secrets.VPS_PATH }}
-          ARGS: "-rlgoDz --delete --exclude=.git --exclude=.*/ --exclude=*.bak --exclude=G41KiTS_*.tar.gz --exclude=.deepseek"
+          ARGS: "-rlgoDz --delete --exclude=.git --exclude=.*/ --exclude=.env --exclude=.local.sh --exclude=*.bak --exclude=G41KiTS_*.tar.gz --exclude=.deepseek"
           EXCLUDE: ""
 
       - name: Apply on VPS (nginx conf + workloads)
