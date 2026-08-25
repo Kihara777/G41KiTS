@@ -24,7 +24,8 @@ spec:
       containers:
         - name: hy2
           image: tobyxdd/hysteria
-          command: ["server", "-c", "/etc/hysteria.yaml"]
+          # k8s args ≈ compose command（覆盖 CMD，保留镜像 ENTRYPOINT hysteria）
+          args: ["server", "-c", "/etc/hysteria.yaml"]
           volumeMounts:
             - { name: certs, mountPath: /certs, readOnly: true }
             - { name: config, mountPath: /etc/hysteria.yaml, readOnly: true }
