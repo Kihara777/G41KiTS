@@ -1,0 +1,40 @@
+# 部署 GitHub 仓库的共有内容到 VPS（k3s 模式）
+# 所需 secrets（Settings → Secrets and variables → Actions）：
+#   VPS_HOST     — VPS 主机名/IP（如 g41.moe）
+#   VPS_USER     — SSH 用户（如 root）
+#   VPS_SSH_KEY  — 部署专用私钥（对应 VPS 上 authorized_keys）
+#   VPS_PATH     — 仓库根（如 /root/G41KiTS）
+# .gitignore 的私有内容（.env、kits/*/.local）不经此处，用 deploy-local.sh 手动推送
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync public content over SSH (rsync)
+        uses: easingthemes/ssh-deploy@v5
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST }}
+          REMOTE_USER: ${{ secrets.VPS_USER }}
+          TARGET: ${{ secrets.VPS_PATH }}
+          ARGS: "-rlgoDz --delete --exclude=.git --exclude=.*/ --exclude=*.bak --exclude=G41KiTS_*.tar.gz --exclude=.deepseek"
+          EXCLUDE: ""
+
+      - name: Apply on VPS (nginx conf + workloads)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.VPS_PATH }}
+            ./g41.sh k8s conf
+            ./g41.sh k8s apply --all
