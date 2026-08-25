@@ -26,8 +26,8 @@ spec:
             - { name: source, mountPath: /blog/source }
             - { name: themes, mountPath: /blog/themes }
             - { name: scaffolds, mountPath: /blog/scaffolds }
-            - { name: config, mountPath: /blog/_config.yml, subPath: _config.yml }
-            - { name: pkg, mountPath: /blog/package.json, subPath: package.json }
+            - { name: config, mountPath: /blog/_config.yml }
+            - { name: pkg, mountPath: /blog/package.json }
             - { name: out, mountPath: /out }
       volumes:
         - { name: source, hostPath: { path: /opt/g41/.hx/source, type: DirectoryOrCreate } }
