@@ -5,7 +5,7 @@ RUN mkdir -p /blog /hexo-init
 WORKDIR /hexo-init
 RUN hexo init . --no-install 2>/dev/null || true
 RUN npm install --no-audit --no-fund
-COPY entry.sh /entry.sh
+COPY kits/hexo/entry.sh /entry.sh
 RUN chmod +x /entry.sh
 EXPOSE 4000
 ENTRYPOINT ["/entry.sh"]
