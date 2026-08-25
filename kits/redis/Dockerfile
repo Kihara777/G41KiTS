@@ -3,7 +3,7 @@
 # k8s 模式入口：node /app/entry.js（tracker + API 同进程，省一个 node 运行时）
 FROM node:24-alpine
 WORKDIR /app
-RUN npm install redis bittorrent-tracker
+RUN npm install redis bittorrent-tracker@10.0.1
 COPY kits/redis/entry.js /app/entry.js
 EXPOSE 5800 8000
 ENTRYPOINT ["node"]
