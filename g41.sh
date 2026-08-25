@@ -515,7 +515,7 @@ k8s_nginx_conf_apply() {
   [ -d .gx ] || { echo "  [k8s] nginx conf: .gx 未装配，跳过"; return 0; }
   [ -f .gx/nginx.conf ] || { echo "  [k8s] nginx conf: .gx/nginx.conf 缺失，跳过"; return 0; }
   kubectl delete configmap nginx-main --ignore-not-found >/dev/null 2>&1
-  kubectl create configmap nginx-main --from-file=nginx.conf=.gx/nginx.conf --from-file=mime.types=.gx/mime.types \
+  kubectl create configmap nginx-main --namespace g41 --from-file=nginx.conf=.gx/nginx.conf --from-file=mime.types=.gx/mime.types \
     --dry-run=client -o yaml | kubectl apply --validate=false -f -
   local sub n
   for sub in zones upstreams servers locations; do
@@ -524,7 +524,7 @@ k8s_nginx_conf_apply() {
     n=$(ls "$dir" 2>/dev/null | wc -l)
     [ "$n" -gt 0 ] || continue
     kubectl delete configmap "nginx-conf-$sub" --ignore-not-found >/dev/null 2>&1
-    kubectl create configmap "nginx-conf-$sub" --from-file="$dir" \
+    kubectl create configmap "nginx-conf-$sub" --namespace g41 --from-file="$dir" \
       --dry-run=client -o yaml | kubectl apply --validate=false -f -
   done
   echo "  [k8s] nginx conf ConfigMaps applied"
