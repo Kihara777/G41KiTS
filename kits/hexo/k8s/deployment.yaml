@@ -22,6 +22,8 @@ spec:
         - name: hexo
           image: g41k8s/hexo:local
           imagePullPolicy: IfNotPresent
+          env:
+            - { name: NODE_OPTIONS, value: "--max-old-space-size=160" }
           ports:
             - { containerPort: 4000 }
           volumeMounts:

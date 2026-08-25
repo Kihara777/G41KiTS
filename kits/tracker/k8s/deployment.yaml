@@ -21,6 +21,8 @@ spec:
         - name: tracker
           image: g41k8s/tracker:local
           imagePullPolicy: IfNotPresent
+          env:
+            - { name: NODE_OPTIONS, value: "--max-old-space-size=128" }
           ports:
             - { containerPort: 8000 }
           resources:
