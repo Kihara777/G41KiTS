@@ -1,4 +1,5 @@
-# nginx 网关 — hostPort 80/443；配置来自 g41.sh 装配的 /opt/g41/.gx（同 compose）
+# nginx 网关 — 配置 ConfigMap 化（g41.sh 从 .gx 装配结果渲染 nginx-main + 4 个子目录 ConfigMap）
+# 配置/证书变更由 reloader sidecar 轮询检测并 nginx -s reload，无需重启 Pod
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,9 +17,8 @@ spec:
     metadata:
       labels:
         app: nginx
-      annotations:
-        reloader.stakater.com/auto: "true"
     spec:
+      shareProcessNamespace: true
       containers:
         - name: nginx
           image: nginx:alpine
@@ -26,8 +26,12 @@ spec:
             - { name: http, containerPort: 80, hostPort: 80, protocol: TCP }
             - { name: https, containerPort: 443, hostPort: 443, protocol: TCP }
           volumeMounts:
+            - { name: main, mountPath: /etc/nginx, readOnly: true }
+            - { name: zones, mountPath: /etc/nginx/conf.d/zones, readOnly: true }
+            - { name: upstreams, mountPath: /etc/nginx/conf.d/upstreams, readOnly: true }
+            - { name: servers, mountPath: /etc/nginx/conf.d/servers, readOnly: true }
+            - { name: locations, mountPath: /etc/nginx/conf.d/locations, readOnly: true }
             - { name: certs, mountPath: /certs, readOnly: true }
-            - { name: conf, mountPath: /etc/nginx }
             - { name: webroot, mountPath: /webroot }
           resources:
             limits: { memory: 256Mi, cpu: "1" }
@@ -39,14 +43,49 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
+        - name: reloader
+          image: nginx:alpine
+          command:
+            - sh
+            - -ec
+            - |
+              touch /tmp/.last
+              while true; do
+                if find /etc/nginx /certs -newer /tmp/.last 2>/dev/null | grep -q .; then
+                  touch /tmp/.last
+                  kill -HUP 1 || exit 1
+                fi
+                sleep 5
+              done
+          resources:
+            limits: { memory: 16Mi, cpu: 50m }
+            requests: { memory: 4Mi, cpu: 10m }
       volumes:
+        - name: main
+          configMap:
+            name: nginx-main
+            defaultMode: 0444
+        - name: zones
+          configMap:
+            name: nginx-conf-zones
+            defaultMode: 0444
+        - name: upstreams
+          configMap:
+            name: nginx-conf-upstreams
+            defaultMode: 0444
+        - name: servers
+          configMap:
+            name: nginx-conf-servers
+            defaultMode: 0444
+        - name: locations
+          configMap:
+            name: nginx-conf-locations
+            defaultMode: 0444
         - name: certs
           secret:
             secretName: g41-tls
             items:
               - { key: tls.crt, path: fc }
               - { key: tls.key, path: k }
-        - name: conf
-          hostPath: { path: /opt/g41/.gx, type: DirectoryOrCreate }
         - name: webroot
           hostPath: { path: /opt/g41/.wr, type: DirectoryOrCreate }

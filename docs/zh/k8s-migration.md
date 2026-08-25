@@ -153,7 +153,7 @@ docker compose down                 # 清理 compose 网络/容器（数据目�
 
 1. **证书签发从 ZeroSSL 换为 Let's Encrypt**（cert-manager 默认）。如需 ZeroSSL 可后续配置 issuer server URL。
 2. **attic 原 127.0.0.1:8188 宿主映射不再需要**（集群内直连 8080）。
-3. **证书轮换 = 手动滚动重启**：`kubectl rollout restart deploy/{nginx,dns,hy2} -n g41`（约每 60 天一次；Reloader 因 k3s SSA 兼容问题及 1GB 内存未采用）。
+3. **证书轮换**：nginx 由 Pod 内 reloader sidecar 检测 `/certs` 变化自动 `nginx -s reload`（无缝）；dns/hy2 无热重载，需 `kubectl rollout restart deploy/{dns,hy2} -n g41`（约每 60 天一次）。
 4. **G41_EXTRA_DOMAINS 暂缓**：多个附加域名共用 `_acme-challenge.g41.moe` 委托目标时，cert-manager 并发签发的清理竞态会导致部分 challenge 失败。需在各自 DNS 把 CNAME 改为**独立目标**（如 `_acme-challenge.maidkihara.g41.moe`）后恢复 `G41_EXTRA_DOMAINS` 并 `./g41.sh k8s base` 重新签发。旧 acme.sh 证书到期前（.ca 目录）仍可回退使用。
 5. **cron 清理**：迁移验证完成后移除旧栈周任务 `0 0 * * 7 docker compose build`（`crontab -e`）。
 6. **镜像构建**：`g41.sh k8s build` 已启用 BuildKit（`DOCKER_BUILDKIT=1`，Dockerfile 使用 heredoc COPY）；构建期间 docker 守护进程按需启停（`systemctl start docker` / `stop`），常态保持停止以省内存。

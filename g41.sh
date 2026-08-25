@@ -453,6 +453,7 @@ k8s_apply_module() {
   for f in "kits/$1/k8s"/*.yaml; do
     [ -f "$f" ] && kubectl apply -f "$f"
   done
+  k8s_nginx_conf_apply
 }
 
 k8s_apply() {
@@ -472,7 +473,30 @@ k8s_apply() {
       [ -d "$dir" ] && for f in "$dir"/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
     done
   fi
+  k8s_nginx_conf_apply
   echo "k8s apply done."
+}
+
+k8s_nginx_conf_apply() {
+  # 将 g41.sh 装配进 .gx 的 nginx 配置渲染为 ConfigMap 并应用
+  # （nginx-main: nginx.conf+mime.types；conf.d 下 4 个固定子目录各一个 ConfigMap）
+  # delete+apply 确保移除的 site 片段不会残留在 ConfigMap 中
+  [ -d .gx ] || { echo "  [k8s] nginx conf: .gx 未装配，跳过"; return 0; }
+  [ -f .gx/nginx.conf ] || { echo "  [k8s] nginx conf: .gx/nginx.conf 缺失，跳过"; return 0; }
+  kubectl delete configmap nginx-main --ignore-not-found >/dev/null 2>&1
+  kubectl create configmap nginx-main --from-file=nginx.conf=.gx/nginx.conf --from-file=mime.types=.gx/mime.types \
+    --dry-run=client -o yaml | kubectl apply -f -
+  local sub n
+  for sub in zones upstreams servers locations; do
+    local dir=".gx/conf.d/$sub"
+    [ -d "$dir" ] || continue
+    n=$(ls "$dir" 2>/dev/null | wc -l)
+    [ "$n" -gt 0 ] || continue
+    kubectl delete configmap "nginx-conf-$sub" --ignore-not-found >/dev/null 2>&1
+    kubectl create configmap "nginx-conf-$sub" --from-file="$dir" \
+      --dry-run=client -o yaml | kubectl apply -f -
+  done
+  echo "  [k8s] nginx conf ConfigMaps applied"
 }
 
 k8s_apply_base_only() {
@@ -1188,6 +1212,7 @@ main() {
       case "${2:-}" in
         apply) shift 2; k8s_apply "$@";;
         base) k8s_apply_base_only;;
+        conf) k8s_nginx_conf_apply;;
         build) shift 2; if [ -n "${1:-}" ]; then k8s_build "$1"; else for m in $(kits_installed_list); do [ -d "kits/$m/k8s" ] && k8s_build "$m"; done; fi;;
         status) k8s_status;;
         ""|--help|-h) echo "Usage: $0 k8s [apply|base|build|status]  (apply --all = bootstrap all kits)";;

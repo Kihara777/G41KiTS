@@ -22,7 +22,7 @@ kits/<module>/k8s/        # 每个容器模块的 Deployment/Service
 | 数据 | hostPath 挂载 `/opt/g41/.rd` 等 → **零数据迁移**，与 compose 共用同一批目录 |
 | 证书 | cert-manager（Cloudflare DNS01）替代 acme.sh；轮换后手动 `kubectl rollout restart deploy/{nginx,dns,hy2} -n g41`（每 ~60 天一次） |
 | acme/autoheal/dsock | 无 k8s manifest，整体退役（探针/cert-manager 原生替代） |
-| 网关 | 保留 nginx（hostPort 80/443），配置仍来自 .gx 装配 |
+| 网关 | 保留 nginx（hostPort 80/443）；配置 ConfigMap 化（`g41.sh k8s conf` 从 .gx 装配结果渲染），sidecar 轮询检测变更自动 `nginx -s reload` |
 | hy2 | hostNetwork（443/udp 与 nginx 共存，同现状） |
 | 镜像 | hub 模块沿用原镜像；`compose: file` 模块 `docker build` + `k3s ctr images import`（tag `g41k8s/<kit>:local`） |
 | 密钥 | `kubectl create secret g41-env --from-env-file=.env`（声明式、幂等、自更新） |
@@ -34,6 +34,7 @@ kits/<module>/k8s/        # 每个容器模块的 Deployment/Service
 ```bash
 ./g41.sh backend k8s              # 切换后端（写入 .env: G41_BACKEND=k8s）
 ./g41.sh k8s apply --all          # 应用 base + 全部模块 manifest（引导部署）
+./g41.sh k8s conf                 # 仅重渲染 nginx 配置 ConfigMap（sidecar 自动 reload）
 ./g41.sh kits add -y <module>     # 安装模块：装配内容 + 构建镜像 + apply manifest
 ./g41.sh kits del -y <module>     # 卸载模块：删除 manifest + 移除装配内容
 ./g41.sh k8s build                # 重建全部 compose=file 模块的镜像
