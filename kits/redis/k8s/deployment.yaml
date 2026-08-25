@@ -1,4 +1,4 @@
-# redis — AOF 持久化于 /opt/g41/.rd（与 compose 共用同一数据目录）
+# redis + api(+tracker) 合一 Pod：省 Pod 开销；api 与 tracker 同进程（entry.js）
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,6 +16,7 @@ spec:
     metadata:
       labels:
         app: redis
+        component: api
     spec:
       containers:
         - name: redis
@@ -50,6 +51,42 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
+        - name: api
+          image: g41k8s/redis:local
+          imagePullPolicy: IfNotPresent
+          args: ["/app/entry.js"]
+          env:
+            - { name: NODE_OPTIONS, value: "--max-old-space-size=128" }
+            - { name: REDIS_HOST, value: redis }
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD, optional: true }
+            - name: G41_DOMAIN
+              valueFrom:
+                secretKeyRef: { name: g41-env, key: G41_DOMAIN, optional: true }
+            - name: RELOAD_SECRET
+              valueFrom:
+                secretKeyRef: { name: g41-env, key: RELOAD_SECRET, optional: true }
+          ports:
+            - { containerPort: 5800 }
+            - { containerPort: 8000 }
+          volumeMounts:
+            - { name: server-js, mountPath: /app/server.js, readOnly: true }
+            - { name: conf-data, mountPath: /conf-data, readOnly: true }
+          resources:
+            limits: { memory: 256Mi, cpu: "1" }
+            requests: { memory: 32Mi, cpu: 50m }
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "wget -q -O /dev/null http://127.0.0.1:5800/data/tiles || exit 1"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
       volumes:
         - name: data
           hostPath: { path: /opt/g41/.rd, type: DirectoryOrCreate }
+        - name: server-js
+          hostPath: { path: /opt/g41/.rd/server.js, type: FileOrCreate }
+        - name: conf-data
+          hostPath: { path: /opt/g41/.rd/data, type: DirectoryOrCreate }

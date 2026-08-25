@@ -1,7 +1,7 @@
 const http=require('http'),fs=require('fs'),path=require('path'),redis=require('redis');
 
 var redisClient=redis.createClient({
-  socket:{host:'rd',port:6379},
+  socket:{host:process.env.REDIS_HOST||'rd',port:6379},
   password:process.env.REDIS_PASSWORD||undefined
 });
 redisClient.on('error',function(e){console.error('Redis:',e.message);});

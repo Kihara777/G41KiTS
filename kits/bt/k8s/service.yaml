@@ -9,6 +9,6 @@ metadata:
     app.kubernetes.io/name: bt
 spec:
   selector:
-    app: bt
+    app: download
   ports:
     - { name: rpc, port: 9091, targetPort: 9091 }

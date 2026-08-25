@@ -9,6 +9,6 @@ metadata:
     app.kubernetes.io/name: aria2
 spec:
   selector:
-    app: aria2
+    app: download
   ports:
     - { name: rpc, port: 6800, targetPort: 6800 }

@@ -1213,9 +1213,10 @@ main() {
         apply) shift 2; k8s_apply "$@";;
         base) k8s_apply_base_only;;
         conf) k8s_nginx_conf_apply;;
+        hexo) kubectl delete job hexo-build -n g41 --ignore-not-found >/dev/null 2>&1; kubectl apply --validate=false -f kits/hexo/k8s/build-job.yaml;;
         build) shift 2; if [ -n "${1:-}" ]; then k8s_build "$1"; else for m in $(kits_installed_list); do [ -d "kits/$m/k8s" ] && k8s_build "$m"; done; fi;;
         status) k8s_status;;
-        ""|--help|-h) echo "Usage: $0 k8s [apply|base|build|status]  (apply --all = bootstrap all kits)";;
+        ""|--help|-h) echo "Usage: $0 k8s [apply|base|conf|hexo|build|status]  (apply --all = bootstrap all kits)";;
         *) echo "Unknown k8s command: $2";;
       esac
       ;;

@@ -1,0 +1,36 @@
+# hexo 静态构建 Job：内容更新后手动触发（博客由 nginx 直接服务静态文件，无常驻 Pod）
+# 触发：./g41.sh k8s hexo  或  kubectl delete job hexo-build -n g41 --ignore-not-found && kubectl apply -f 本文件
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hexo-build
+  namespace: g41
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: build
+          image: g41k8s/hexo:local
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -ec
+            - |
+              [ -s /blog/_config.yml ] || cp /hexo-init/_config.yml /blog/_config.yml
+              cd /blog && npm install --no-audit --no-fund >/dev/null 2>&1 || true
+              hexo generate
+              mkdir -p /out && rm -rf /out/* && cp -a public/. /out/
+          volumeMounts:
+            - { name: source, mountPath: /blog/source }
+            - { name: themes, mountPath: /blog/themes }
+            - { name: scaffolds, mountPath: /blog/scaffolds }
+            - { name: config, mountPath: /blog/_config.yml, subPath: _config.yml }
+            - { name: out, mountPath: /out }
+      volumes:
+        - { name: source, hostPath: { path: /opt/g41/.hx/source, type: DirectoryOrCreate } }
+        - { name: themes, hostPath: { path: /opt/g41/.hx/themes, type: DirectoryOrCreate } }
+        - { name: scaffolds, hostPath: { path: /opt/g41/.hx/scaffolds, type: DirectoryOrCreate } }
+        - { name: config, hostPath: { path: /opt/g41/.hx/_config.yml, type: FileOrCreate } }
+        - { name: out, hostPath: { path: /opt/g41/.wr/hexo, type: DirectoryOrCreate } }

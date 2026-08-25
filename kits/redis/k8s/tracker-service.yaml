@@ -1,4 +1,5 @@
-# tracker Service — 对应 nginx upstream "wt { server tracker:8000; }"
+# tracker Service — 指向 api 容器（tracker 与 api 同进程，端口 8000）
+# 名称保持 tracker：nginx upstream "wt { server tracker:8000; }" 不变
 apiVersion: v1
 kind: Service
 metadata:
@@ -9,6 +10,6 @@ metadata:
     app.kubernetes.io/name: tracker
 spec:
   selector:
-    app: tracker
+    component: api
   ports:
     - { name: http, port: 8000, targetPort: 8000 }

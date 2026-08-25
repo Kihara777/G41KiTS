@@ -27,7 +27,7 @@ spec:
             - { name: db, mountPath: /mnt/data/data/database.db }
             - { name: templates, mountPath: /mnt/data/data/custom_public/templates }
           resources:
-            limits: { memory: 256Mi, cpu: "1" }
+            limits: { memory: 192Mi, cpu: "1" }
             requests: { memory: 32Mi, cpu: 50m }
           livenessProbe:
             exec:

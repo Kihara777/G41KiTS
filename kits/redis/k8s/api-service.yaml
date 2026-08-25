@@ -9,6 +9,6 @@ metadata:
     app.kubernetes.io/name: api
 spec:
   selector:
-    app: api
+    component: api
   ports:
     - { name: http, port: 5800, targetPort: 5800 }

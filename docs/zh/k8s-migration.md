@@ -180,6 +180,10 @@ docker compose down                 # 清理 compose 网络/容器（数据目�
 
 ## 已知取舍
 
+1. **Pod 整合（12 → 8）**：hexo 静态化（`k8s hexo` 按需构建，nginx try_files 静态优先/代理回退，compose 行为不变）；tracker 并入 api 进程（entry.js，同 node 运行时）；api 并入 redis Pod；aria2+bt 合 Pod。省约 3 个 node 运行时与 4 个 Pod 开销（预估 -350MB 工作集）。
+2. **镜像 alpine 化**：api/tracker/hexo 构建镜像 `FROM node`（Debian ~1.3GB）→ `node:24-alpine`（~150-200MB），磁盘省 ~3.4GB，`k8s build` 导入从分钟级到秒级。
+3. **REDIS_HOST 修复**：server.js 原硬编码 compose 容器名 `rd`，k8s 下不可解析（api 假健康）——改为 `process.env.REDIS_HOST||'rd'`，k8s manifest 注入 `REDIS_HOST=redis`。
+
 1. **证书签发从 ZeroSSL 换为 Let's Encrypt**（cert-manager 默认）。如需 ZeroSSL 可后续配置 issuer server URL。
 2. **attic 原 127.0.0.1:8188 宿主映射不再需要**（集群内直连 8080）。
 3. **证书轮换**：nginx 由 Pod 内 reloader sidecar 检测 `/certs` 变化自动 `nginx -s reload`（无缝）；dns/hy2 无热重载，需 `kubectl rollout restart deploy/{dns,hy2} -n g41`（约每 60 天一次）。

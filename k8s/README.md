@@ -28,6 +28,19 @@ kits/<module>/k8s/        # 每个容器模块的 Deployment/Service
 | 密钥 | `kubectl create secret g41-env --from-env-file=.env`（声明式、幂等、自更新） |
 | 健康检查 | compose healthcheck → livenessProbe（同命令） |
 | 资源限制 | mem_limit/cpus → resources.limits/requests |
+| Pod 整合 | 12 Pod → 8 Pod：hexo 静态化（Job 按需构建）、tracker 并入 api 进程（entry.js）、api 并入 redis Pod（sidecar）、aria2+bt 合 Pod |
+
+## Pod 拓扑（整合后）
+
+| Pod | 内容 | 镜像 |
+|---|---|---|
+| nginx | 网关（ConfigMap + reload sidecar） | nginx:alpine |
+| redis | redis + api + tracker（同进程） | redis / g41k8s/redis:local（node:24-alpine） |
+| download | aria2 + bt 双容器共享 webroot | g41k8s/{aria2,bt}:local |
+| dns / hy2 / hako / blc / attic | 单服务 | 各自原镜像 |
+
+hexo 无常驻 Pod：内容更新后 `./g41.sh k8s hexo` 触发构建 Job，
+输出到 `/opt/g41/.wr/hexo`，nginx `try_files` 静态优先、代理回退（compose 模式行为不变）。
 
 ## 使用
 
@@ -35,6 +48,7 @@ kits/<module>/k8s/        # 每个容器模块的 Deployment/Service
 ./g41.sh backend k8s              # 切换后端（写入 .env: G41_BACKEND=k8s）
 ./g41.sh k8s apply --all          # 应用 base + 全部模块 manifest（引导部署）
 ./g41.sh k8s conf                 # 仅重渲染 nginx 配置 ConfigMap（sidecar 自动 reload）
+./g41.sh k8s hexo                 # 触发 hexo 静态构建 Job（博客内容更新后）
 ./g41.sh kits add -y <module>     # 安装模块：装配内容 + 构建镜像 + apply manifest
 ./g41.sh kits del -y <module>     # 卸载模块：删除 manifest + 移除装配内容
 ./g41.sh k8s build                # 重建全部 compose=file 模块的镜像
