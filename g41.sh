@@ -457,8 +457,12 @@ k8s_apply_base() {
   for d in $G41_EXTRA_DOMAINS; do
     [ -n "$d" ] && dns="$dns\n    - \"$d\""
   done
-  printf 'apiVersion: cert-manager.io/v1\nkind: ClusterIssuer\nmetadata:\n  name: g41-issuer\nspec:\n  acme:\n    server: https://acme-v02.api.letsencrypt.org/directory\n    email: %s\n    privateKeySecretRef:\n      name: g41-issuer-key\n    solvers:\n    - dns01:\n        cloudflare:\n          email: %s\n          apiKeySecretRef:\n            name: g41-env\n            key: CF_Key\n        cnameStrategy: Follow\n' "$ACME_EMAIL" "$CF_Email" | kubectl apply --validate=false -f -
-  printf 'apiVersion: cert-manager.io/v1\nkind: Certificate\nmetadata:\n  name: g41-tls\n  namespace: g41\nspec:\n  secretName: g41-tls\n  issuerRef:\n    name: g41-issuer\n    kind: ClusterIssuer\n  dnsNames:\n%b' "$dns" | kubectl apply --validate=false -f -
+  if kubectl get pods -n cert-manager -l app.kubernetes.io/name=webhook --no-headers 2>/dev/null | grep -q Running; then
+    printf 'apiVersion: cert-manager.io/v1\nkind: ClusterIssuer\nmetadata:\n  name: g41-issuer\nspec:\n  acme:\n    server: https://acme-v02.api.letsencrypt.org/directory\n    email: %s\n    privateKeySecretRef:\n      name: g41-issuer-key\n    solvers:\n    - dns01:\n        cloudflare:\n          email: %s\n          apiKeySecretRef:\n            name: g41-env\n            key: CF_Key\n        cnameStrategy: Follow\n' "$ACME_EMAIL" "$CF_Email" | kubectl apply --validate=false -f -
+    printf 'apiVersion: cert-manager.io/v1\nkind: Certificate\nmetadata:\n  name: g41-tls\n  namespace: g41\nspec:\n  secretName: g41-tls\n  issuerRef:\n    name: g41-issuer\n    kind: ClusterIssuer\n  dnsNames:\n%b' "$dns" | kubectl apply --validate=false -f -
+  else
+    echo "  [k8s] cert-manager 未运行（续期窗口模式），跳过 issuer/certificate 应用"
+  fi
 }
 
 k8s_build() {
