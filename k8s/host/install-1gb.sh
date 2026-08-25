@@ -13,7 +13,14 @@ mkdir -p /etc/rancher/k3s
 cp -a "$HOST_DIR/k3s-config-1gb.yaml" /etc/rancher/k3s/config.yaml
 
 echo "== 3. ExecStart 精简为纯 server（全部参数由 config.yaml 驱动）=="
-sed -i 's|^ExecStart=.*|ExecStart=/usr/local/bin/k3s server|' /etc/systemd/system/k3s.service
+# k3s 安装器生成多行续行格式（每 flag 一行），整块替换为单行
+awk '
+  /^ExecStart=/ { print "ExecStart=/usr/local/bin/k3s server"; skip=1; next }
+  skip && /^[[:space:]]/ { next }
+  skip && /^$/ { next }
+  { skip=0; print }
+' /etc/systemd/system/k3s.service > /tmp/k3s.service.new && mv /tmp/k3s.service.new /etc/systemd/system/k3s.service
+grep -n "^ExecStart=" /etc/systemd/system/k3s.service
 
 echo "== 4. 状态准备/备份单元 =="
 cp -a "$HOST_DIR/k3s-state-prep.service" /etc/systemd/system/
