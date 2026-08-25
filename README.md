@@ -2,7 +2,7 @@
 
 中文 | [English](docs/README.en.md) | [日本語](docs/README.ja.md) 
 
-模块化自托管 Docker Compose 技术栈 — Metro/WP8.1 风格首页、Redis 配置 API、多语言 i18n、KITS 模块系统。
+模块化自托管 Kubernetes (k3s) 技术栈 — Metro/WP8.1 风格首页、Redis 配置 API、多语言 i18n、KITS 模块系统。
 
 ## 部署
 
@@ -13,6 +13,8 @@ cp .env.example .env
 # 编辑 .env 填入域名与 Cloudflare 凭证
 ./g41.sh kits add -y all
 ```
+
+**Kubernetes (k3s) 模式**：`./g41.sh init k8s`（详见 [docs/zh/k8s-migration.md](docs/zh/k8s-migration.md)）。
 
 ### 本地初始化
 

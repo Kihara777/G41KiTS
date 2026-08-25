@@ -2,6 +2,19 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-08-26
+
+- **k3s 移行完了**：Docker Compose → Kubernetes (k3s v1.36.3)、12 Pod を 8 Pod に統合
+  （hexo 静的化、tracker を api プロセスに統合、api を redis Pod に統合、aria2+bt 統合）
+- コントロールプレーン：tmpfs kine（状態バックアップ/復元ユニット）、k3s-standalone
+  （ファイルログで journald から分離、MemoryMin 400M、OOM 保護）；cert-manager 証明書発行
+  （g41.moe + *.g41.moe）
+- g41.sh：`init k8s`、`k8s stage|conf|hexo` サブコマンド、include 生成的書き換え
+- 1GB ホストチューニングのスクリプト化：journald volatile / zram / swappiness / snapd 停止 / fail2ban 許可リスト
+- CD パイプライン：GitHub Actions（共有コンテンツ）+ deploy-local.sh（プライベートコンテンツ）
+- i18n 全量監査通過；home 説明を k3s に更新、tile_flake を現行 NixKits に同期
+- 根本原因修正：journald フリーズ、k3s.service ユニット、bittorrent-tracker ESM、REDIS_HOST ハードコード等
+
 ## 2026-07-14
 
 - blc モジュールに `blc_template` provides タイプを追加: 依存モジュールが `blc_template/` ディレクトリ経由で blivechat カスタムテンプレートを配布可能に

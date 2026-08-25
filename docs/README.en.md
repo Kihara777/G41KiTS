@@ -2,7 +2,7 @@
 
 [中文](../README.md) | English | [日本語](README.ja.md) 
 
-Modular self-hosted Docker Compose stack — Metro/WP8.1 style homepage, Redis-backed config API, multi-language i18n, KITS module system.
+Modular self-hosted Kubernetes (k3s) stack — Metro/WP8.1 style homepage, Redis-backed config API, multi-language i18n, KITS module system.
 
 ## Deploy
 
@@ -13,6 +13,8 @@ cp .env.example .env
 # Edit .env with your domain and Cloudflare credentials
 ./g41.sh kits add -y all
 ```
+
+**Kubernetes (k3s) mode**: `./g41.sh init k8s` (see [docs/zh/k8s-migration.md](docs/zh/k8s-migration.md)).
 
 ### Local Init
 

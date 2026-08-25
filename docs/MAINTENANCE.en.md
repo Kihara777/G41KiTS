@@ -2,6 +2,18 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-08-26
+
+- **Completed k3s migration**: Docker Compose → Kubernetes (k3s v1.36.3); 12 pods consolidated into 8
+  (hexo static-ified, tracker merged into api process, api merged into redis pod, aria2+bt merged)
+- Control plane: tmpfs kine (state backup/restore units), k3s-standalone (file-log decoupled from
+  journald, MemoryMin 400M, OOM protection); cert-manager issued cert (g41.moe + *.g41.moe)
+- g41.sh: `init k8s`, `k8s stage|conf|hexo` subcommands, generative include rewrite
+- 1GB host tuning scripted: journald volatile / zram / swappiness / snapd disabled / fail2ban allowlist
+- CD pipeline: GitHub Actions (public content) + deploy-local.sh (private content via local SSH)
+- i18n full audit passed; home desc updated to k3s, tile_flake synced to current NixKits
+- Root causes fixed: journald freeze, k3s.service unit, bittorrent-tracker ESM, REDIS_HOST hardcode, redis auth mismatch
+
 ## 2026-07-14
 
 - Added `blc_template` provides type to blc module: dependent modules can distribute blivechat custom templates via `blc_template/` directory

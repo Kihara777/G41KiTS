@@ -2,7 +2,7 @@
 
 [中文](../README.md) | [English](README.en.md) | 日本語 
 
-モジュール型セルフホスト Docker Compose スタック — Metro/WP8.1 風ホームページ、Redis 設定 API、多言語 i18n、KITS モジュールシステム。
+モジュール型セルフホスト Kubernetes (k3s) スタック — Metro/WP8.1 風ホームページ、Redis 設定 API、多言語 i18n、KITS モジュールシステム。
 
 ## デプロイ
 
@@ -13,6 +13,8 @@ cp .env.example .env
 # .env にドメインと Cloudflare 認証情報を記入
 ./g41.sh kits add -y all
 ```
+
+**Kubernetes (k3s) モード**: `./g41.sh init k8s`（[docs/zh/k8s-migration.md](docs/zh/k8s-migration.md) 参照）。
 
 ### ローカル初期化
 

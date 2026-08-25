@@ -2,6 +2,19 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-08-26
+
+- **完成 k3s 迁移**：Docker Compose → Kubernetes (k3s v1.36.3)，12 Pod 整合为 8 Pod
+  （hexo 静态化、tracker 并入 api 进程、api 并入 redis Pod、aria2+bt 合 Pod）
+- 控制面：tmpfs kine（状态备份/恢复 systemd 单元）、k3s-standalone（文件日志解耦 journald、
+  MemoryMin 400M、OOM 保护）；cert-manager 签发证书（g41.moe + *.g41.moe）
+- g41.sh：`init k8s`、`k8s stage|conf|hexo` 子命令、include 生成式重写
+- 1GB 主机调优脚本化：journald volatile / zram / swappiness / snapd 停用 / fail2ban 白名单
+- CD 管道：GitHub Actions（共有内容）+ deploy-local.sh（私有内容本地 SSH 推送）
+- i18n 全量检查通过；home 描述更新为 k3s、tile_flake 对齐 NixKits 现状
+- 修复根因：journald 冻结（apiserver 卡死元凶）、k3s.service 单元、bittorrent-tracker
+  ESM 解析、REDIS_HOST 硬编码、redis 认证不一致等
+
 ## 2026-08-24
 
 - 新增 k8s/k3s 部署层：12 个容器模块的 Deployment/Service manifest（kits/*/k8s/）
