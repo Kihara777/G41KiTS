@@ -20,7 +20,8 @@ spec:
             - |
               [ -s /blog/_config.yml ] || cp /hexo-init/_config.yml /blog/_config.yml
               cp -a /hexo-init/node_modules /blog/ 2>/dev/null || true
-              cd /blog && hexo generate
+              cp -a /hexo-init/themes/landscape /blog/themes/ 2>/dev/null || true
+              cd /blog && node -e 'var Hexo=require("/blog/node_modules/hexo");var h=new Hexo("/blog",{silent:false});h.init().then(function(){return h.call("generate",{})}).then(function(){console.log("GEN-DONE");process.exit(0)}).catch(function(e){console.error(e.message);process.exit(1)})'
               mkdir -p /out && rm -rf /out/* && cp -a public/. /out/
           volumeMounts:
             - { name: source, mountPath: /blog/source }
