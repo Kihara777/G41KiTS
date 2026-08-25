@@ -1,0 +1,6 @@
+[Unit]
+Description=G41KiTS k3s state backup (tmpfs -> disk)
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'sqlite3 /dev/shm/k3s-db/state.db ".backup /var/lib/rancher/k3s/server/db-backup/state.db.tmp" && mv -f /var/lib/rancher/k3s/server/db-backup/state.db.tmp /var/lib/rancher/k3s/server/db-backup/state.db'

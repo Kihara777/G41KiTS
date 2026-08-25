@@ -10,6 +10,35 @@ Docker Compose 架构向 k3s 的迁移 runbook。**双轨共存、数据零迁�
 
 ## 0.1 1GB VPS 实战配置（本次迁移所用）
 
+**核心结论**：1GB 机跑这套 k3s 体系是可行的，前提是控制面状态存储（kine/sqlite）不能与磁盘 swap 抢 I/O。实测证据：compose 时代 594MB + 397MB 磁盘 swap 长期稳定（负载 0.4），说明负载 + 磁盘 swap 本身没问题；k3s 首次迁移失败的根因是 k3s 日志中 `Slow SQL 2-3s`（sqlite 查询被同盘 swap 流量饿死 → apiserver 反复卡死），而非内存总量。
+
+**方案 = tmpfs kine + 磁盘 swap 回流 + 组件再精简**：
+
+1. **kine 移入 tmpfs**（DB 实测仅 ~19MB，/dev/shm 480MB 绰绰有余）：
+   ```bash
+   apt-get install -y sqlite3   # 在线备份工具
+   bash k8s/host/install-1gb.sh # 安装 config.yaml + 状态备份/恢复 systemd 单元
+   ```
+   - `k3s-state-backup.timer`：每 5 分钟 `sqlite3 .backup` 在线备份到磁盘
+   - `k3s-state-prep.service`：开机自动从磁盘备份恢复到 tmpfs
+   - `k3s.service.d/backup.conf`：k3s 停止时兜底备份
+   - 风险模型：断电最多丢 5 分钟集群状态；仓库清单可一键重建整个集群（自托管可接受）
+2. **磁盘 swap 恢复启用**（zram 719MB 快速层 + 2GB 磁盘溢出场，swappiness=10）：
+   负载超出的 ~200-400MB 由 swap 吸收——与 compose 时代同款行为。
+3. **组件再精简**：`disable: [traefik, metrics-server, servicelb, local-storage]`
+   （全部 hostPath 存储 → local-path provisioner 无用，省一个 Pod + 常驻 watch）
+4. **可选内存杠杆**：cert-manager 常态缩 0（~150-200MB），每月开窗续期：
+   ```cron
+   0 0 1 * * kubectl scale deployment -n cert-manager --replicas=1 --all
+   0 2 1 * * kubectl scale deployment -n cert-manager --replicas=0 --all
+   ```
+   （90 天证书在到期前 30 天触发续期；每月 2 小时窗口足以覆盖，且不影响已签发证书的使用）
+
+**内存预算**：k3s+tmpfs-kine ~350MB + 负载 ~600MB + 内核 ~200MB ≈ 1.15GB
+→ RAM 958MB + zram ~700MB（压缩后约 1.2GB 有效）+ 磁盘 swap 兜底，稳态无 churn 时 apiserver 不再有慢盘依赖。
+
+## 0.2 旧版 1GB 调优记录（部分已被上述方案取代）
+
 在 958MB VPS 上让 k3s 稳定运行的三件套：
 
 1. **只用 zram，不用磁盘 swap**（磁盘 swap 的 I/O 会饿死 kine/sqlite，

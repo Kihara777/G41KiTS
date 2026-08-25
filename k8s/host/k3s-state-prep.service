@@ -1,0 +1,12 @@
+[Unit]
+Description=G41KiTS k3s state restore (tmpfs kine)
+Before=k3s.service
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'mkdir -p /dev/shm/k3s-db /var/lib/rancher/k3s/server/db-backup; if [ ! -f /dev/shm/k3s-db/state.db ] && [ -f /var/lib/rancher/k3s/server/db-backup/state.db ]; then cp -a /var/lib/rancher/k3s/server/db-backup/state.db /dev/shm/k3s-db/state.db; fi'
+
+[Install]
+WantedBy=multi-user.target

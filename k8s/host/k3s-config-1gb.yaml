@@ -1,0 +1,19 @@
+# G41KiTS — 1GB VPS k3s 配置模板（安装到 /etc/rancher/k3s/config.yaml）
+#
+# 核心思想：控制面状态（kine/sqlite，实测仅 ~19MB）移入 tmpfs，
+# 避免与磁盘 swap 的 I/O 争抢——这是 1GB 机上 apiserver 反复卡死
+# （k3s 日志 Slow SQL 2-3s）的根因，而非内存量本身。
+# compose 时代（594MB + 397MB 磁盘 swap 稳定运行）证明负载 + 磁盘 swap 可行；
+# k3s 相对 docker 多出的 ~200MB 由 zram + 磁盘 swap 吸收。
+#
+# 状态持久化：k3s-state-backup.timer 每 5 分钟将 tmpfs 中的 DB 在线备份
+# （sqlite3 .backup）到磁盘；开机时 k3s-state-prep.service 自动恢复。
+# 断电最多丢失 5 分钟集群状态，且整个集群可由仓库清单一键重建，可接受。
+datastore-endpoint: "sqlite:///dev/shm/k3s-db/state.db?_pragma_busy_timeout(5000)&_pragma_journal_mode(WAL)&_pragma_synchronous(NORMAL)&_pragma_cache_size(2000)"
+disable:
+  - traefik            # 网关用自研 nginx
+  - metrics-server     # 无需监控聚合
+  - servicelb          # 端口用 hostPort
+  - local-storage      # 全部 hostPath，local-path provisioner 无用
+kubelet-arg:
+  - fail-swap-on=false

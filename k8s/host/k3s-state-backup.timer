@@ -1,0 +1,9 @@
+[Unit]
+Description=G41KiTS k3s state backup timer (5min)
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target
