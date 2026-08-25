@@ -107,6 +107,34 @@ do_init() {
   show_ascii
 }
 
+do_init_k8s() {
+  validate_dirs
+
+  # 部署者专属主机初始化（.local/install.sh 或 .local.sh）
+  if [ -d .local ] && [ -f .local/install.sh ]; then
+    source .local/install.sh
+  elif [ -f .local.sh ]; then
+    source .local.sh
+  fi
+  if declare -f do_init_local >/dev/null 2>&1; then
+    do_init_local
+  fi
+
+  setup_dns_stub
+
+  echo '=== k3s ==='
+  if ! command -v k3s >/dev/null 2>&1; then
+    curl -sfL https://get.k3s.io | sh -s - --disable traefik --disable metrics-server --disable servicelb
+  fi
+  bash k8s/host/install-1gb.sh     # tmpfs kine + 状态备份 + standalone 单元
+  bash k8s/host/host-tune.sh       # journald/zram/swappiness/snapd/fail2ban
+  ./g41.sh backend k8s
+  systemctl enable --now k3s-standalone
+  for i in $(seq 1 72); do kubectl get nodes 2>/dev/null | grep -q ' Ready ' && break; sleep 5; done
+  ./g41.sh k8s stage
+  show_ascii
+}
+
 show_ascii() {
 cat <<'G41ONLY'
                                                        ^^^^^"
@@ -1222,7 +1250,7 @@ kits_reload() {
 main() {
   case "${1:-}" in
     init)
-      do_init
+      if [ "${2:-}" = "k8s" ]; then do_init_k8s; else do_init; fi
       ;;
     kits)
       case "${2:-}" in

@@ -1,0 +1,17 @@
+[Unit]
+Description=G41KiTS k3s (standalone, journald 解耦)
+After=network-online.target k3s-state-prep.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/k3s server
+Restart=always
+RestartSec=10s
+MemoryMin=400M
+OOMScoreAdjust=-900
+# 关键：日志直接写文件，不依赖 journald（journald 故障会阻塞 k3s 进程管道）
+StandardOutput=file:/var/log/k3s.log
+StandardError=file:/var/log/k3s.log
+
+[Install]
+WantedBy=multi-user.target

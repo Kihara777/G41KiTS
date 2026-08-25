@@ -38,6 +38,10 @@ g41.sh 支持双后端：`compose`（默认）与 `k8s`（k3s）。切换：`./g
   hostPath 挂载进 Pod，**与 compose 共用同一批数据目录**。
 - `compose: file` 模块由 `k8s build` 走 `docker build` + `k3s ctr images import`。
 - acme/autoheal/dsock 在 k8s 下退役（cert-manager + 探针替代），无 k8s manifest。
+- **首次初始化**：`./g41.sh init k8s`（安装精简 k3s + tmpfs-kine + 主机调优 + 分阶段部署）；
+  compose 模式仍用 `./g41.sh init`。
+- **CD**：共有内容经 GitHub Actions（`.github/workflows/deploy.yml`，secrets: VPS_HOST/USER/SSH_KEY/PATH）
+  推送 main 时自动 rsync + apply；私有内容（`.env`、`kits/*/.local`）用 `./deploy-local.sh` 经本地 SSH 手动推送。
 - 迁移操作详见 `docs/zh/k8s-migration.md`，架构决策见 `k8s/README.md`。
 
 ## 目标
