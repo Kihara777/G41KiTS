@@ -418,10 +418,10 @@ k8s_apply_base() {
   #   - namespace cert-manager: ClusterIssuer 的 apiKeySecretRef 要求 Secret
   #     与 cert-manager 部署同命名空间
   kubectl create secret generic g41-env --from-env-file=.env \
-    --namespace g41 --dry-run=client -o yaml | kubectl apply -f -
+    --namespace g41 --dry-run=client -o yaml | kubectl apply --validate=false -f -
   kubectl get ns cert-manager >/dev/null 2>&1 && \
     kubectl create secret generic g41-env --from-env-file=.env \
-    --namespace cert-manager --dry-run=client -o yaml | kubectl apply -f -
+    --namespace cert-manager --dry-run=client -o yaml | kubectl apply --validate=false -f -
   # ClusterIssuer + Certificate rendered from .env (domains are deployment-specific)
   local dns="" d
   source .env 2>/dev/null
@@ -429,8 +429,8 @@ k8s_apply_base() {
   for d in $G41_EXTRA_DOMAINS; do
     [ -n "$d" ] && dns="$dns\n    - \"$d\""
   done
-  printf 'apiVersion: cert-manager.io/v1\nkind: ClusterIssuer\nmetadata:\n  name: g41-issuer\nspec:\n  acme:\n    server: https://acme-v02.api.letsencrypt.org/directory\n    email: %s\n    privateKeySecretRef:\n      name: g41-issuer-key\n    solvers:\n    - dns01:\n        cloudflare:\n          email: %s\n          apiKeySecretRef:\n            name: g41-env\n            key: CF_Key\n        cnameStrategy: Follow\n' "$ACME_EMAIL" "$CF_Email" | kubectl apply -f -
-  printf 'apiVersion: cert-manager.io/v1\nkind: Certificate\nmetadata:\n  name: g41-tls\n  namespace: g41\nspec:\n  secretName: g41-tls\n  issuerRef:\n    name: g41-issuer\n    kind: ClusterIssuer\n  dnsNames:\n%b' "$dns" | kubectl apply -f -
+  printf 'apiVersion: cert-manager.io/v1\nkind: ClusterIssuer\nmetadata:\n  name: g41-issuer\nspec:\n  acme:\n    server: https://acme-v02.api.letsencrypt.org/directory\n    email: %s\n    privateKeySecretRef:\n      name: g41-issuer-key\n    solvers:\n    - dns01:\n        cloudflare:\n          email: %s\n          apiKeySecretRef:\n            name: g41-env\n            key: CF_Key\n        cnameStrategy: Follow\n' "$ACME_EMAIL" "$CF_Email" | kubectl apply --validate=false -f -
+  printf 'apiVersion: cert-manager.io/v1\nkind: Certificate\nmetadata:\n  name: g41-tls\n  namespace: g41\nspec:\n  secretName: g41-tls\n  issuerRef:\n    name: g41-issuer\n    kind: ClusterIssuer\n  dnsNames:\n%b' "$dns" | kubectl apply --validate=false -f -
 }
 
 k8s_build() {
@@ -448,10 +448,10 @@ k8s_apply_module() {
   k8s_ready || return 1
   k8s_link_root
   local f
-  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply --validate=false -f "$f"; done
   k8s_apply_base
   for f in "kits/$1/k8s"/*.yaml; do
-    [ -f "$f" ] && kubectl apply -f "$f"
+    [ -f "$f" ] && kubectl apply --validate=false -f "$f"
   done
   k8s_nginx_conf_apply
 }
@@ -460,17 +460,17 @@ k8s_apply() {
   k8s_ready || return 1
   k8s_link_root
   local f m dir
-  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply --validate=false -f "$f"; done
   k8s_apply_base
   if [ "$1" = "--all" ]; then
     for m in kits/*/; do
       dir="${m%/}/k8s"
-      [ -d "$dir" ] && for f in "$dir"/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+      [ -d "$dir" ] && for f in "$dir"/*.yaml; do [ -f "$f" ] && kubectl apply --validate=false -f "$f"; done
     done
   else
     for m in $(kits_installed_list); do
       dir="kits/$m/k8s"
-      [ -d "$dir" ] && for f in "$dir"/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+      [ -d "$dir" ] && for f in "$dir"/*.yaml; do [ -f "$f" ] && kubectl apply --validate=false -f "$f"; done
     done
   fi
   k8s_nginx_conf_apply
@@ -485,7 +485,7 @@ k8s_nginx_conf_apply() {
   [ -f .gx/nginx.conf ] || { echo "  [k8s] nginx conf: .gx/nginx.conf 缺失，跳过"; return 0; }
   kubectl delete configmap nginx-main --ignore-not-found >/dev/null 2>&1
   kubectl create configmap nginx-main --from-file=nginx.conf=.gx/nginx.conf --from-file=mime.types=.gx/mime.types \
-    --dry-run=client -o yaml | kubectl apply -f -
+    --dry-run=client -o yaml | kubectl apply --validate=false -f -
   local sub n
   for sub in zones upstreams servers locations; do
     local dir=".gx/conf.d/$sub"
@@ -494,7 +494,7 @@ k8s_nginx_conf_apply() {
     [ "$n" -gt 0 ] || continue
     kubectl delete configmap "nginx-conf-$sub" --ignore-not-found >/dev/null 2>&1
     kubectl create configmap "nginx-conf-$sub" --from-file="$dir" \
-      --dry-run=client -o yaml | kubectl apply -f -
+      --dry-run=client -o yaml | kubectl apply --validate=false -f -
   done
   echo "  [k8s] nginx conf ConfigMaps applied"
 }
@@ -503,7 +503,7 @@ k8s_apply_base_only() {
   k8s_ready || return 1
   k8s_link_root
   local f
-  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply -f "$f"; done
+  [ -d "k8s/base" ] && for f in k8s/base/*.yaml; do [ -f "$f" ] && kubectl apply --validate=false -f "$f"; done
   k8s_apply_base
   echo "k8s base applied."
 }
