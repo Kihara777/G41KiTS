@@ -27,10 +27,12 @@ spec:
             - { name: themes, mountPath: /blog/themes }
             - { name: scaffolds, mountPath: /blog/scaffolds }
             - { name: config, mountPath: /blog/_config.yml, subPath: _config.yml }
+            - { name: pkg, mountPath: /blog/package.json, subPath: package.json }
             - { name: out, mountPath: /out }
       volumes:
         - { name: source, hostPath: { path: /opt/g41/.hx/source, type: DirectoryOrCreate } }
         - { name: themes, hostPath: { path: /opt/g41/.hx/themes, type: DirectoryOrCreate } }
         - { name: scaffolds, hostPath: { path: /opt/g41/.hx/scaffolds, type: DirectoryOrCreate } }
         - { name: config, hostPath: { path: /opt/g41/.hx/_config.yml, type: FileOrCreate } }
+        - { name: pkg, hostPath: { path: /opt/g41/.hx/package.json, type: FileOrCreate } }
         - { name: out, hostPath: { path: /opt/g41/.wr/hexo, type: DirectoryOrCreate } }
