@@ -439,8 +439,8 @@ k8s_build() {
   [ "$mode" = "file" ] || return 0
   local tag="g41k8s/$m:local"
   echo "  [k8s] build $tag (kits/$m/Dockerfile)"
-  # BuildKit: Dockerfile 使用 heredoc COPY 等 BuildKit 语法
-  DOCKER_BUILDKIT=1 docker build -q -f "kits/$m/Dockerfile" -t "$tag" . || { echo "ERROR: docker build failed for $m"; return 1; }
+  # legacy builder：Dockerfile 已无 BuildKit 专属语法（heredoc COPY 已改为文件 COPY）
+  docker build -q -f "kits/$m/Dockerfile" -t "$tag" . || { echo "ERROR: docker build failed for $m"; return 1; }
   docker save "$tag" | k3s ctr images import - || { echo "ERROR: image import failed for $m"; return 1; }
 }
 

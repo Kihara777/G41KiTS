@@ -1,16 +1,11 @@
-FROM node
+# hexo 镜像（alpine 精简）：compose 模式 hexo server；k8s 模式仅作静态构建 Job 的镜像
+FROM node:24-alpine
 RUN npm install -g hexo-cli
 RUN mkdir -p /blog /hexo-init
 WORKDIR /hexo-init
 RUN hexo init . --no-install 2>/dev/null || true
-RUN npm install
-COPY <<'ENTRY' /entry.sh
-#!/bin/sh
-if [ ! -f /blog/_config.yml ]; then
-  cp -a /hexo-init/. /blog/
-fi
-cd /blog && npm install && exec hexo server -p 4000 -i 0.0.0.0
-ENTRY
+RUN npm install --no-audit --no-fund
+COPY entry.sh /entry.sh
 RUN chmod +x /entry.sh
 EXPOSE 4000
 ENTRYPOINT ["/entry.sh"]
