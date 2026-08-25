@@ -22,6 +22,7 @@ spec:
           image: g41k8s/redis:local
           imagePullPolicy: IfNotPresent
           env:
+            - { name: NODE_OPTIONS, value: "--max-old-space-size=128" }
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef: { name: g41-env, key: REDIS_PASSWORD, optional: true }
