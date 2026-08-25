@@ -4,7 +4,7 @@
 FROM node:24-alpine
 WORKDIR /app
 RUN npm install redis bittorrent-tracker
-COPY entry.js /app/entry.js
+COPY kits/redis/entry.js /app/entry.js
 EXPOSE 5800 8000
 ENTRYPOINT ["node"]
 CMD ["server.js"]
