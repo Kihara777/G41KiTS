@@ -1,6 +1,6 @@
 {
   "name": "Autoheal",
-  "desc": "Auto-restart unhealthy Docker containers",
+  "desc": "Legacy Docker auto-restart — retired under k8s (native liveness probes); Compose backend only",
   "depends": [
     "core",
     "dsock"

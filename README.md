@@ -51,9 +51,9 @@ EOF
 |------|------|------|
 | nginx | TLS 1.3 / HTTP/3 网关，反向代理全部后端 | [docs/zh/nginx.md](docs/zh/nginx.md) |
 | redis | Redis 配置存储 + Node.js HTTP API 桥接 | [docs/zh/redis.md](docs/zh/redis.md) |
-| acme | SSL 证书管理（acme.sh + ZeroSSL/Cloudflare DNS） | [docs/zh/acme.md](docs/zh/acme.md) |
-| autoheal | 自动重启不健康的 Docker 容器 | [docs/zh/autoheal.md](docs/zh/autoheal.md) |
-| dsock | Docker API 安全代理（替代 docker.sock 直接挂载） | [docs/zh/dsock.md](docs/zh/dsock.md) |
+| acme | SSL 证书管理（acme.sh）— 已退役，k3s 由 cert-manager 替代 | [docs/zh/acme.md](docs/zh/acme.md) |
+| autoheal | 自动重启不健康容器 — 已退役，k3s 由原生探针替代 | [docs/zh/autoheal.md](docs/zh/autoheal.md) |
+| dsock | Docker API 安全代理 — 已退役，k3s 无 docker.sock | [docs/zh/dsock.md](docs/zh/dsock.md) |
 | home | 站点核心数据 — 角色消息、主题色、状态码、i18n | [docs/zh/home.md](docs/zh/home.md) |
 
 ## 站点服务

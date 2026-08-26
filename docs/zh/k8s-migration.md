@@ -10,6 +10,11 @@ Docker Compose 架构向 k3s 的迁移 runbook。**双轨共存、数据零迁�
 
 ## 0.1 1GB VPS 实战配置（本次迁移所用）
 
+> **现状更新（迁移后）**：迁移完成后 VPS 已从 958MB 升级至 1.6GB（目标 2GB），
+> cert-manager 恢复**常态驻留**（replicas=1，自动续期），下方"每月开窗续期"的内存杠杆
+> 已停用（crontab 相应条目已移除）。本节保留作为 1GB 回退参考，长期结论见
+> [docs/zh/1gb-stability.md](1gb-stability.md)。
+
 **核心结论**：1GB 机跑这套 k3s 体系是可行的，前提是控制面状态存储（kine/sqlite）不能与磁盘 swap 抢 I/O。实测证据：compose 时代 594MB + 397MB 磁盘 swap 长期稳定（负载 0.4），说明负载 + 磁盘 swap 本身没问题；k3s 首次迁移失败的根因是 k3s 日志中 `Slow SQL 2-3s`（sqlite 查询被同盘 swap 流量饿死 → apiserver 反复卡死），而非内存总量。
 
 **方案 = tmpfs kine + 磁盘 swap 回流 + 组件再精简**：
@@ -27,7 +32,7 @@ Docker Compose 架构向 k3s 的迁移 runbook。**双轨共存、数据零迁�
    负载超出的 ~200-400MB 由 swap 吸收——与 compose 时代同款行为。
 3. **组件再精简**：`disable: [traefik, metrics-server, servicelb, local-storage]`
    （全部 hostPath 存储 → local-path provisioner 无用，省一个 Pod + 常驻 watch）
-4. **可选内存杠杆**：cert-manager 常态缩 0（~150-200MB），每月开窗续期：
+4. **可选内存杠杆（已停用，仅作 1GB 回退参考）**：cert-manager 常态缩 0（~150-200MB），每月开窗续期：
    ```cron
    0 0 1 * * kubectl scale deployment -n cert-manager --replicas=1 --all
    0 2 1 * * kubectl scale deployment -n cert-manager --replicas=0 --all

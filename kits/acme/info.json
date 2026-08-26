@@ -1,6 +1,6 @@
 {
   "name": "ACME",
-  "desc": "SSL certificate management via acme.sh — ZeroSSL/Cloudflare DNS",
+  "desc": "Legacy cert management (acme.sh) — retired under k8s (cert-manager replaces it); Compose backend only",
   "depends": [
     "core",
     "dsock"

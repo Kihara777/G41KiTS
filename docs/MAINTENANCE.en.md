@@ -2,6 +2,14 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-08-27
+
+- **RAM upgrade landed**: VPS 958MB → 1.6GB (target 2GB); cert-manager switched from monthly-window renewal to **always-on** (replicas=1); the renewal-window cron entries were removed (only the apt-upgrade task remains)
+- **CD pipeline verified**: GitHub Actions `deploy.yml` (ssh-deploy@v6 + ssh-action@v1) passed end-to-end (~28s), secrets configured; rsync added `--exclude=.env --exclude=.local.sh` to protect VPS private content
+- Added `docs/zh/1gb-stability.md`: 1GB stability research conclusion (tmpfs kine + swap tiering + component slimming)
+- Extra domains conclusion: cert-manager has a cleanup race when several domains share one `_acme-challenge` CNAME target — deferred; reissue needs unique per-domain CNAME targets
+- git fully pushed to GitHub (ee62381); image policy unified to floating tags
+
 ## 2026-08-26
 
 - **Completed k3s migration**: Docker Compose → Kubernetes (k3s v1.36.3); 12 pods consolidated into 8

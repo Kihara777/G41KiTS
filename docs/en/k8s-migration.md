@@ -4,7 +4,7 @@ Migration from Docker Compose to k3s. Dual-track coexistence, zero data migratio
 
 ## Prerequisites
 
-- **RAM ≥ 1GB** (the 1GB configuration below is proven on a 958MB VPS)
+- **RAM ≥ 1GB** (proven on a 958MB VPS); **2GB recommended** — post-migration the VPS was upgraded to 1.6GB and cert-manager runs always-on
 - Repo synced (includes `k8s/`, `kits/*/k8s/`, latest `g41.sh`)
 - Backup first: `./g41.sh kits pack -SAL`
 
@@ -41,8 +41,9 @@ order via `k8s stage`.
 
 ## Certificates
 
-cert-manager issues `g41.moe` + `*.g41.moe` (Let's Encrypt, Cloudflare DNS01). It is
-scaled to 0 most of the time; a monthly cron opens a 2-hour renewal window on the 1st.
+cert-manager issues `g41.moe` + `*.g41.moe` (Let's Encrypt, Cloudflare DNS01). After the
+RAM upgrade it runs **always-on** (replicas=1); the earlier monthly 2-hour renewal window
+(scale to 0 between windows) is documented as a 1GB fallback in `docs/zh/1gb-stability.md`.
 
 ## Rollback
 

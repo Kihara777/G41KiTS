@@ -2,6 +2,14 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-08-27
+
+- **内存扩容落地**：VPS 由 958MB 升至 1.6GB（目标 2GB），cert-manager 由"每月开窗续期"改为**常态驻留**（replicas=1），crontab 中的开窗条目已移除（仅保留 apt 升级任务）
+- **CD 管道验证闭环**：GitHub Actions `deploy.yml`（ssh-deploy@v6 + ssh-action@v1）端到端跑通（~28s），secrets 配置完成；rsync 追加 `--exclude=.env --exclude=.local.sh` 防止覆盖 VPS 私有内容
+- 新增 `docs/zh/1gb-stability.md`：1GB 稳定运行研究结论（tmpfs kine + swap 分层 + 组件精简）
+- 附加域名结论：多域名共用同一 `_acme-challenge` CNAME 目标时，cert-manager 并发签发存在清理竞态，暂缓附加域名；恢复需在各自 DNS 配置独立 CNAME 目标后重新签发
+- git 全量推送至 GitHub（ee62381）；镜像策略统一为浮动标签
+
 ## 2026-08-26
 
 - **完成 k3s 迁移**：Docker Compose → Kubernetes (k3s v1.36.3)，12 Pod 整合为 8 Pod

@@ -20,7 +20,7 @@ kits/<module>/k8s/        # 每个容器模块的 Deployment/Service
 |---|---|
 | include 痛点 | k8s 无中央清单：`g41.sh k8s apply` 自动遍历 `kits/*/k8s/`；纯 kubectl 等价于 `kubectl apply $(for d in k8s/base kits/*/k8s; do printf -- '-f %s ' "$d"; done)`（shell glob，零编辑） |
 | 数据 | hostPath 挂载 `/opt/g41/.rd` 等 → **零数据迁移**，与 compose 共用同一批目录 |
-| 证书 | cert-manager（Cloudflare DNS01）替代 acme.sh；轮换后手动 `kubectl rollout restart deploy/{nginx,dns,hy2} -n g41`（每 ~60 天一次） |
+| 证书 | cert-manager（Cloudflare DNS01）替代 acme.sh；常驻（replicas=1）自动续期，续期后由 Reloader 自动滚动重启 nginx/dns/hy2 |
 | acme/autoheal/dsock | 无 k8s manifest，整体退役（探针/cert-manager 原生替代） |
 | 网关 | 保留 nginx（hostPort 80/443）；配置 ConfigMap 化（`g41.sh k8s conf` 从 .gx 装配结果渲染），sidecar 轮询检测变更自动 `nginx -s reload` |
 | hy2 | hostNetwork（443/udp 与 nginx 共存，同现状） |
@@ -58,7 +58,7 @@ hexo 无常驻 Pod：内容更新后 `./g41.sh k8s hexo` 触发构建 Job，
 
 ## 前置条件
 
-- **内存 ≥ 2GB**（k3s 控制面 ~300MB + 工作负载；1GB VPS 需先升级）
+- **内存 ≥ 2GB**（k3s 控制面 ~300MB + 工作负载；1GB 可跑，见 docs/zh/1gb-stability.md，但长期建议 2GB）
 - k3s 安装建议：`curl -sfL https://get.k3s.io | sh -s - --disable traefik --disable metrics-server --disable servicelb`
   （网关用 nginx、端口用 hostPort，无需 traefik/servicelb）
 - `kubectl`（root：`export KUBECONFIG=/etc/rancher/k3s/k3s.yaml`）

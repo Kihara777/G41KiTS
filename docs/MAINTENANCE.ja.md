@@ -2,6 +2,14 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-08-27
+
+- **メモリ増強完了**：VPS を 958MB → 1.6GB（目標 2GB）に増強、cert-manager を「毎月更新ウィンドウ」から**常駐**（replicas=1）に変更、crontab のウィンドウ項目を削除（apt アップグレードのみ残置）
+- **CD パイプライン検証完了**：GitHub Actions `deploy.yml`（ssh-deploy@v6 + ssh-action@v1）をエンドツーエンドで確認（~28s）、secrets 設定済み；rsync に `--exclude=.env --exclude=.local.sh` を追加し VPS 私有コンテンツを保護
+- `docs/zh/1gb-stability.md` を追加：1GB 安定稼働の研究結論（tmpfs kine + swap 階層化 + コンポーネント削減）
+- 追加ドメイン結論：複数ドメインが同一 `_acme-challenge` CNAME ターゲットを共有すると cert-manager の並行発行でクリーンアップ競合が発生、見送り；再発行にはドメインごとの独立 CNAME ターゲットが必要
+- git を GitHub に全量プッシュ（ee62381）、イメージ方針をフローティングタグに統一
+
 ## 2026-08-26
 
 - **k3s 移行完了**：Docker Compose → Kubernetes (k3s v1.36.3)、12 Pod を 8 Pod に統合

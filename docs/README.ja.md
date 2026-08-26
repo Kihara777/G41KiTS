@@ -51,9 +51,9 @@ EOF
 |-----------|------|-------------|
 | nginx | TLS 1.3 / HTTP/3 ゲートウェイ、全バックエンドへのリバースプロキシ | [docs/ja/nginx.md](ja/nginx.md) |
 | redis | Redis 設定ストア + Node.js HTTP API ブリッジ | [docs/ja/redis.md](ja/redis.md) |
-| acme | SSL 証明書管理（acme.sh + ZeroSSL/Cloudflare DNS） | [docs/ja/acme.md](ja/acme.md) |
-| autoheal | 異常な Docker コンテナの自動再起動 | [docs/ja/autoheal.md](ja/autoheal.md) |
-| dsock | Docker API セキュリティプロキシ（docker.sock 直接マウントの代替） | [docs/ja/dsock.md](ja/dsock.md) |
+| acme | SSL 証明書管理（acme.sh）— 退役済み、k3s では cert-manager が代替 | [docs/ja/acme.md](ja/acme.md) |
+| autoheal | 異常コンテナの自動再起動 — 退役済み、k3s ではネイティブプローブが代替 | [docs/ja/autoheal.md](ja/autoheal.md) |
+| dsock | Docker API セキュリティプロキシ — 退役済み、k3s では docker.sock なし | [docs/ja/dsock.md](ja/dsock.md) |
 | home | サイトコアデータ — キャラクターメッセージ、テーマカラー、ステータスコード、i18n | [docs/ja/home.md](ja/home.md) |
 
 ## サイトサービス

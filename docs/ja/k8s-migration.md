@@ -4,7 +4,7 @@ Docker Compose から k3s への移行。デュアルトラック共存、デー
 
 ## 前提条件
 
-- **RAM ≥ 1GB**（958MB VPS で実証済みの 1GB 構成）
+- **RAM ≥ 1GB**（958MB VPS で実証済み）。**2GB 推奨** — 移行後 VPS を 1.6GB に増強し、cert-manager は常駐で稼働
 - リポジトリ同期済み（`k8s/`、`kits/*/k8s/`、最新 `g41.sh`）
 - 事前バックアップ：`./g41.sh kits pack -SAL`
 
@@ -41,7 +41,8 @@ snapd 停止、fail2ban 許可リスト）、その後 `k8s stage` で依存順�
 ## 証明書
 
 cert-manager が `g41.moe` + `*.g41.moe` を発行（Let's Encrypt、Cloudflare DNS01）。
-通常は 0 にスケールし、毎月 1 日の cron が 2 時間の更新ウィンドウを開きます。
+メモリ増強後は**常駐**（replicas=1）で稼働します。かつての毎月 2 時間の更新ウィンドウ
+（ウィンドウ間は 0 にスケール）は `docs/zh/1gb-stability.md` に 1GB 向けフォールバックとして記載。
 
 ## ロールバック
 

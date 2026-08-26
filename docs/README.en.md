@@ -51,9 +51,9 @@ Core services providing gateway, storage, certs, and site skeleton.
 |--------|-------------|------|
 | nginx | TLS 1.3 / HTTP/3 gateway, reverse proxy to all backends | [docs/en/nginx.md](en/nginx.md) |
 | redis | Redis config store + Node.js HTTP API bridge | [docs/en/redis.md](en/redis.md) |
-| acme | SSL certificate management (acme.sh + ZeroSSL/Cloudflare DNS) | [docs/en/acme.md](en/acme.md) |
-| autoheal | Auto-restart unhealthy Docker containers | [docs/en/autoheal.md](en/autoheal.md) |
-| dsock | Docker API security proxy (replaces direct docker.sock mounts) | [docs/en/dsock.md](en/dsock.md) |
+| acme | SSL certificate management (acme.sh) — retired, k3s uses cert-manager | [docs/en/acme.md](en/acme.md) |
+| autoheal | Auto-restart unhealthy containers — retired, k3s uses native probes | [docs/en/autoheal.md](en/autoheal.md) |
+| dsock | Docker API security proxy — retired, k3s has no docker.sock | [docs/en/dsock.md](en/dsock.md) |
 | home | Site core data — character messages, theme colors, status codes, i18n | [docs/en/home.md](en/home.md) |
 
 ## Site Services
