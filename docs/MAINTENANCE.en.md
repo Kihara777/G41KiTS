@@ -2,6 +2,34 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-09-13
+
+- **Two new operational timers added** (k8s/host/), closing the automation gaps of k8s mode:
+  - `g41-cert-reload.timer` (every 15 min): distributes the certificate to each consumer pod after
+    cert-manager renewal. Handled per capability — nginx ships a reloader sidecar and hot-loads via
+    SIGHUP (**no restart**); hy2/dns have no hot-reload and must be rolled. Idempotent via the
+    sha256 of `tls.crt`; an expired certificate is rejected with `openssl -checkend 0` before distribution.
+  - `g41-image-update.timer` (Sundays 04:30): compares upstream digests of floating tags and rolls out updates
+  - `g41-notify.py`: SMTP notification with no third-party dependency; silently skipped when `G41_SMTP_*` is unset
+- **Fixed three single-node deployment defects** (all verified in practice; guards and docs added):
+  - `kits/nginx/k8s/deployment.yaml` gained `imagePullPolicy: Always` — `nginx:alpine` is a floating
+    tag and defaults to `IfNotPresent` when unset, so `rollout restart` only reuses the cached image and
+    an upstream release is **never pulled** (two earlier "successful updates" left the digest unchanged)
+  - `maxSurge` zeroed for `dns`(53/853) and `download`(51413) — same reason as nginx(80/443): with
+    `hostPort` on a single node, `maxSurge>0` leaves the new pod Pending forever on a held port
+  - `k3s-standalone.service` gained `Conflicts=k3s.service`, and the timers now depend on
+    `k3s-standalone` — the legacy `k3s.service` (disabled but still on disk, `Restart=always`) would
+    fight standalone for `127.0.0.1:6444` and crash-loop the apiserver (restart counter reached 41)
+- Docs corrected: `k8s/README.md` clarifies that this deployment does **not** install stakater/reloader,
+  so the `reloader.stakater.com/auto` annotations on hy2/dns are inert; added "Certificate rotation"
+  and "Scheduled tasks" sections
+- `install-1gb.sh` now installs both timers; `.env.example` gained `G41_SMTP_*`; `.gitignore` ignores `__pycache__`
+
+| Commit | Description |
+|--------|-------------|
+| `8fdb78c` | feat(k8s): add certificate distribution and weekly image update timers |
+| `031a146` | fix(k8s): fix three single-node rollout defects and update docs |
+
 ## 2026-08-27
 
 - **RAM upgrade landed**: VPS 958MB → 1.6GB (target 2GB); cert-manager switched from monthly-window renewal to **always-on** (replicas=1); the renewal-window cron entries were removed (only the apt-upgrade task remains)

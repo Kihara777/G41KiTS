@@ -2,6 +2,36 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-09-13
+
+- **運用タイマーを 2 本追加**（k8s/host/）、k8s モードの自動化ギャップを解消：
+  - `g41-cert-reload.timer`（15 分ごと）：cert-manager 更新後、証明書を各消費 Pod に配布。
+    能力ごとに処理を分岐 —— nginx は reloader sidecar を備え SIGHUP でホットロード（**再起動なし**）、
+    hy2/dns はホットロード機構がなくロール再起動が必要。`tls.crt` の sha256 を指紋として冪等化し、
+    配布前に `openssl -checkend 0` で期限切れ証明書を拒否。
+  - `g41-image-update.timer`（毎週日曜 04:30）：フローティングタグの上流 digest を比較し、新版があればロール更新
+  - `g41-notify.py`：サードパーティ依存なしの SMTP 通知。`G41_SMTP_*` 未設定時は静かにスキップ
+- **単一ノード配備の欠陥を 3 件修正**（いずれも実測で踏んだ問題、ガードと文書を追加）：
+  - `kits/nginx/k8s/deployment.yaml` に `imagePullPolicy: Always` を追加 —— `nginx:alpine` は
+    フローティングタグで、未指定時は `IfNotPresent` が既定のため `rollout restart` は
+    ローカルキャッシュを再利用するだけで上流の新版を**永遠に取得できない**
+    （以前の 2 回の「更新成功」は実際には digest が変化していなかった）
+  - `dns`(53/853)、`download`(51413) の `maxSurge` を 0 に —— nginx(80/443) と同理由。
+    単一ノードで `hostPort` を使う場合 `maxSurge>0` だと新 Pod がポート占有で永久 Pending になる
+  - `k3s-standalone.service` に `Conflicts=k3s.service` を追加し、タイマーの依存先を
+    `k3s-standalone` へ変更 —— 旧来の `k3s.service`（disabled だがファイルは残存、`Restart=always`）が
+    起動されると standalone と `127.0.0.1:6444` を奪い合い apiserver が crash-loop
+    （restart counter が 41 まで到達）
+- 文書修正：`k8s/README.md` で本配備が stakater/reloader を**導入していない**ことを明記。
+  hy2/dns の `reloader.stakater.com/auto` アノテーションは無効。「証明書ローテーション」
+  「定期タスク」の 2 節を追加
+- `install-1gb.sh` が両タイマーを導入；`.env.example` に `G41_SMTP_*` を追加；`.gitignore` で `__pycache__` を除外
+
+| コミット | 説明 |
+|----------|------|
+| `8fdb78c` | feat(k8s): 証明書配布と週次イメージ更新のタイマーを追加 |
+| `031a146` | fix(k8s): 単一ノードのロールアウト欠陥 3 件を修正し文書を更新 |
+
 ## 2026-08-27
 
 - **メモリ増強完了**：VPS を 958MB → 1.6GB（目標 2GB）に増強、cert-manager を「毎月更新ウィンドウ」から**常駐**（replicas=1）に変更、crontab のウィンドウ項目を削除（apt アップグレードのみ残置）

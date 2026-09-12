@@ -2,6 +2,33 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-09-13
+
+- **新增两个运维定时任务**（k8s/host/），补齐 k8s 模式下的自动化缺口：
+  - `g41-cert-reload.timer`（每 15 分钟）：cert-manager 续期后把证书分发到各消费 Pod。
+    按能力区分处理 —— nginx 自带 reloader sidecar 走 SIGHUP 热加载**不重启**；
+    hy2/dns 无热加载机制须滚动重启。以 `tls.crt` 的 sha256 作指纹实现幂等，
+    分发前用 `openssl -checkend 0` 拒绝已过期证书。
+  - `g41-image-update.timer`（每周日 04:30）：比对浮动 tag 的上游 digest，有新版本则滚动更新
+  - `g41-notify.py`：无第三方依赖的 SMTP 通知，未配置 `G41_SMTP_*` 时静默跳过
+- **修正三处单节点部署缺陷**（均实测踩坑，已内置护栏与文档）：
+  - `kits/nginx/k8s/deployment.yaml` 补 `imagePullPolicy: Always` —— `nginx:alpine` 为浮动 tag，
+    未声明时默认 `IfNotPresent`，`rollout restart` 只复用本地缓存镜像，
+    上游新版**永远拉不到**（此前两次"更新成功"实际 digest 纹丝不动）
+  - `dns`(53/853)、`download`(51413) 的 `maxSurge` 归零 —— 与 nginx(80/443) 同理，
+    使用 `hostPort` 且单节点时 `maxSurge>0` 会让新 Pod 因端口被占而永久 Pending，rollout 卡死
+  - `k3s-standalone.service` 增加 `Conflicts=k3s.service`，定时任务改依赖 `k3s-standalone`
+    —— 遗留的 `k3s.service`（disabled 但文件仍在、`Restart=always`）被依赖拉起后
+    与 standalone 抢占 `127.0.0.1:6444`，导致 apiserver crash-loop（restart counter 涨到 41）
+- 文档更正：`k8s/README.md` 澄清本部署**并未安装** stakater/reloader，
+  hy2/dns 上的 `reloader.stakater.com/auto` 注解是失效的；新增「证书轮换」「定时任务」两节
+- `install-1gb.sh` 补装两个定时任务；`.env.example` 补 `G41_SMTP_*` 说明；`.gitignore` 忽略 `__pycache__`
+
+| 提交 | 说明 |
+|------|------|
+| `8fdb78c` | feat(k8s): 新增证书分发与每周镜像更新定时任务 |
+| `031a146` | fix(k8s): 修正单节点滚动更新的三处缺陷并补文档 |
+
 ## 2026-08-27
 
 - **内存扩容落地**：VPS 由 958MB 升至 1.6GB（目标 2GB），cert-manager 由"每月开窗续期"改为**常态驻留**（replicas=1），crontab 中的开窗条目已移除（仅保留 apt 升级任务）
