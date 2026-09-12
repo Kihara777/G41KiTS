@@ -3,3 +3,7 @@
 !.git/
 .local.sh
 !.github/
+
+# Python 构建产物（k8s/host/g41-notify.py 编译缓存）
+__pycache__/
+*.pyc

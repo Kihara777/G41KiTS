@@ -1,6 +1,12 @@
 [Unit]
 Description=G41KiTS k3s (standalone, journald 解耦)
 After=network-online.target k3s-state-prep.service
+# k3s 安装包自带的 k3s.service 必须彻底退场：它 Restart=always 且与本单元
+# 抢占同一 apiserver 端口 127.0.0.1:6444，一旦被拉起就会 crash-loop 刷屏
+# （实测：daemon-reload 后死灰复燃，restart counter 涨到 41 并导致 API
+#  ServiceUnavailable）。Conflicts 让本单元启动时强制停掉它。
+Conflicts=k3s.service
+Before=k3s.service
 
 [Service]
 Type=simple
