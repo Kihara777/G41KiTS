@@ -1,0 +1,14 @@
+[Unit]
+Description=G41KiTS certificate propagation (cert-manager secret -> consumer pods)
+Documentation=file:/opt/g41/k8s/host/g41-cert-reload.sh
+# 必须依赖 k3s-standalone 而非 k3s.service：后者是 k3s 安装包自带的遗留单元
+# （disabled 但文件仍在），被依赖拉起后会与 k3s-standalone 抢占
+# 127.0.0.1:6444 端口并 crash-loop（实测坑，见 k8s/README.md）。
+After=k3s-standalone.service
+Wants=k3s-standalone.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/g41/k8s/host/g41-cert-reload.sh
+# k3s 启动期间 kubectl 可能未就绪，失败后由 timer 周期性重试
+TimeoutStartSec=600

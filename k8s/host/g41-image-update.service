@@ -1,0 +1,12 @@
+[Unit]
+Description=G41KiTS weekly image update check (upstream float tags + local builds)
+Documentation=file:/opt/g41/k8s/host/g41-image-update.sh
+# 依赖 k3s-standalone（非遗留的 k3s.service，理由同 g41-cert-reload.service）
+After=k3s-standalone.service network-online.target
+Wants=k3s-standalone.service network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/g41/k8s/host/g41-image-update.sh
+# 拉取与滚动重启可能较慢
+TimeoutStartSec=1800

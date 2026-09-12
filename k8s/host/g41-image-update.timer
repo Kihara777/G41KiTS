@@ -1,0 +1,12 @@
+[Unit]
+Description=G41KiTS weekly image update timer (Sun 04:30 JST)
+
+[Timer]
+# 周日凌晨，避开流量高峰
+OnCalendar=Sun *-*-* 04:30:00
+# 因关机错过则开机后补跑
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

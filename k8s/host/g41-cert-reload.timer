@@ -1,0 +1,11 @@
+[Unit]
+Description=G41KiTS certificate propagation timer (15min)
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+# 开机补跑一次，避免关机期间错过证书轮换
+Persistent=true
+
+[Install]
+WantedBy=timers.target
