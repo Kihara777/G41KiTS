@@ -67,10 +67,8 @@ EOF
 | bt | BitTorrent 客户端，含 WebUI 与 WebDAV 共享 | [docs/zh/bt.md](docs/zh/bt.md) |
 | dns | AdGuard 递归 DNS，支持 DoT/DoH/DoQ | [docs/zh/dns.md](docs/zh/dns.md) |
 | hako | Web 文件管理器，含公开 WebDAV 共享 | [docs/zh/hako.md](docs/zh/hako.md) |
-| hexo | 个人博客引擎 | [docs/zh/hexo.md](docs/zh/hexo.md) |
 | hy2 | Hysteria2 代理，与 nginx 共用 443 端口 | [docs/zh/hy2.md](docs/zh/hy2.md) |
 | tracker | 轻量 HTTPS BitTorrent Tracker | [docs/zh/tracker.md](docs/zh/tracker.md) |
-| attic | 自托管 Nix 二进制缓存服务器（atticd） | [docs/zh/attic.md](docs/zh/attic.md) |
 
 ## 代理与镜像
 
@@ -110,7 +108,6 @@ EOF
 |------|------|------|
 | flake | 个人 Nix flake 仓库 — 自定义包、overlay、NixOS 模块 | [docs/zh/tile_flake.md](docs/zh/tile_flake.md) |
 | bilibili | Bilibili 个人主页 — 虚拟主播介绍 | [docs/zh/tile_bilibili.md](docs/zh/tile_bilibili.md) |
-| attic | Attic Nix 二进制缓存使用指南 | [docs/zh/tile_attic.md](docs/zh/tile_attic.md) |
 | mail | MailKits — Cloudflare Email Workers 透明邮件代理 | [docs/zh/tile_mail.md](docs/zh/tile_mail.md) |
 | kihara777 | GitHub 个人主页 — 项目、贡献与联系方式 | [docs/zh/tile_kihara777.md](docs/zh/tile_kihara777.md) |
 

@@ -442,7 +442,7 @@ k8s_link_root() {
 
 k8s_apply_base() {
   # secret: whole .env as g41-env (declarative, idempotent, self-updating)
-  #   - namespace g41: workloads (redis/api/attic)
+  #   - namespace g41: workloads (redis/api/nginx/hy2/…)
   #   - namespace cert-manager: ClusterIssuer 的 apiKeySecretRef 要求 Secret
   #     与 cert-manager 部署同命名空间
   kubectl create secret generic g41-env --from-env-file=.env \
@@ -532,7 +532,6 @@ k8s_apply() {
 k8s_stage() {
   # 分阶段部署（1GB 机防 Pod 启动风暴）：
   # 应用全部 manifest → 全部缩 0 → 按依赖顺序逐个拉起并等待 Ready
-  # attic 暂缓（内存不足时优先让出）
   k8s_ready || return 1
   k8s_link_root
   local f m dir
@@ -556,7 +555,7 @@ k8s_stage() {
     done
     [ "$ready" = "1" ] && echo "  [stage] $m ready" || echo "  [stage] $m 未就绪（继续下一个）"
   done
-  echo "stage done.（attic 暂缓：kubectl scale deployment attic --replicas=1 恢复）"
+  echo "stage done."
 }
 
 k8s_nginx_conf_apply() {
@@ -1297,10 +1296,9 @@ main() {
         stage) k8s_stage;;
         base) k8s_apply_base_only;;
         conf) k8s_nginx_conf_apply;;
-        hexo) kubectl delete job hexo-build -n g41 --ignore-not-found >/dev/null 2>&1; kubectl apply --validate=false -f kits/hexo/k8s/build-job.yaml.tmpl;;
         build) shift 2; if [ -n "${1:-}" ]; then k8s_build "$1"; else for m in $(kits_installed_list); do [ -d "kits/$m/k8s" ] && k8s_build "$m"; done; fi;;
         status) k8s_status;;
-        ""|--help|-h) echo "Usage: $0 k8s [apply|stage|base|conf|hexo|build|status]  (stage = 分阶段部署，1GB 机推荐)";;
+        ""|--help|-h) echo "Usage: $0 k8s [apply|stage|base|conf|build|status]  (stage = 分阶段部署，1GB 机推荐)";;
         *) echo "Unknown k8s command: $2";;
       esac
       ;;

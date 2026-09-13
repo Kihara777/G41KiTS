@@ -18,7 +18,7 @@
 | 组成 | 估算 |
 |---|---|
 | k3s（含嵌入式 containerd/coredns） | ~350MB |
-| 8 业务 Pod（nginx/redis+api+tracker/download/dns/hy2/hako/blc/attic） | ~450-550MB |
+| 8 业务 Pod（nginx/redis+api+tracker/download/dns/hy2/hako/blc） | ~450-550MB |
 | 内核 + page cache | ~200MB |
 | **合计** | **~1.0-1.1GB** |
 | 供给 | RAM 958MB + zram ~720MB（压缩 ≈ 1.2GB 有效）+ 磁盘 swap 2GB 兜底 |

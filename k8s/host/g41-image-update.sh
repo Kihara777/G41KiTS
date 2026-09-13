@@ -199,7 +199,7 @@ build_sig() {
     | sha256sum | awk '{print $1}'
 }
 
-for m in aria2 bt hexo redis; do
+for m in aria2 bt redis; do
   [ -f "$REPO/kits/$m/Dockerfile" ] || continue
   [ -d "$REPO/kits/$m/k8s" ] || continue   # 仅 k8s 下真正部署的模块
 
@@ -235,7 +235,6 @@ else
           case "$m" in
             redis)     d=redis ;;
             aria2|bt)  d=download ;;
-            hexo)      d="" ;;   # hexo 无常驻 Pod（k8s hexo Job 按需构建），无需重启
             *)         d="" ;;
           esac
           [ -n "$d" ] || continue

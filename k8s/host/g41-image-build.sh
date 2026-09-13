@@ -72,7 +72,7 @@ for m in $mods; do
   tag="g41k8s/$m:local"
 
   # 构建上下文取决于 Dockerfile 的 COPY/ADD 路径风格：
-  #   形如 kits/<m>/xxx -> 上下文为仓库根（hexo、redis）
+  #   形如 kits/<m>/xxx -> 上下文为仓库根（如 redis）
   #   形如裸文件名 xxx  -> 上下文为 kit 目录（autoheal 等 compose-only 模块）
   # 判定错误会以 "failed to calculate checksum ... not found" 失败。
   if grep -qE '^(COPY|ADD)[[:space:]]+[^[:space:]]*kits/' "$df"; then

@@ -67,10 +67,8 @@ nginx リバースプロキシを通じて公開されるユーザー向けサ�
 | bt | BitTorrent クライアント（WebUI と WebDAV 共有付き） | [docs/ja/bt.md](ja/bt.md) |
 | dns | AdGuard 再帰 DNS（DoT/DoH/DoQ 対応） | [docs/ja/dns.md](ja/dns.md) |
 | hako | Web ファイルマネージャ（公開 WebDAV 共有付き） | [docs/ja/hako.md](ja/hako.md) |
-| hexo | 個人ブログエンジン | [docs/ja/hexo.md](ja/hexo.md) |
 | hy2 | Hysteria2 プロキシ（nginx と 443 ポート共有） | [docs/ja/hy2.md](ja/hy2.md) |
 | tracker | 軽量 HTTPS BitTorrent トラッカー | [docs/ja/tracker.md](ja/tracker.md) |
-| attic | セルフホスト Nix バイナリキャッシュサーバー（atticd） | [docs/ja/attic.md](ja/attic.md) |
 
 ## プロキシとミラー
 
@@ -110,7 +108,6 @@ nginx リバースプロキシを通じて公開されるユーザー向けサ�
 |-----------|------|-------------|
 | flake | 個人 Nix flake リポジトリ — カスタムパッケージ、overlay、NixOS モジュール | [docs/ja/tile_flake.md](ja/tile_flake.md) |
 | bilibili | Bilibili スペース — バーチャル配信者紹介 | [docs/ja/tile_bilibili.md](ja/tile_bilibili.md) |
-| attic | Attic Nix バイナリキャッシュ利用ガイド | [docs/ja/tile_attic.md](ja/tile_attic.md) |
 | mail | MailKits — Cloudflare Email Workers 透過メールプロキシ | [docs/ja/tile_mail.md](ja/tile_mail.md) |
 | kihara777 | GitHub プロフィール — プロジェクト、貢献、連絡先 | [docs/ja/tile_kihara777.md](ja/tile_kihara777.md) |
 

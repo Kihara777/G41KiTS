@@ -49,7 +49,6 @@
 | lc | blc |
 | ns | dns |
 | fb | hako |
-| hx | hexo |
 | hq | hy2 |
 | tr | bt |
 | ad | aria2 |

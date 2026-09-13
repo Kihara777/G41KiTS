@@ -9,12 +9,10 @@ include:
   - kits/dns/compose.yaml
   - kits/dsock/compose.yaml
   - kits/hako/compose.yaml
-  - kits/hexo/compose.yaml
   - kits/hy2/compose.yaml
   - kits/nginx/compose.yaml
   - kits/redis/compose.yaml
   - kits/tracker/compose.yaml
-  - kits/attic/compose.yaml
 volumes:
   certs:
     driver: local

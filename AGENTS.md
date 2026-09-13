@@ -52,9 +52,8 @@ g41.sh 支持双后端：`compose`（默认）与 `k8s`（k3s）。切换：`./g
 
 单 VPS 自托管 Docker Compose 技术栈，提供：
 - **首页** — Metro/WP8.1 风格的磁贴与状态码页面
-- **博客** — Hexo 个人博客
 - **直播聊天** — Bilibili 直播弹幕
-- DNS-over-HTTPS/TLS/QUIC 代理、BT Tracker、WebDAV、Nix 缓存镜像
+- DNS-over-HTTPS/TLS/QUIC 代理、BT Tracker、WebDAV
 - Hysteria2 代理与 nginx 共用 443 端口
 
 ## 基础设施
@@ -94,7 +93,7 @@ G41KiTS/
 │
 ├── .ca/     (证书)            ├── .hq/    (hy2)       ├── .ns/    (dns)
 ├── .gx/     (nginx)          ├── .fb/    (文件管理)    ├── .lc/    (直播聊天)
-├── .tr/     (bt)             ├── .ad/    (aria2)     ├── .hx/    (hexo)
+├── .tr/     (bt)             ├── .ad/    (aria2)     ├── .attic/ (nix 缓存)
 ├── .wr/     (webroot)        └── .rd/    (redis+API)
 │
 └── README.md                  # 项目概览
@@ -132,7 +131,7 @@ G41KiTS/
 |------|------|------|
 | `none` | 无 Docker 服务；仅 tile/link/data | tile_*、link_*、home |
 | `hub` | 从 Docker Hub 拉取镜像 | blc、dns、hako、hy2、dsock |
-| `file` | 本地 Dockerfile 构建 | redis、bt、aria2、acme、autoheal、hexo、tracker |
+| `file` | 本地 Dockerfile 构建 | redis、bt、aria2、acme、autoheal、tracker |
 
 `compose: "file"` 模块需要 `Dockerfile` + `compose.yaml`（含 `build: .` 而非 `image:`）。
 
