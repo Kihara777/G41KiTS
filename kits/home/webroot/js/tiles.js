@@ -53,9 +53,39 @@ function getDetail(cfg){
   return Promise.resolve({title:t(cfg.label,0),body:body});
 }
 
+// 按「磁贴正面的短名」排序。
+// 服务端（server.js）按 id 字典序返回，而 id 是内部标识（tile_apps、tile_friends…），
+// 与用户看到的文字无关。这里改为按显示名排序，使顺序符合阅读直觉。
+//
+// 排序键取 label[0] —— 磁贴正面实际显示的那行短名（如 "apps"/"friends"/"links"）。
+// 实测本项目 label[0] 在所有语言下都是同一串拉丁词，只有 label[1]（描述）经过
+// 翻译，因此**三种语言的顺序保持一致**；语言切换不会让磁贴跳位，位置记忆也更稳。
+// label[0] 缺失（磁贴只给了描述）时才退回 label[1]，最后退回 id 保证可比较。
+//
+// numeric 让 "7-Zip" 这类数字前缀按数值排（7 在 10 之前）而非逐字符比较。
+function tileDisplayName(cfg){
+  var v=t(cfg.label,0);                          // 正面短名（首选排序键）
+  if(!v||v===cfg.label){                         // 缺 i18n 键时 t() 原样返回键名
+    v=t(cfg.label,1);                            // 退回描述
+    if(!v||v===cfg.label)v=cfg.id||'';
+  }
+  return String(v);
+}
+function sortTilesByDisplayName(list){
+  return list.slice().sort(function(a,b){
+    try{
+      return tileDisplayName(a).localeCompare(tileDisplayName(b),undefined,{numeric:true,sensitivity:'base'});
+    }catch(e){                    // 老浏览器不支持 options：退回默认比较
+      return tileDisplayName(a).localeCompare(tileDisplayName(b));
+    }
+  });
+}
+
 function buildTiles(){
   dom['g41-tiles'].innerHTML='';
-  TILES.forEach(function(cfg,idx){
+  // 先排序再渲染：颜色由 METRO[idx % 6] 决定，顺序稳定才能让每块磁贴的配色
+  // 在切语言/重载后保持一致，而不是随返回顺序漂移。
+  sortTilesByDisplayName(TILES).forEach(function(cfg,idx){
     var label=t(cfg.label,0),desc=t(cfg.label,1);
     var a=document.createElement('a');a.className='tile t-wp-'+METRO[idx%METRO.length];
     a.innerHTML='<span class="tile-icon">'+cfg.icon+'</span><span><span class="tile-label">'+label+'</span><br><span class="tile-desc"><span>'+desc+'</span></span></span>';
