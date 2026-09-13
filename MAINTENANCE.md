@@ -65,6 +65,28 @@
   - 附带：VPS `.env` 补上 `REDIS_PASSWORD`（原缺失，属已知易错点）
 - 新增模块后测：7 Pod 全部 Running 且新 redis pod **0 重启**，
   `/data/tiles` 返回 **12** 项且含 tile_friends，三语 i18n 解析正常
+- **清理过时内容并修复 GC 缺失**（评估 k3s 设施时发现）：
+  - **根因**：kubelet 的 image GC 只在**磁盘使用率超过 85%** 时触发（默认阈值），
+    本机长期在 30% 上下 → GC 从不运行 → 孤儿快照无限累积
+  - 实测镜像库堆积到 **8.6GB**，实际在用仅 2.7GB，**5.9GB 是已删除/已切版本
+    镜像的孤儿快照**
+  - 修复：`g41-image-update.sh` 收尾增加主动回收（`nerdctl system prune`，
+    按「是否被容器引用」判定，保留在用镜像；比 `ctr images prune --all`
+    安全，后者会连 tag 一起删并逼出重新拉取）
+  - 显式删除 7 个已验证无引用的镜像：`tracker:local` 440MB、
+    `local-path-provisioner` 85MB、`attic` 83MB、`hexo:local` 79MB、
+    `acme:local` 36MB、`stakater/reloader` 15MB、
+    `cert-manager-startupapicheck` 14MB，及其孤儿 digest 引用
+  - 清理残留数据：`.rd/data/i18n/tile_attic/`、`.rd/data/tile_apps/hexo.json`
+  - **实测**：containerd 8.6GB → **2.7GB**（释放 5.9GB），磁盘 32G → 26G，
+    7 Pod 全程 Running；GC 幂等（二次运行报「无可回收空间」）
+- **评估 nginx 原生 ACME 替代 cert-manager：结论不可行**，维持现有机制。
+  决定性阻塞：`ngx_http_acme_module` 官方文档与源码 README 均声明
+  **仅支持 HTTP-01**，而我们的证书含 `*.g41.moe` 通配符 —— ACME 规范
+  （RFC 8555）规定通配符**只能**用 DNS-01 验证。次要问题：附加域名
+  `maidkihara.moe`/`kitsunori.moe` 解析到 Cloudflare 而非本机；模块不产出
+  k8s Secret，会使 hy2/dns 失去证书来源；包版本与 nginx 主版本绑定
+  （需要 1.29.8，本机 1.31.5）。详见 `docs/zh/nginx-native-acme-assessment.md`
 
 | 提交 | 说明 |
 |------|------|
@@ -73,6 +95,9 @@
 | `5a8ff40` | feat(k8s): 本地镜像构建改走 containerd 原生路径（无需 dockerd） |
 | `1e164a3` | feat: 移除 hexo 博客模块与 attic 服务 |
 | `8e87063` | feat: 新增 tile_friends 友情链接磁贴，补齐第 12 块磁贴 |
+| `ba4126e` | docs: 评估 nginx 原生 ACME 替代 cert-manager 的可行性（结论：不可行） |
+| `c8aa095` | docs: 新增 k3s 设施评估 — 资源优化空间与全量迁移可行性 |
+| `f4fdbc3` | feat(k8s): 每周镜像任务增加 GC，回收孤儿快照 |
 
 ## 2026-08-27
 

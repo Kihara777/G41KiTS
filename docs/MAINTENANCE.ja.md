@@ -70,6 +70,31 @@
   - 併せて VPS の `.env` に `REDIS_PASSWORD` を追加（従来欠落、既知の落とし穴）
 - 追加後の確認：Pod 7 件すべて Running、新 redis Pod は**再起動 0 回**、
   `/data/tiles` は **12** 件で tile_friends を含み、3 言語 i18n も正常に解決
+- **陳腐化した内容を整理し、GC 欠如を修正**（k3s 施設評価中に発見）：
+  - **根本原因**：kubelet の image GC は**ディスク使用率が 85% を超えた時のみ**
+    発火する（既定閾値）。本機は常時 30% 前後 → GC が一度も走らず、
+    孤児スナップショットが無制限に蓄積
+  - 実測でイメージ庫が **8.6GB** まで膨張、実際の使用は 2.7GB のみ ——
+    **5.9GB が削除済み／切替済みイメージの孤児スナップショット**
+  - 修正：`g41-image-update.sh` の末尾に能動的回収を追加
+    （`nerdctl system prune`。「コンテナから参照されているか」で判定し
+    使用中のイメージは全て保持。`ctr images prune --all` より安全 ——
+    後者はタグごと削除し再取得を強いる）
+  - 参照ゼロを確認した 7 イメージを明示削除：`tracker:local` 440MB、
+    `local-path-provisioner` 85MB、`attic` 83MB、`hexo:local` 79MB、
+    `acme:local` 36MB、`stakater/reloader` 15MB、
+    `cert-manager-startupapicheck` 14MB、および孤児 digest 参照
+  - 残存データを整理：`.rd/data/i18n/tile_attic/`、`.rd/data/tile_apps/hexo.json`
+  - **実測**：containerd 8.6GB → **2.7GB**（5.9GB 解放）、ディスク 32G → 26G、
+    Pod 7 件は終始 Running。GC は冪等（2 回目は「回収対象なし」）
+- **nginx ネイティブ ACME による cert-manager 代替を評価：不可行**、現行機構を維持。
+  決定的な阻害要因：`ngx_http_acme_module` の公式文書とソース README がいずれも
+  **HTTP-01 のみ対応**と明記。一方われわれの証明書は `*.g41.moe` ワイルドカードを含み、
+  RFC 8555 はワイルドカードを **DNS-01 のみ**で検証するよう規定している。
+  副次的な問題：追加ドメイン `maidkihara.moe`/`kitsunori.moe` は本機ではなく
+  Cloudflare に解決される；本モジュールは k8s Secret を生成せず hy2/dns が証明書源を
+  失う；パッケージは nginx 本体バージョンに固定（1.29.8 が必要、本機は 1.31.5）。
+  詳細は `docs/zh/nginx-native-acme-assessment.md`
 
 | コミット | 説明 |
 |----------|------|
@@ -78,7 +103,9 @@
 | `5a8ff40` | feat(k8s): ローカルイメージを containerd ネイティブ経路でビルド（dockerd 不要） |
 | `1e164a3` | feat: hexo ブログモジュールと attic サービスを削除 |
 | `8e87063` | feat: tile_friends フレンドリンクタイルを追加し 12 枚目を補完 |
-| `8e87063` | feat: tile_friends フレンドリンクタイルを追加し 12 枚目を補完 |
+| `ba4126e` | docs: nginx ネイティブ ACME による cert-manager 代替を評価（不可行） |
+| `c8aa095` | docs: k3s 施設評価を追加 — リソース余力と全量 k3s 移行 |
+| `f4fdbc3` | feat(k8s): 週次イメージタスクに GC を追加し孤児スナップショットを回収 |
 
 ## 2026-08-27
 

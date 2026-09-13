@@ -67,6 +67,29 @@
   - Also added `REDIS_PASSWORD` to the VPS `.env` (it had been missing, a known pitfall)
 - Post-check: all 7 Pods Running with the new redis pod at **0 restarts**, `/data/tiles` returns
   **12** entries including tile_friends, and all three i18n locales resolve correctly
+- **Cleaned up stale content and fixed a missing GC** (found while assessing the k3s facility):
+  - **Root cause**: kubelet's image GC only fires once **disk usage exceeds 85%** (default
+    threshold), while this box has sat around 30% — so GC never ran and orphaned snapshots
+    accumulated without bound
+  - Measured the image store at **8.6 GB** against only 2.7 GB actually in use — **5.9 GB of
+    orphaned snapshots** left by deleted/rolled-out images
+  - Fix: `g41-image-update.sh` now performs active reclamation at the end
+    (`nerdctl system prune`, which keys off "referenced by a container" and keeps every in-use
+    image; safer than `ctr images prune --all`, which also drops tags and forces re-pulls)
+  - Explicitly deleted 7 images verified to have no references: `tracker:local` 440MB,
+    `local-path-provisioner` 85MB, `attic` 83MB, `hexo:local` 79MB, `acme:local` 36MB,
+    `stakater/reloader` 15MB, `cert-manager-startupapicheck` 14MB, plus their orphaned digest refs
+  - Cleaned leftover data: `.rd/data/i18n/tile_attic/`, `.rd/data/tile_apps/hexo.json`
+  - **Measured**: containerd 8.6 GB → **2.7 GB** (5.9 GB freed), disk 32G → 26G, all 7 Pods
+    Running throughout; the GC step is idempotent (a second run reports "nothing to reclaim")
+- **Assessed replacing cert-manager with nginx's native ACME: not viable**, keeping the current
+  mechanism. The decisive blocker: the official docs and the source README of
+  `ngx_http_acme_module` both state it supports **HTTP-01 only**, while our certificate carries
+  the `*.g41.moe` wildcard — and RFC 8555 requires wildcards to be validated via **DNS-01 only**.
+  Secondary issues: the extra domains `maidkihara.moe`/`kitsunori.moe` resolve to Cloudflare
+  rather than this host; the module produces no k8s Secret, which would leave hy2/dns without a
+  certificate source; and the package is version-locked to the nginx release (needs 1.29.8, this
+  box runs 1.31.5). See `docs/zh/nginx-native-acme-assessment.md`
 
 | Commit | Description |
 |--------|-------------|
@@ -75,6 +98,9 @@
 | `5a8ff40` | feat(k8s): build local images via the native containerd path (no dockerd) |
 | `1e164a3` | feat: remove the hexo blog module and the attic service |
 | `8e87063` | feat: add the tile_friends friend-links tile, completing the 12th tile |
+| `ba4126e` | docs: assess nginx native ACME as a cert-manager replacement (not viable) |
+| `c8aa095` | docs: add the k3s facility assessment — resource headroom and full k3s migration |
+| `f4fdbc3` | feat(k8s): add GC to the weekly image task to reclaim orphaned snapshots |
 
 ## 2026-08-27
 
