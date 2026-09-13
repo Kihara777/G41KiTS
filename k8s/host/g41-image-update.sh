@@ -304,6 +304,38 @@ else
   done
 fi
 
+# --- 4. 回收陈旧镜像与快照 -----------------------------------------------
+# 坑：kubelet 的 image GC 只在**磁盘使用率超过 85%** 时才触发（默认阈值），
+# 本机长期在 30% 上下，因此 GC 从不运行 —— 已删除/已切版本的镜像快照会
+# 无限累积（实测堆积到 8.6GB，其中 5.9GB 是孤儿快照，而实际在用仅 2.7GB）。
+# 这里主动回收，不等 GC 触发。
+#
+# 用 nerdctl system prune：它按「是否被容器引用」判定，保留一切在用镜像，
+# 比 `ctr images prune --all` 安全（后者会连 tag 一起删、逼出重新拉取）。
+pruned_before=$(du -sm /var/lib/rancher/k3s/agent/containerd 2>/dev/null | cut -f1)
+if command -v nerdctl >/dev/null 2>&1; then
+  log "GC 回收未引用镜像与快照…"
+  if nerdctl --address /run/k3s/containerd/containerd.sock --namespace k8s.io \
+        system prune -f >/tmp/g41-prune.log 2>&1; then
+    pruned_after=$(du -sm /var/lib/rancher/k3s/agent/containerd 2>/dev/null | cut -f1)
+    if [ -n "$pruned_before" ] && [ -n "$pruned_after" ]; then
+      saved=$((pruned_before - pruned_after))
+      if [ "$saved" -gt 100 ]; then
+        log "GC 完成：containerd ${pruned_before}MB -> ${pruned_after}MB（释放 ${saved}MB）"
+      else
+        log "GC 完成：无可回收空间（${pruned_after}MB）"
+      fi
+    else
+      log "GC 完成（空间统计不可用）"
+    fi
+  else
+    log "WARN GC 失败，日志尾部："
+    tail -5 /tmp/g41-prune.log | sed 's/^/        /'
+  fi
+else
+  log "NOTE: nerdctl 不可用，跳过镜像 GC"
+fi
+
 # --- 5. 通知 -------------------------------------------------------------
 # 仅在**确实发生了更新或失败**时发信；一切最新则静默，避免每周噪音。
 if [ -n "${updated# }" ] || [ -n "${failed# }" ] || [ -n "${local_stale# }" ]; then
