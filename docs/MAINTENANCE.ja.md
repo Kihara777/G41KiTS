@@ -36,12 +36,29 @@
   - 週次タスクは「Dockerfile + COPY されるファイル」の内容ハッシュで再ビルド要否を判定し、
     未変化ならスキップ。再ビルド後は該当 Deployment をロール再起動
   - 実測：bt/aria2/hexo/redis すべて再ビルド成功、2 回目はすべてスキップされ冪等性を確認
+- **hexo ブログモジュールと attic サービスを削除**（メンテナの要請）：
+  - `kits/hexo`（`.hx` データと `.wr/hexo` 静的出力を含む。削除前に VPS の
+    `/root/g41-removed-backup/` へバックアップ済み）、`kits/attic`、および attic に
+    ハード依存するタイル `kits/tile_attic` を削除。併せてモジュール文書 9 件
+  - k8s 側：attic の Deployment/Service、hx Service、hexo-build Job を削除。
+    `.gx` に残った site 断片を消して nginx ConfigMap を再レンダリング
+    —— さもないと Service 消滅後に upstream `attic:8080` が原因で
+    **nginx が起動に失敗**する。Redis の `data:tiles/tile_attic` を削除し
+    `data:loaded` を空にして再インポートを発火
+  - 同期：compose.yaml、G41_KITS、g41.sh（`k8s hexo` サブコマンドを削除）、
+    運用スクリプト 2 本のモジュール一覧、AGENTS.md、README（3 言語）、
+    k8s/README.md、kits-spec.md、1gb-stability.md
+  - attic の永続ディレクトリ `.attic` は保持（データ未削除、後日復元可能）。
+    `docs/*/k8s-migration.md` は歴史的記録として保持
+  - 実測：Deployment 7 件すべて Running、サイト 200、`/attic/` → 404、
+    `/data/tiles` は 11 件で tile_attic を含まず、タイマー 2 本とも exit 0
 
 | コミット | 説明 |
 |----------|------|
 | `8fdb78c` | feat(k8s): 証明書配布と週次イメージ更新のタイマーを追加 |
 | `031a146` | fix(k8s): 単一ノードのロールアウト欠陥 3 件を修正し文書を更新 |
 | `5a8ff40` | feat(k8s): ローカルイメージを containerd ネイティブ経路でビルド（dockerd 不要） |
+| `1e164a3` | feat: hexo ブログモジュールと attic サービスを削除 |
 
 ## 2026-08-27
 

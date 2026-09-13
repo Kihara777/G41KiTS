@@ -34,12 +34,28 @@
   - The weekly task now decides whether to rebuild from a content hash of the Dockerfile plus every
     COPYed file, skipping unchanged modules and rolling the affected Deployment afterwards
   - Verified: bt/aria2/hexo/redis all rebuilt; a second run skipped everything, so it is idempotent
+- **Removed the hexo blog module and the attic service** (at maintainer's request):
+  - Deleted `kits/hexo` (including its `.hx` data and `.wr/hexo` static output, backed up to
+    `/root/g41-removed-backup/` on the VPS beforehand), `kits/attic`, and the tile
+    `kits/tile_attic` that hard-depends on attic; plus 9 module docs
+  - k8s side: deleted the attic Deployment/Service, the hx Service and the hexo-build Job;
+    cleared the leftover `.gx` site fragments and re-rendered the nginx ConfigMap — otherwise the
+    `attic:8080` upstream would make **nginx fail to start** once the Service was gone; cleared
+    Redis `data:tiles/tile_attic` and blanked `data:loaded` to trigger a re-import
+  - Kept in sync: compose.yaml, G41_KITS, g41.sh (dropped the `k8s hexo` subcommand), the module
+    lists in both ops scripts, AGENTS.md, the READMEs (3 languages), k8s/README.md, kits-spec.md
+    and 1gb-stability.md
+  - Retained the attic persist directory `.attic` (data not deleted, so it can be restored later);
+    `docs/*/k8s-migration.md` stays as a historical record
+  - Verified: all 7 Deployments Running, site 200, `/attic/` → 404, `/data/tiles` returns 11
+    entries without tile_attic, both timers exit 0
 
 | Commit | Description |
 |--------|-------------|
 | `8fdb78c` | feat(k8s): add certificate distribution and weekly image update timers |
 | `031a146` | fix(k8s): fix three single-node rollout defects and update docs |
 | `5a8ff40` | feat(k8s): build local images via the native containerd path (no dockerd) |
+| `1e164a3` | feat: remove the hexo blog module and the attic service |
 
 ## 2026-08-27
 

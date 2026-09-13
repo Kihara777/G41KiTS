@@ -33,12 +33,28 @@
   - 每周任务改为「Dockerfile + 被 COPY 文件」内容哈希判定，未变化则跳过重建，
     重建后自动滚动重启对应 Deployment
   - 实测 bt/aria2/hexo/redis 全部重建成功，二次运行全部跳过，幂等成立
+- **移除 hexo 博客模块与 attic 服务**（维护者要求）：
+  - 删除 `kits/hexo`（含 `.hx` 数据与 `.wr/hexo` 静态输出，移除前已备份至
+    VPS `/root/g41-removed-backup/`）、`kits/attic`、以及硬依赖 attic 的磁贴
+    `kits/tile_attic`；连带 9 篇模块文档
+  - k8s 侧：删除 attic Deployment/Service、hx Service、hexo-build Job；
+    清除 `.gx` 残留 site 片段后重渲染 nginx ConfigMap（否则 upstream
+    `attic:8080` 因 Service 消失会导致 **nginx 启动失败**）；
+    清除 Redis `data:tiles/tile_attic` 并置空 `data:loaded` 触发重导入
+  - 同步 compose.yaml / G41_KITS / g41.sh（移除 `k8s hexo` 子命令）/
+    两个运维脚本的模块列表 / AGENTS.md、README（三语）、k8s/README.md、
+    kits-spec.md、1gb-stability.md
+  - 保留 attic 持久化目录 `.attic`（数据未删，便于日后恢复）；
+    `docs/*/k8s-migration.md` 作为历史记录保留
+  - 实测：7 个 Deployment 全部 Running，站点 200，`/attic/` → 404，
+    `/data/tiles` 返回 11 项且不含 tile_attic，两个定时任务 exit 0
 
 | 提交 | 说明 |
 |------|------|
 | `8fdb78c` | feat(k8s): 新增证书分发与每周镜像更新定时任务 |
 | `031a146` | fix(k8s): 修正单节点滚动更新的三处缺陷并补文档 |
 | `5a8ff40` | feat(k8s): 本地镜像构建改走 containerd 原生路径（无需 dockerd） |
+| `1e164a3` | feat: 移除 hexo 博客模块与 attic 服务 |
 
 ## 2026-08-27
 
