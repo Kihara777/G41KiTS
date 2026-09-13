@@ -87,6 +87,20 @@
   `maidkihara.moe`/`kitsunori.moe` 解析到 Cloudflare 而非本机；模块不产出
   k8s Secret，会使 hy2/dns 失去证书来源；包版本与 nginx 主版本绑定
   （需要 1.29.8，本机 1.31.5）。详见 `docs/zh/nginx-native-acme-assessment.md`
+- **首页磁贴改为按正面短名排序**：服务端按 `id` 字典序返回（`tile_apps`、
+  `tile_friends`…），与用户看到的文字无关，顺序无规律可循。改为在
+  `buildTiles()` 渲染前按 `label[0]`（磁贴正面短名）排序，缺失时退回
+  `label[1]`、再退回 `id`；排序在 `METRO[idx%6]` 配色**之前**执行，
+  以保证每块磁贴配色不随返回顺序漂移
+  - 实测三语顺序完全一致：apps → bilibili → dns → flake → friends →
+    github → homete → kihara777 → links → mail → nix → tracker
+  - 顺带修正两条不规范英文描述：`proxy`→`Reverse Proxy`、`resolve`→`DNS Resolver`
+  - ⚠️ **踩坑**：改动必须经 `g41.sh kits add -C` 安装。直接 rsync 覆盖
+    `kits/` 源文件会换掉 inode，**断开与 `.wr/G41/`（nginx 实际提供路径）
+    的硬链接**，表现为「改了但站点没变」——本次即因此一度误判已生效
+  - 附带清理 6 个陈旧 i18n 目录（`apps`/`flake`/`gh-proxy`/`links`/
+    `nix-cache`/`tile_homete`，均为旧模块名残留）；它们与现行目录内容
+    **不同**，而加载器用 `Object.assign` 合并，陈旧值会与之竞争
 
 | 提交 | 说明 |
 |------|------|
@@ -98,6 +112,7 @@
 | `ba4126e` | docs: 评估 nginx 原生 ACME 替代 cert-manager 的可行性（结论：不可行） |
 | `c8aa095` | docs: 新增 k3s 设施评估 — 资源优化空间与全量迁移可行性 |
 | `f4fdbc3` | feat(k8s): 每周镜像任务增加 GC，回收孤儿快照 |
+| `98b6441` | feat(home): 磁贴按正面短名排序 |
 
 ## 2026-08-27
 

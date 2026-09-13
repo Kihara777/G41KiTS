@@ -95,6 +95,21 @@
   Cloudflare に解決される；本モジュールは k8s Secret を生成せず hy2/dns が証明書源を
   失う；パッケージは nginx 本体バージョンに固定（1.29.8 が必要、本機は 1.31.5）。
   詳細は `docs/zh/nginx-native-acme-assessment.md`
+- **ホームのタイルを正面の短名でソートするよう変更**：サーバーは `id` の辞書順
+  （`tile_apps`、`tile_friends`…）で返しており、これはユーザーが読む文字とは無関係で
+  順序に規則性がなかった。`buildTiles()` の描画前に `label[0]`（タイル正面の短名）で
+  ソートするよう変更。欠落時は `label[1]`、さらに `id` へフォールバック。ソートは
+  `METRO[idx%6]` の配色決定**より前**に実行し、配色が返却順で揺れないようにした
+  - 3 言語で順序が完全に一致することを実測：apps → bilibili → dns → flake → friends →
+    github → homete → kihara777 → links → mail → nix → tracker
+  - 併せて不適切な英語説明を 2 件修正：`proxy`→`Reverse Proxy`、`resolve`→`DNS Resolver`
+  - ⚠️ **落とし穴**：変更は `g41.sh kits add -C` でインストールする必要がある。素の rsync で
+    `kits/` のソースを上書きすると inode が置き換わり、**`.wr/G41/`（nginx が実際に配信する
+    パス）へのハードリンクが切れる**。「編集したのにサイトが変わらない」という症状になり、
+    今回まさにそれで反映済みと誤認した
+  - 併せて陳腐化した i18n ディレクトリ 6 件（`apps`/`flake`/`gh-proxy`/`links`/`nix-cache`/
+    `tile_homete`、旧モジュール名の残骸）を削除。内容は現行版と**異なり**、ローダーは
+    `Object.assign` でマージするため、古い値が現行値と競合していた
 
 | コミット | 説明 |
 |----------|------|
@@ -106,6 +121,7 @@
 | `ba4126e` | docs: nginx ネイティブ ACME による cert-manager 代替を評価（不可行） |
 | `c8aa095` | docs: k3s 施設評価を追加 — リソース余力と全量 k3s 移行 |
 | `f4fdbc3` | feat(k8s): 週次イメージタスクに GC を追加し孤児スナップショットを回収 |
+| `98b6441` | feat(home): タイルを正面の短名でソート |
 
 ## 2026-08-27
 

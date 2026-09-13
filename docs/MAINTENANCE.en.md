@@ -90,6 +90,23 @@
   rather than this host; the module produces no k8s Secret, which would leave hy2/dns without a
   certificate source; and the package is version-locked to the nginx release (needs 1.29.8, this
   box runs 1.31.5). See `docs/zh/nginx-native-acme-assessment.md`
+- **Homepage tiles now sort by their front-facing short name**: the server returned tiles in
+  `id` order (`tile_apps`, `tile_friends`, …), which is unrelated to what users read and left the
+  order without any discernible rule. `buildTiles()` now sorts by `label[0]` (the short name shown
+  on the tile) before rendering, falling back to `label[1]` and then `id`; the sort runs **before**
+  the `METRO[idx%6]` colour assignment so each tile keeps its colour instead of drifting with the
+  returned order
+  - Verified identical order across all three languages: apps → bilibili → dns → flake → friends →
+    github → homete → kihara777 → links → mail → nix → tracker
+  - Also fixed two non-conforming English descriptions: `proxy`→`Reverse Proxy`,
+    `resolve`→`DNS Resolver`
+  - ⚠️ **Pitfall**: the change must be installed via `g41.sh kits add -C`. Overwriting the `kits/`
+    source with plain rsync replaces the inode and **breaks the hard link to `.wr/G41/`** (the path
+    nginx actually serves), which looks like "edited but the site never changed" — exactly the
+    false positive hit here
+  - Also removed 6 stale i18n directories (`apps`/`flake`/`gh-proxy`/`links`/`nix-cache`/
+    `tile_homete`, leftovers from old module names). Their contents **differ** from the current
+    ones and the loader merges via `Object.assign`, so the stale values competed with the live ones
 
 | Commit | Description |
 |--------|-------------|
@@ -101,6 +118,7 @@
 | `ba4126e` | docs: assess nginx native ACME as a cert-manager replacement (not viable) |
 | `c8aa095` | docs: add the k3s facility assessment — resource headroom and full k3s migration |
 | `f4fdbc3` | feat(k8s): add GC to the weekly image task to reclaim orphaned snapshots |
+| `98b6441` | feat(home): sort tiles by their front-facing short name |
 
 ## 2026-08-27
 
