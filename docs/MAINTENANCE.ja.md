@@ -52,6 +52,24 @@
     `docs/*/k8s-migration.md` は歴史的記録として保持
   - 実測：Deployment 7 件すべて Running、サイト 200、`/attic/` → 404、
     `/data/tiles` は 11 件で tile_attic を含まず、タイマー 2 本とも exit 0
+- **`tile_friends` フレンドリンクタイルを追加**（12 枚目、ホームのグリッドを補完）：
+  - `list` 型タイル。クリックでフレンドリンク一覧を展開。最初の項目は
+    「汐霧の霧星パン工房」（`https://shiogiri.com`、相互リンク）
+  - 3 言語 i18n + 3 言語ドキュメント + README 展示表の項目
+  - 11 → 12 枚：4 列グリッドでちょうど 3 行、6 色 METRO 循環でちょうど 2 巡、欠けなし
+- **静かな半故障を 1 件修正**（新タイル追加時のリロードで顕在化）：
+  - `kits/redis/k8s/deployment.yaml`：`REDIS_PASSWORD` の secretKeyRef を
+    `optional: true` から**必須**へ変更。optional だと `g41-env` にキーが無い場合
+    Kubernetes はエラーではなく**空文字列**を注入 → redis が `--requirepass ""` で起動し
+    api が認証できず（`NOAUTH HELLO`）、`/data/*` が **502** になるのに Pod は Running のまま。
+    実測でこれがデータエンドポイント停止の原因だった。必須化によりキー欠落時は
+    Pod が Pending になり明確なエラーが出る。
+  - `g41.sh k8s_apply_base`：`.env` に `REDIS_PASSWORD` があるか事前検証し、
+    無ければ早期に失敗。キー欠落の Secret を二度と生成しない。
+    （`RELOAD_SECRET` は対象外 —— ホットリロード端点のみに影響し独自のエラーがある。）
+  - 併せて VPS の `.env` に `REDIS_PASSWORD` を追加（従来欠落、既知の落とし穴）
+- 追加後の確認：Pod 7 件すべて Running、新 redis Pod は**再起動 0 回**、
+  `/data/tiles` は **12** 件で tile_friends を含み、3 言語 i18n も正常に解決
 
 | コミット | 説明 |
 |----------|------|
@@ -59,6 +77,8 @@
 | `031a146` | fix(k8s): 単一ノードのロールアウト欠陥 3 件を修正し文書を更新 |
 | `5a8ff40` | feat(k8s): ローカルイメージを containerd ネイティブ経路でビルド（dockerd 不要） |
 | `1e164a3` | feat: hexo ブログモジュールと attic サービスを削除 |
+| `8e87063` | feat: tile_friends フレンドリンクタイルを追加し 12 枚目を補完 |
+| `8e87063` | feat: tile_friends フレンドリンクタイルを追加し 12 枚目を補完 |
 
 ## 2026-08-27
 

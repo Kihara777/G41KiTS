@@ -48,6 +48,23 @@
     `docs/*/k8s-migration.md` 作为历史记录保留
   - 实测：7 个 Deployment 全部 Running，站点 200，`/attic/` → 404，
     `/data/tiles` 返回 11 项且不含 tile_attic，两个定时任务 exit 0
+- **新增 `tile_friends` 友情链接磁贴**（第 12 块磁贴，补齐首页网格）：
+  - `list` 型磁贴，点击展开友链列表；首个条目为「汐雾の雾星面包房」
+    （`https://shiogiri.com`，互为友链）
+  - 三语 i18n + 三语文档 + README 展示表条目
+  - 11 → 12 块：4 列网格正好 3 行、6 色 METRO 循环正好 2 轮，无空缺
+- **修复一处静默半失效缺陷**（新增磁贴触发 reload 时暴露）：
+  - `kits/redis/k8s/deployment.yaml`：`REDIS_PASSWORD` 的 secretKeyRef 由
+    `optional: true` 改为**必需**。optional 时若 `g41-env` 缺该键，Kubernetes 会
+    注入**空字符串**而不报错 → redis 以 `--requirepass ""` 启动、api 无法认证
+    （`NOAUTH HELLO`），表现为 `/data/*` 全部 **502** 而 Pod 仍显示 Running。
+    实测就是这个原因导致数据端点中断，改为必需后缺键会让 Pod 直接 Pending。
+  - `g41.sh k8s_apply_base`：前置校验 `.env` 是否含 `REDIS_PASSWORD`，缺失即
+    失败退出，避免再次生成缺键的 Secret。（`RELOAD_SECRET` 不在此列 —— 仅影响
+    热重载端点且已有独立报错。）
+  - 附带：VPS `.env` 补上 `REDIS_PASSWORD`（原缺失，属已知易错点）
+- 新增模块后测：7 Pod 全部 Running 且新 redis pod **0 重启**，
+  `/data/tiles` 返回 **12** 项且含 tile_friends，三语 i18n 解析正常
 
 | 提交 | 说明 |
 |------|------|
@@ -55,6 +72,7 @@
 | `031a146` | fix(k8s): 修正单节点滚动更新的三处缺陷并补文档 |
 | `5a8ff40` | feat(k8s): 本地镜像构建改走 containerd 原生路径（无需 dockerd） |
 | `1e164a3` | feat: 移除 hexo 博客模块与 attic 服务 |
+| `8e87063` | feat: 新增 tile_friends 友情链接磁贴，补齐第 12 块磁贴 |
 
 ## 2026-08-27
 

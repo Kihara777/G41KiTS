@@ -49,6 +49,24 @@
     `docs/*/k8s-migration.md` stays as a historical record
   - Verified: all 7 Deployments Running, site 200, `/attic/` → 404, `/data/tiles` returns 11
     entries without tile_attic, both timers exit 0
+- **Added the `tile_friends` friend-links tile** (the 12th tile, completing the homepage grid):
+  - A `list`-type tile that expands the friend links on click; first entry is
+    "Shiogiri's Mist-Star Bakery" (`https://shiogiri.com`, a mutual link)
+  - Trilingual i18n, trilingual docs and a README showcase entry
+  - 11 → 12 tiles: exactly 3 rows in the 4-column grid and 2 full cycles of the 6 METRO colours
+- **Fixed a silent half-failure defect** (surfaced when the new tile triggered a reload):
+  - `kits/redis/k8s/deployment.yaml`: the `REDIS_PASSWORD` secretKeyRef changed from
+    `optional: true` to **required**. With `optional`, a missing key in `g41-env` is injected as
+    an **empty string** instead of an error → redis starts with `--requirepass ""` and the api
+    cannot authenticate (`NOAUTH HELLO`), showing up as `/data/*` returning **502** while the Pod
+    still reads Running. This was the actual cause of the data-endpoint outage; requiring the key
+    makes a missing key leave the Pod Pending with a clear error.
+  - `g41.sh k8s_apply_base`: pre-flight check that `.env` contains `REDIS_PASSWORD`, failing early
+    so a keyless Secret is never generated again. (`RELOAD_SECRET` is excluded — it only affects
+    the hot-reload endpoint and already reports its own error.)
+  - Also added `REDIS_PASSWORD` to the VPS `.env` (it had been missing, a known pitfall)
+- Post-check: all 7 Pods Running with the new redis pod at **0 restarts**, `/data/tiles` returns
+  **12** entries including tile_friends, and all three i18n locales resolve correctly
 
 | Commit | Description |
 |--------|-------------|
@@ -56,6 +74,7 @@
 | `031a146` | fix(k8s): fix three single-node rollout defects and update docs |
 | `5a8ff40` | feat(k8s): build local images via the native containerd path (no dockerd) |
 | `1e164a3` | feat: remove the hexo blog module and the attic service |
+| `8e87063` | feat: add the tile_friends friend-links tile, completing the 12th tile |
 
 ## 2026-08-27
 
