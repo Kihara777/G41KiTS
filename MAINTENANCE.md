@@ -23,11 +23,22 @@
 - 文档更正：`k8s/README.md` 澄清本部署**并未安装** stakater/reloader，
   hy2/dns 上的 `reloader.stakater.com/auto` 注解是失效的；新增「证书轮换」「定时任务」两节
 - `install-1gb.sh` 补装两个定时任务；`.env.example` 补 `G41_SMTP_*` 说明；`.gitignore` 忽略 `__pycache__`
+- **本地镜像构建改走 containerd 原生路径**：k8s 模式下 dockerd 停用，原
+  `docker build` + `save | ctr import` 无法运行。改用 nerdctl + BuildKit 的
+  containerd worker（`buildkitd.service`），镜像直接构建进 k3s 的 k8s.io namespace
+  与 overlayfs snapshotter，省去 save/import 两步
+  - 新增 `g41-image-build.sh`：自动发现 k8s 下部署的 `compose=file` 模块
+    （跳过 autoheal/dsock/acme 等退役模块），按 COPY 路径风格自动判定构建上下文
+  - `g41.sh k8s build` 优先路由到该路径，nerdctl 不可用时回退 docker
+  - 每周任务改为「Dockerfile + 被 COPY 文件」内容哈希判定，未变化则跳过重建，
+    重建后自动滚动重启对应 Deployment
+  - 实测 bt/aria2/hexo/redis 全部重建成功，二次运行全部跳过，幂等成立
 
 | 提交 | 说明 |
 |------|------|
 | `8fdb78c` | feat(k8s): 新增证书分发与每周镜像更新定时任务 |
 | `031a146` | fix(k8s): 修正单节点滚动更新的三处缺陷并补文档 |
+| `5a8ff40` | feat(k8s): 本地镜像构建改走 containerd 原生路径（无需 dockerd） |
 
 ## 2026-08-27
 

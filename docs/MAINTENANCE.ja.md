@@ -26,11 +26,22 @@
   hy2/dns の `reloader.stakater.com/auto` アノテーションは無効。「証明書ローテーション」
   「定期タスク」の 2 節を追加
 - `install-1gb.sh` が両タイマーを導入；`.env.example` に `G41_SMTP_*` を追加；`.gitignore` で `__pycache__` を除外
+- **ローカルイメージビルドを containerd ネイティブ経路へ移行**：k8s モードでは dockerd が
+  停止しているため、従来の `docker build` + `save | ctr import` は実行できない。
+  nerdctl + BuildKit の containerd worker（`buildkitd.service`）に変更し、イメージを
+  k3s の k8s.io namespace と overlayfs snapshotter へ直接ビルド。save/import の 2 段階が不要に
+  - 新規 `g41-image-build.sh`：k8s で実際に配備される `compose=file` モジュールを自動検出
+    （autoheal/dsock/acme など退役済みは除外）、COPY パスの流儀からビルドコンテキストを自動判定
+  - `g41.sh k8s build` はこの経路を優先し、nerdctl 不在時は docker へフォールバック
+  - 週次タスクは「Dockerfile + COPY されるファイル」の内容ハッシュで再ビルド要否を判定し、
+    未変化ならスキップ。再ビルド後は該当 Deployment をロール再起動
+  - 実測：bt/aria2/hexo/redis すべて再ビルド成功、2 回目はすべてスキップされ冪等性を確認
 
 | コミット | 説明 |
 |----------|------|
 | `8fdb78c` | feat(k8s): 証明書配布と週次イメージ更新のタイマーを追加 |
 | `031a146` | fix(k8s): 単一ノードのロールアウト欠陥 3 件を修正し文書を更新 |
+| `5a8ff40` | feat(k8s): ローカルイメージを containerd ネイティブ経路でビルド（dockerd 不要） |
 
 ## 2026-08-27
 

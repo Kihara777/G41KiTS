@@ -24,11 +24,22 @@
   so the `reloader.stakater.com/auto` annotations on hy2/dns are inert; added "Certificate rotation"
   and "Scheduled tasks" sections
 - `install-1gb.sh` now installs both timers; `.env.example` gained `G41_SMTP_*`; `.gitignore` ignores `__pycache__`
+- **Local image builds moved to the native containerd path**: dockerd is disabled in k8s mode, so
+  `docker build` + `save | ctr import` could not run. Now uses nerdctl + BuildKit's containerd worker
+  (`buildkitd.service`); images are built straight into k3s's k8s.io namespace and overlayfs
+  snapshotter, dropping the save/import steps
+  - New `g41-image-build.sh`: auto-discovers deployed `compose=file` modules (skipping retired ones
+    such as autoheal/dsock/acme) and infers the build context from the COPY path style
+  - `g41.sh k8s build` prefers this path and falls back to docker when nerdctl is unavailable
+  - The weekly task now decides whether to rebuild from a content hash of the Dockerfile plus every
+    COPYed file, skipping unchanged modules and rolling the affected Deployment afterwards
+  - Verified: bt/aria2/hexo/redis all rebuilt; a second run skipped everything, so it is idempotent
 
 | Commit | Description |
 |--------|-------------|
 | `8fdb78c` | feat(k8s): add certificate distribution and weekly image update timers |
 | `031a146` | fix(k8s): fix three single-node rollout defects and update docs |
+| `5a8ff40` | feat(k8s): build local images via the native containerd path (no dockerd) |
 
 ## 2026-08-27
 
