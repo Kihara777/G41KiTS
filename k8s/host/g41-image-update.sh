@@ -173,27 +173,91 @@ for img in $(collect); do
   fi
 done
 
-# --- 2. 本地 :local 镜像：构建上下文是否更新 -----------------------------
-# 用 Dockerfile + kits/<m>/ 目录内容的哈希作为"应该构建"的指纹。
-# 注意：需要 dockerd，k8s 模式下它默认是关闭的；若不可用则仅报告。
+# --- 2. 本地 :local 镜像：构建上下文是否变化 -----------------------------
+# 构建走 containerd 原生路径（nerdctl + BuildKit 的 containerd worker），
+# **不依赖 dockerd**（k8s 模式下 dockerd 是停用的）。详见 g41-image-build.sh。
+#
+# 判定"是否需要重建"：对模块的构建输入（Dockerfile + 被 COPY 的本地文件）
+# 求哈希，与上次成功构建时记录的哈希比对；仅哈希变化才重建，避免每周空转。
 local_stale=""
-for m in aria2 bt redis; do
+local_unchanged=""
+
+# 计算某模块的构建输入指纹（Dockerfile + 全部 COPY/ADD 的本地文件内容）
+build_sig() {
+  _m="$1"; _df="$REPO/kits/$_m/Dockerfile"
+  _ins=""
+  for _tok in $(grep -hE '^(COPY|ADD)[[:space:]]' "$_df" 2>/dev/null \
+                | sed 's/^[A-Z]*[[:space:]]*//' | grep -v '^--'); do
+    case "$_tok" in
+      http*|/*) continue ;;   # 跳过远程资源与绝对路径
+    esac
+    for _p in "$REPO/$_tok" "$REPO/kits/$_m/$_tok"; do
+      [ -f "$_p" ] && _ins="$_ins $_p"
+    done
+  done
+  { cat "$_df" 2>/dev/null; for _f in $_ins; do cat "$_f" 2>/dev/null; done; } \
+    | sha256sum | awk '{print $1}'
+}
+
+for m in aria2 bt hexo redis; do
   [ -f "$REPO/kits/$m/Dockerfile" ] || continue
-  ctx_hash=$(cat "$REPO/kits/$m/Dockerfile" 2>/dev/null | sha256sum | awk '{print $1}')
-  # 取镜像自身创建时间与 Dockerfile mtime 比较（轻量近似）
-  img_ts=$(k3s ctr -n k8s.io images ls 2>/dev/null | grep -F "g41k8s/$m:local" | awk '{print $5}' | head -1) || true
-  df_mtime=$(date -r "$REPO/kits/$m/Dockerfile" +%s 2>/dev/null || echo 0)
-  log "LOCAL $m — Dockerfile mtime=$df_mtime hash=${ctx_hash%${ctx_hash#????????}}…"
-  local_stale="$local_stale $m"
+  [ -d "$REPO/kits/$m/k8s" ] || continue   # 仅 k8s 下真正部署的模块
+
+  sig=$(build_sig "$m")
+  prev_sig=""
+  [ -f "$STATE_DIR/build-$m.sha256" ] && prev_sig=$(cat "$STATE_DIR/build-$m.sha256" 2>/dev/null || true)
+
+  if [ "$sig" = "$prev_sig" ]; then
+    local_unchanged="$local_unchanged $m"
+    log "LOCAL $m — 构建输入未变化 (${sig%${sig#????????}}…)，跳过重建"
+  else
+    log "LOCAL $m — 构建输入已变化 ${prev_sig:+(${prev_sig%${prev_sig#????????}}… -> )}${sig%${sig#????????}}…，需重建"
+    local_stale="$local_stale $m"
+  fi
 done
 
 # --- 3. 执行更新 ---------------------------------------------------------
 if [ -z "${updated# }" ] && [ -z "${local_stale# }" ]; then
   log "没有需要更新的镜像"
 else
-  # 3a. 本地镜像重建（仅当 dockerd 可用）
-  if ! docker info >/dev/null 2>&1; then
-    log "NOTE: dockerd 未运行，跳过 :local 镜像重建（k8s 模式默认如此）"
+  # 3a. 本地镜像重建（containerd 原生，无需 dockerd）
+  if [ -n "${local_stale# }" ]; then
+    if [ -x /opt/g41/k8s/host/g41-image-build.sh ]; then
+      log "REBUILD 本地镜像:${local_stale}"
+      if /opt/g41/k8s/host/g41-image-build.sh $local_stale >/tmp/g41-rebuild.log 2>&1; then
+        log "REBUILD 完成:${local_stale}"
+        # 重建成功后更新各模块的构建指纹
+        for m in $local_stale; do
+          build_sig "$m" > "$STATE_DIR/build-$m.sha256"
+        done
+        # 重建后的镜像需要滚动重启相关 Deployment 才会生效
+        for m in $local_stale; do
+          case "$m" in
+            redis)     d=redis ;;
+            aria2|bt)  d=download ;;
+            hexo)      d="" ;;   # hexo 无常驻 Pod（k8s hexo Job 按需构建），无需重启
+            *)         d="" ;;
+          esac
+          [ -n "$d" ] || continue
+          # hostPort 护栏：download 用 51413，需 maxSurge=0 才能滚动
+          ensure_rollout_safe "$d"
+          log "REBUILD 重启 $d 以加载新镜像"
+          if kubectl -n "$NS" rollout restart "deploy/$d" >/dev/null 2>&1 \
+             && kubectl -n "$NS" rollout status "deploy/$d" --timeout=300s >/dev/null 2>&1; then
+            log "REBUILD $d 完成"
+          else
+            log "ERROR $d 重启失败或超时"
+            failed="$failed $d"
+          fi
+        done
+      else
+        log "ERROR 本地镜像重建失败，日志尾部："
+        tail -10 /tmp/g41-rebuild.log | sed 's/^/        /'
+        failed="$failed $local_stale"
+      fi
+    else
+      log "WARN g41-image-build.sh 不存在，跳过本地镜像重建"
+    fi
   fi
 
   # 3b. 上游镜像：滚动重启各 Deployment
@@ -241,18 +305,18 @@ else
   done
 fi
 
-# --- 4. 记录状态 ---------------------------------------------------------
 # --- 5. 通知 -------------------------------------------------------------
 # 仅在**确实发生了更新或失败**时发信；一切最新则静默，避免每周噪音。
-if [ -n "${updated# }" ] || [ -n "${failed# }" ]; then
+if [ -n "${updated# }" ] || [ -n "${failed# }" ] || [ -n "${local_stale# }" ]; then
   {
     echo "G41KiTS 每周镜像检查报告"
     echo
-    echo "时间:   $(date -Is)"
-    echo "已更新:${updated:- 无}"
-    echo "失败:  ${failed:- 无}"
-    echo "跳过:  ${skipped:- 无（查询失败通常为网络/限流，下周会重试）}"
-    echo "本地:  ${local_stale:- 无}"
+    echo "时间:     $(date -Is)"
+    echo "上游更新:${updated:- 无}"
+    echo "本地重建:${local_stale:- 无}"
+    echo "本地未变:${local_unchanged:- 无}"
+    echo "失败:    ${failed:- 无}"
+    echo "跳过:    ${skipped:- 无（查询失败通常为网络/限流，下周会重试）}"
     echo
     echo "附: 当前运行镜像"
     kubectl -n "$NS" get deploy -o custom-columns=\
@@ -266,7 +330,7 @@ fi
 
 if [ -z "${failed# }" ]; then
   collect | sha256sum | awk '{print $1}' > "$STATE_FILE"
-  log "=== 完成：$([ -z "${updated# }" ] && echo 无更新 || echo "已更新:${updated}")${skipped:+  跳过:$skipped}${local_stale:+  本地:${local_stale}} ==="
+  log "=== 完成：$([ -z "${updated# }" ] && echo 无上游更新 || echo "已更新:${updated}")${local_stale:+  本地重建:$local_stale}${local_unchanged:+  本地未变:$local_unchanged}${skipped:+  跳过:$skipped} ==="
   exit 0
 else
   log "=== 完成但有失败:$failed ==="

@@ -1,0 +1,23 @@
+[Unit]
+Description=G41KiTS BuildKit daemon (containerd-native image builds)
+Documentation=file:/opt/g41/k8s/host/g41-image-build.sh
+After=k3s-standalone.service network-online.target
+Wants=k3s-standalone.service network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/buildkitd \
+  --addr unix:///run/buildkit/buildkitd.sock \
+  --oci-worker=false \
+  --containerd-worker=true \
+  --containerd-worker-addr /run/k3s/containerd/containerd.sock \
+  --containerd-worker-namespace k8s.io \
+  --containerd-worker-snapshotter overlayfs \
+  --root /var/lib/buildkit
+Restart=always
+RestartSec=10s
+# BuildKit 构建需要访问 docker.io / ghcr.io
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target

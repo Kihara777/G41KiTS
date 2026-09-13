@@ -67,12 +67,42 @@ cert-manager 续期后只更新 Secret `g41/g41-tls`；Pod 内证书文件虽由
 | 单元 | 周期 | 作用 |
 |---|---|---|
 | `g41-cert-reload.timer` | 每 15 分钟 | 证书更新后分发到 hy2/dns（nginx 热加载），指纹幂等 |
-| `g41-image-update.timer` | 每周日 04:30 | 比对浮动 tag 上游 digest，有新版本则滚动更新 |
+| `g41-image-update.timer` | 每周日 04:30 | 比对浮动 tag 上游 digest + 重建本地 `:local` 镜像 |
 
 脚本位于 `k8s/host/`，部署到 `/opt/g41/k8s/host/`，宿主机单元装到
 `/etc/systemd/system/`。状态存于 `/var/lib/g41/`。日志：`journalctl -u <unit>`。
 有实质动作（证书轮换 / 镜像更新 / 失败）时经 `g41-notify.py` 发信；未配置
 `G41_SMTP_*` 时静默跳过，不影响任务本身。
+
+### 本地镜像构建（containerd 原生）
+
+k8s 模式下 **dockerd 是停用的**（集群用 k3s 自带 containerd），因此原有的
+`docker build` + `docker save | k3s ctr images import` 路径无法运行。改为：
+
+```
+nerdctl build --buildkit-host unix:///run/buildkit/buildkitd.sock \
+              --address /run/k3s/containerd/containerd.sock --namespace k8s.io
+```
+
+BuildKit 以 **containerd worker** 模式直接把镜像构建进 k3s 的 `k8s.io`
+namespace 与 `overlayfs` snapshotter，**省去 save/import 两步**，构建完成即可
+被 kubelet 使用。`buildkitd.service` 提供守护进程；`g41-image-build.sh` 是
+构建入口，`./g41.sh k8s build [module]` 也会优先路由到它。
+
+需预先放置的二进制（体积大，不随仓库分发，`install-1gb.sh` 会检测）：
+
+| 路径 | 来源 |
+|---|---|
+| `/usr/local/bin/nerdctl` | https://github.com/containerd/nerdctl/releases |
+| `/usr/local/bin/buildkitd` | https://github.com/moby/buildkit/releases |
+| `/usr/local/bin/buildctl` | 同上 |
+
+只构建 **k8s 下真正部署**的 `compose: "file"` 模块（有 `kits/<m>/k8s/` 的）；
+`autoheal`/`dsock`/`acme` 等已退役模块会自动跳过。构建上下文按 Dockerfile 的
+COPY 路径风格自动判定（`kits/<m>/...` → 仓库根；裸文件名 → kit 目录）。
+
+每周任务以「Dockerfile + 被 COPY 文件」的内容哈希判断是否需重建，未变化则跳过，
+避免空转。
 
 ### 单节点滚动更新的三个硬约束
 

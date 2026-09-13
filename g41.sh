@@ -470,8 +470,28 @@ k8s_build() {
   local mode=$(jq -r '.compose // "none"' "kits/$m/info.json" 2>/dev/null)
   [ "$mode" = "file" ] || return 0
   local tag="g41k8s/$m:local"
-  echo "  [k8s] build $tag (kits/$m/Dockerfile)"
-  # legacy builder：Dockerfile 已无 BuildKit 专属语法（heredoc COPY 已改为文件 COPY）
+
+  # 优先走 containerd 原生路径（nerdctl + BuildKit 的 containerd worker）。
+  # k8s 模式下 dockerd 通常是停用的，老的 docker build + save/import 无法运行；
+  # 该路径直接构建进 k3s 的 k8s.io namespace，省去 save/import 两步。
+  if command -v /opt/g41/k8s/host/g41-image-build.sh >/dev/null 2>&1; then
+    /opt/g41/k8s/host/g41-image-build.sh "$m" || { echo "ERROR: containerd 构建失败 for $m"; return 1; }
+    return 0
+  fi
+  if command -v nerdctl >/dev/null 2>&1 && systemctl is-active --quiet buildkitd.service 2>/dev/null; then
+    echo "  [k8s] build $tag via nerdctl+BuildKit (containerd)"
+    local ctx="." dfrel="kits/$m/Dockerfile"
+    # COPY 路径不含 kits/ 前缀时，构建上下文为 kit 目录本身
+    grep -qE '^(COPY|ADD)[[:space:]]+[^[:space:]]*kits/' "kits/$m/Dockerfile" 2>/dev/null \
+      || { ctx="kits/$m"; dfrel="Dockerfile"; }
+    ( cd "$ctx" && nerdctl --address /run/k3s/containerd/containerd.sock --namespace k8s.io \
+        build --buildkit-host unix:///run/buildkit/buildkitd.sock \
+        -f "$dfrel" -t "$tag" . ) || { echo "ERROR: nerdctl build failed for $m"; return 1; }
+    return 0
+  fi
+
+  # 回退：传统 docker 路径（需 dockerd 运行）
+  echo "  [k8s] build $tag (kits/$m/Dockerfile) via docker"
   docker build -q -f "kits/$m/Dockerfile" -t "$tag" . || { echo "ERROR: docker build failed for $m"; return 1; }
   docker save "$tag" | k3s ctr images import - || { echo "ERROR: image import failed for $m"; return 1; }
 }
