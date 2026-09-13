@@ -441,6 +441,18 @@ k8s_link_root() {
 }
 
 k8s_apply_base() {
+  # 前置校验：REDIS_PASSWORD 缺失会导致**静默半失效**（k8s secretKeyRef 缺键时
+  # 注入空串，redis 以 --requirepass "" 启动、api 无法认证 → /data/* 502 而 pod
+  # 仍显示 Running）。曾在实机踩到：.env 少该键，重启 redis 后数据端点全 502。
+  # RELOAD_SECRET 不在此列 —— 它只影响热重载端点，且已有独立报错（见 kits reload）。
+  if ! grep -q "^REDIS_PASSWORD=..*" .env 2>/dev/null; then
+    echo "ERROR: .env 缺少 REDIS_PASSWORD" >&2
+    echo "       该键缺失会让 redis/api 静默半失效（502 而非报错）。" >&2
+    echo "       请在 .env 中补上（参见 .env.example）：" >&2
+    echo "         REDIS_PASSWORD=\$(openssl rand -hex 24)" >&2
+    return 1
+  fi
+
   # secret: whole .env as g41-env (declarative, idempotent, self-updating)
   #   - namespace g41: workloads (redis/api/nginx/hy2/…)
   #   - namespace cert-manager: ClusterIssuer 的 apiKeySecretRef 要求 Secret

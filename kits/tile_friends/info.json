@@ -1,0 +1,8 @@
+{
+  "name": "Friends",
+  "desc": "Friend links tile — sites I exchange mutual links with",
+  "depends": [
+    "home"
+  ],
+  "compose": "none"
+}

@@ -110,6 +110,7 @@ EOF
 | bilibili | Bilibili 个人主页 — 虚拟主播介绍 | [docs/zh/tile_bilibili.md](docs/zh/tile_bilibili.md) |
 | mail | MailKits — Cloudflare Email Workers 透明邮件代理 | [docs/zh/tile_mail.md](docs/zh/tile_mail.md) |
 | kihara777 | GitHub 个人主页 — 项目、贡献与联系方式 | [docs/zh/tile_kihara777.md](docs/zh/tile_kihara777.md) |
+| friends | 友情链接 — 与本站互换友链的站点 | [docs/zh/tile_friends.md](docs/zh/tile_friends.md) |
 
 
 ## 作者

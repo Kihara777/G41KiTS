@@ -34,9 +34,15 @@ spec:
             - "--requirepass"
             - "$(REDIS_PASSWORD)"
           env:
+            # 必须 NOT optional：若 g41-env 中缺少 REDIS_PASSWORD，Kubernetes 会把
+            # 变量注入为**空字符串**而不是报错，于是 redis 以 `--requirepass ""`
+            # 启动、api 无法认证 —— 表现为 /data/* 返回 502 而 pod 仍显示 Running。
+            # 曾经因此踩坑：.env 缺该键 → secret 无该键 → 静默半失效。
+            # 去掉 optional 后，缺键会让 Pod 直接 Pending 并给出明确的
+            # "secret ... not found / key not found" 错误，暴露问题而非掩盖。
             - name: REDIS_PASSWORD
               valueFrom:
-                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD, optional: true }
+                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD }
           ports:
             - { containerPort: 6379 }
           volumeMounts:
@@ -60,7 +66,7 @@ spec:
             - { name: REDIS_HOST, value: redis }
             - name: REDIS_PASSWORD
               valueFrom:
-                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD, optional: true }
+                secretKeyRef: { name: g41-env, key: REDIS_PASSWORD }
             - name: G41_DOMAIN
               valueFrom:
                 secretKeyRef: { name: g41-env, key: G41_DOMAIN, optional: true }

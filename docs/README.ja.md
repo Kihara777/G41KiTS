@@ -110,6 +110,7 @@ nginx リバースプロキシを通じて公開されるユーザー向けサ�
 | bilibili | Bilibili スペース — バーチャル配信者紹介 | [docs/ja/tile_bilibili.md](ja/tile_bilibili.md) |
 | mail | MailKits — Cloudflare Email Workers 透過メールプロキシ | [docs/ja/tile_mail.md](ja/tile_mail.md) |
 | kihara777 | GitHub プロフィール — プロジェクト、貢献、連絡先 | [docs/ja/tile_kihara777.md](ja/tile_kihara777.md) |
+| friends | フレンドリンク — 相互リンクしているサイト | [docs/ja/tile_friends.md](ja/tile_friends.md) |
 
 
 ## 作者

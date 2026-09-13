@@ -1,0 +1,13 @@
+{
+  "id": "tile_friends",
+  "icon": "🤝",
+  "label": "tile_friends",
+  "type": "list",
+  "items": [
+    {
+      "icon": "🌫",
+      "label": "friend_shiogiri",
+      "href": "https://shiogiri.com"
+    }
+  ]
+}

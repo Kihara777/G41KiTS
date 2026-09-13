@@ -110,6 +110,7 @@ Static link tiles on the homepage pointing to external downloads (no Docker serv
 | bilibili | Bilibili space — virtual streamer introduction | [docs/en/tile_bilibili.md](en/tile_bilibili.md) |
 | mail | MailKits — Cloudflare Email Workers transparent proxy | [docs/en/tile_mail.md](en/tile_mail.md) |
 | kihara777 | GitHub profile — projects, contributions & contact | [docs/en/tile_kihara777.md](en/tile_kihara777.md) |
+| friends | Friend links — sites with mutual links to this homepage | [docs/en/tile_friends.md](en/tile_friends.md) |
 
 
 ## Author
