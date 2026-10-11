@@ -2,6 +2,56 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-10-12
+
+- **gh-proxy のホームページタイルを撤去し、自己紹介タイル `tile_kitsunome` を追加**（保守者の要望）：
+  - `tile_gh-proxy` から `tile.json` + `i18n/` を削除し、`depends` を `home, nginx` から `nginx` に
+    絞りました。**タイルは撤去、サービスは存続** —— `/gr/` は従来どおり。ディレクトリ名は変更しません
+    （改名するとデプロイ済みの断片名と `G41_KITS` の記帳も変わるため）。AGENTS.md に「既知の例外」
+    として記録し、新モジュールはこの形を真似しないよう明記
+  - 新タイル `tile_kitsunome`（🐾 / 短名 `kitsunome` / `guide` 三段）は保守者が誰で、どう検証するかを
+    紹介。3 言語の i18n を一度に用意。文案は**外向けの部分のみ**（G41KiTS は公開リポジトリで CD が
+    自動デプロイ）。デプロイの詳細やローカルの私的記録はこのリポジトリに入れません —— 境界は
+    `docs/*/tile_kitsunome.md` に記載
+  - デプロイ：`kits add tile_kitsunome` + 旧来の残置 2 件を手作業で削除
+    （`.rd/data/tiles/tile_gh-proxy.json`、`.rd/data/i18n/tile_gh-proxy/` —— `depends` を絞った後は
+    `kits del` が見つけません）+ ホットリロード
+  - 実測：`/data/tiles` は 12 件、`tile_kitsunome` を含み `tile_gh-proxy` を含まない。3 言語とも
+    `kitsunome_*` が入り `ghp_*` は消滅。3 言語の並び順は一致（kitsunome は kihara777 の直後）。
+    ホームページと `/gr/` はともに 200
+- **`kits verify` の静黙故障を修正**：`local m="$1" md="kits/$m"` では `$m` が代入**前**に展開されるため
+  `md` は常に `kits/` でした。結果として L1/L3/L4 と「モジュールが無い」エラーがすべて空振りし、
+  実測で `kits verify no-such-module` が PASS / exit 0 を返していました（`kits add` はこれを関門に
+  しています）。代入を分割した後、31 モジュールすべてが再度 PASS（偽陽性なし）。4 つの反例
+  （キー欠落 / 壊れた JSON / 空の i18n ディレクトリ / Dockerfile 無しの compose=file）がそれぞれ FAIL に転じます
+- **L1 にタイル i18n キー網羅チェックを追加**：キー欠落、i18n が正しい JSON でない、`i18n/` に
+  `*.json` が無い、の 3 件がそれぞれ ERR。キー欠落はページ上で**エラーになりません**
+  （`t()` がキー名をそのまま描画）。パース失敗も server.js では `console.error` 止まりです
+- **`kits reload` の修正 2 件 + 記帳の修正 1 件**：k8s 分岐は `deploy/api` を叩いていましたが、api は
+  **redis Deployment の 2 番目のコンテナ**であり、この構成ではその exec は決して成功しません。
+  compose 分岐の失敗時は pod ラベルで本当の診断（backend のドリフト）を出すようにし、
+  `kits add --dry-run` は `G41_KITS` を書かなくなりました
+- **実機での発見（未修正、保守者の判断に委ねる）**：
+  - VPS の `.env` に `G41_BACKEND=k8s` が無く（デプロイはとうに k3s）、`kits reload` は必ず compose
+    分岐に落ちていました。今回は `./g41.sh backend k8s` で補完。**注意：`deploy-local.sh` は `.env` を
+    丸ごと送り、ローカルの `.env` にこのキーが無いため、次回の送信で再び消えます**
+  - VPS の `.env` に `RELOAD_SECRET` が無く（コンテナ内では空）、server.js は expected が空のとき
+    チェックを**行いません**。現在 `/admin/` は nginx に代理されておらず露出していませんが、リポジトリの
+    `kits/redis/site/location.conf` は `/admin/` を含むため、redis を再インストールすると
+    無認証のリロード端点が公開されます
+  - `.gx/conf.d/locations/999-redis.conf` はリポジトリのソースと **inode が異なり内容も古い**（`/data/` のみ）
+    —— rsync にハードリンクを置き換えられた後、再インストールされていない典型形で、実機とリポジトリが食い違っています
+  - この保守記録は 3 言語版が以前から分岐しています（zh のみ 2026-08-24 / 06-24 / 06-22、
+    en·ja のみ 2026-07-14）。今回の項目は 3 言語で同期し、過去の分岐は触っていません
+
+| コミット | 説明 |
+|----------|------|
+| `ba86aba` | fix(g41.sh): kits verify の L1/L3/L4 が実行されていなかった。タイル i18n キー網羅を追加 |
+| `4435b12` | feat(home): 自己紹介タイル tile_kitsunome（小爪 / キツのめ） |
+| `8451fe9` | refactor(tile_gh-proxy): ホームページタイル撤去、依存を nginx に絞る |
+| `26afe10` | docs: tile_kitsunome / gh-proxy / kits-spec / AGENTS.md の 3 言語同期 |
+| `45b16f0` | fix(g41.sh): kits reload の k8s ターゲット誤り —— api は独立 Deployment ではない |
+
 ## 2026-09-13
 
 - **運用タイマーを 2 本追加**（k8s/host/）、k8s モードの自動化ギャップを解消：

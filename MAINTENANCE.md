@@ -2,6 +2,49 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-10-12
+
+- **撤下 gh-proxy 首页磁贴，换上自我介绍磁贴 `tile_kitsunome`**（维护者要求）：
+  - `tile_gh-proxy` 删除 `tile.json` + `i18n/`，`depends` 由 `home, nginx` 收窄为 `nginx`；
+    **只撤磁贴、不撤服务**——`/gr/` 反代照常。目录名不动（改名会一并改掉已部署的片段名与
+    `G41_KITS` 记账），已在 AGENTS.md 记作「已知例外」，并写明新模块别照抄这个形状
+  - 新磁贴 `tile_kitsunome`（🐾 / 短名 `kitsunome` / `guide` 三段）介绍维护者是谁、怎么干活；
+    三语 i18n 一次写齐。文案**只写门面部分**（G41KiTS 是公开仓库且 CD 自动上线），
+    部署细节与本机私有记录不入此仓——边界写进 `docs/*/tile_kitsunome.md`
+  - 部署：`kits add tile_kitsunome` + 手工删除两处历史遗留（`.rd/data/tiles/tile_gh-proxy.json`、
+    `.rd/data/i18n/tile_gh-proxy/` —— 收窄 depends 后 `kits del` 不再发现它们）+ 热重载
+  - 实测：`/data/tiles` 12 项、含 `tile_kitsunome`、不含 `tile_gh-proxy`；三语 `kitsunome_*`
+    就位、`ghp_*` 消失；三语排序一致（kitsunome 紧随 kihara777）；首页与 `/gr/` 均 200
+- **修掉 `kits verify` 的静默失效**：`local m="$1" md="kits/$m"` 中 `$m` 在赋值**前**展开，
+  `md` 恒为 `kits/`，于是 L1/L3/L4 与「模块不存在」的报错全落空——实测
+  `kits verify no-such-module` 返回 PASS/exit 0，而 `kits add` 正拿它当闸门。
+  拆开后 31 个模块重新全过（无假阳性），四种反例（缺键 / 坏 JSON / 空 i18n 目录 /
+  compose=file 无 Dockerfile）各翻一次脸
+- **L1 补磁贴 i18n 键覆盖检查**：缺键、i18n 不是合法 JSON、`i18n/` 下无 `*.json` 各报 ERR。
+  缺键在页面上**不报错**（`t()` 原样渲染键名），i18n 解析失败 server.js 也只 `console.error`
+- **`kits reload` 两处修正 + 一条记账修正**：k8s 分支原写 `deploy/api`，而 api 是
+  **redis Deployment 的第二个容器**，该 exec 在本部署里永远失败；compose 分支失败时改成
+  按 pod 标签报出真诊断（backend 漂移）；`kits add --dry-run` 不再写 `G41_KITS`
+- **实机发现（未修，留维护者定夺）**：
+  - VPS `.env` 原无 `G41_BACKEND=k8s`（部署早就是 k3s），`kits reload` 必走 compose 分支；
+    本次已 `./g41.sh backend k8s` 补上。**注意 `deploy-local.sh` 整份推 `.env`，本地 `.env`
+    没有该键，下次推送会再抹掉**
+  - VPS `.env` 无 `RELOAD_SECRET`（容器内为空），而 server.js 在 expected 为空时**不校验**；
+    当前 `/admin/` 未被 nginx 代理故未暴露，但仓库里的 `kits/redis/site/location.conf` 带着
+    `/admin/`，一旦重装 redis 就会把这个不校验的 reload 端点挂上公网
+  - `.gx/conf.d/locations/999-redis.conf` 与仓库源**不同 inode、内容更旧**（仅 `/data/`）——
+    硬链接被 rsync 换掉后未重装的典型形态，现场与仓库不一致
+  - 三语维护日志本身有历史分歧（zh 独有 2026-08-24 / 06-24 / 06-22，en·ja 独有 2026-07-14），
+    本次条目三语同步，历史分歧未动
+
+| 提交 | 说明 |
+|------|------|
+| `ba86aba` | fix(g41.sh): kits verify 的 L1/L3/L4 从不执行；补磁贴 i18n 键覆盖检查 |
+| `4435b12` | feat(home): 新增自我介绍磁贴 tile_kitsunome（小爪 / キツのめ） |
+| `8451fe9` | refactor(tile_gh-proxy): 撤下首页磁贴，依赖收窄为 nginx |
+| `26afe10` | docs: 三语同步 tile_kitsunome / gh-proxy / kits-spec / AGENTS.md |
+| `45b16f0` | fix(g41.sh): kits reload 的 k8s 目标写错 —— api 不是独立 Deployment |
+
 ## 2026-09-13
 
 - **新增两个运维定时任务**（k8s/host/），补齐 k8s 模式下的自动化缺口：

@@ -2,6 +2,58 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-10-12
+
+- **Retired the gh-proxy homepage tile and added a self-introduction tile, `tile_kitsunome`** (maintainer's request):
+  - `tile_gh-proxy` lost `tile.json` + `i18n/`, and `depends` narrowed from `home, nginx` to `nginx`;
+    **the tile is gone, the service is not** — `/gr/` still proxies. The directory name stays
+    (renaming it would rename the deployed fragment and the `G41_KITS` entry); AGENTS.md now
+    records it as a known exception and tells new modules not to copy the shape
+  - The new tile `tile_kitsunome` (🐾 / short name `kitsunome` / `guide` with three blocks) says who
+    maintains the site and how the work is verified; all three languages written in one pass. The copy
+    carries only the front-facing part (G41KiTS is public and CD deploys it automatically); deployment
+    details and private local records stay out of this repo — the boundary lives in `docs/*/tile_kitsunome.md`
+  - Deployment: `kits add tile_kitsunome`, plus a manual removal of two leftovers
+    (`.rd/data/tiles/tile_gh-proxy.json`, `.rd/data/i18n/tile_gh-proxy/` — after the `depends`
+    narrowing `kits del` no longer finds them), then a hot reload
+  - Measured: `/data/tiles` returns 12 items including `tile_kitsunome` and no `tile_gh-proxy`; the
+    `kitsunome_*` keys exist in all three languages and `ghp_*` is gone; the three languages sort
+    identically (kitsunome right after kihara777); homepage and `/gr/` both 200
+- **Fixed a silent failure in `kits verify`**: in `local m="$1" md="kits/$m"` the `$m` expands
+  **before** the assignment, so `md` was always `kits/` — L1/L3/L4 and the "module not found" error
+  all landed on the wrong level. Measured: `kits verify no-such-module` printed PASS and exited 0,
+  while `kits add` uses it as its gate. After splitting the assignment all 31 modules pass again
+  (no false positives), and four counterexamples (missing key / broken JSON / empty i18n dir /
+  compose=file without Dockerfile) each flip it to FAIL
+- **L1 now checks tile i18n key coverage**: a missing key, an i18n file that is not valid JSON, and an
+  `i18n/` directory with no `*.json` each report an ERR. A missing key does **not** error on the page
+  (`t()` renders the key name as-is), and a parse failure only reaches `console.error` in server.js
+- **Two `kits reload` fixes plus one bookkeeping fix**: the k8s branch called `deploy/api`, but the api
+  is the **second container of the redis Deployment**, so that exec could never work in this deployment;
+  the compose branch now reports the real diagnosis (backend drift) using the pod label; and
+  `kits add --dry-run` no longer writes `G41_KITS`
+- **Found on the live host (not fixed, left to the maintainer)**:
+  - The VPS `.env` had no `G41_BACKEND=k8s` (the deployment has long been k3s), so `kits reload` always
+    took the compose branch; added with `./g41.sh backend k8s` this time. **Note: `deploy-local.sh`
+    pushes `.env` wholesale and the local `.env` lacks that key, so the next push wipes it again**
+  - The VPS `.env` has no `RELOAD_SECRET` (empty inside the container), and server.js **skips** the check
+    when expected is empty. `/admin/` is not proxied by nginx today, so nothing is exposed — but the
+    repository's `kits/redis/site/location.conf` carries `/admin/`, so reinstalling redis would publish
+    that unauthenticated reload endpoint
+  - `.gx/conf.d/locations/999-redis.conf` has a **different inode and older content** than the repository
+    source (only `/data/`) — the classic shape of a hardlink replaced by rsync and never reinstalled, so
+    the host and the repo disagree
+  - The three language versions of this log already diverged before this entry (zh-only 2026-08-24 /
+    06-24 / 06-22; en·ja-only 2026-07-14); this entry is synced in all three, the old divergence is untouched
+
+| Commit | Description |
+|--------|-------------|
+| `ba86aba` | fix(g41.sh): kits verify's L1/L3/L4 never ran; tile i18n key coverage added |
+| `4435b12` | feat(home): self-introduction tile tile_kitsunome (小爪 / キツのめ) |
+| `8451fe9` | refactor(tile_gh-proxy): homepage tile retired, depends narrowed to nginx |
+| `26afe10` | docs: three-language sync for tile_kitsunome / gh-proxy / kits-spec / AGENTS.md |
+| `45b16f0` | fix(g41.sh): kits reload's k8s target was wrong — api is not a standalone Deployment |
+
 ## 2026-09-13
 
 - **Two new operational timers added** (k8s/host/), closing the automation gaps of k8s mode:
