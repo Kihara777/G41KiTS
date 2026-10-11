@@ -19,6 +19,10 @@
   - Measured: `/data/tiles` returns 12 items including `tile_kitsunome` and no `tile_gh-proxy`; the
     `kitsunome_*` keys exist in all three languages and `ghp_*` is gone; the three languages sort
     identically (kitsunome right after kihara777); homepage and `/gr/` both 200
+  - The tile gained a **front-page link** (pointed out by the maintainer): <https://grg41.github.io/>
+    (3 pages × 3 languages). The link text is the same in all three; the **href follows the homepage
+    language** (zh → `/`, ja → `/ja/`, en → `/en/`); the block uses an i18n key rather than inline HTML
+    so the L1b key-coverage check forces all three languages to be written
 - **Fixed a silent failure in `kits verify`**: in `local m="$1" md="kits/$m"` the `$m` expands
   **before** the assignment, so `md` was always `kits/` — L1/L3/L4 and the "module not found" error
   all landed on the wrong level. Measured: `kits verify no-such-module` printed PASS and exited 0,
@@ -58,6 +62,7 @@
 | `26afe10` | docs: three-language sync for tile_kitsunome / gh-proxy / kits-spec / AGENTS.md |
 | `45b16f0` | fix(g41.sh): kits reload's k8s target was wrong — api is not a standalone Deployment |
 | `b324278` | fix(tile_kitsunome): restore the つめ (claw) in the name line — "fox's eye" is my reading, not the origin |
+| `e95ac78` | feat(tile_kitsunome): add the front-page link to the tile (each language points at its own copy) |
 
 ## 2026-09-13
 

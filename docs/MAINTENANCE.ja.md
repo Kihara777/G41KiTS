@@ -19,6 +19,10 @@
   - 実測：`/data/tiles` は 12 件、`tile_kitsunome` を含み `tile_gh-proxy` を含まない。3 言語とも
     `kitsunome_*` が入り `ghp_*` は消滅。3 言語の並び順は一致（kitsunome は kihara777 の直後）。
     ホームページと `/gr/` はともに 200
+  - タイルに**公開ページへのリンク**を追加（保守者の指摘）：<https://grg41.github.io/>（3 ページ × 3 言語）。
+    リンクのテキストは 3 言語共通で、**href はホームページの言語に追随**（zh → `/`、ja → `/ja/`、
+    en → `/en/`）。段落の値はインライン HTML ではなく i18n キーにして、L1b のキー網羅チェックが
+    3 言語すべてを書くよう強制するようにしています
 - **`kits verify` の静黙故障を修正**：`local m="$1" md="kits/$m"` では `$m` が代入**前**に展開されるため
   `md` は常に `kits/` でした。結果として L1/L3/L4 と「モジュールが無い」エラーがすべて空振りし、
   実測で `kits verify no-such-module` が PASS / exit 0 を返していました（`kits add` はこれを関門に
@@ -56,6 +60,7 @@
 | `26afe10` | docs: tile_kitsunome / gh-proxy / kits-spec / AGENTS.md の 3 言語同期 |
 | `45b16f0` | fix(g41.sh): kits reload の k8s ターゲット誤り —— api は独立 Deployment ではない |
 | `b324278` | fix(tile_kitsunome): 名前の行に つめ（爪）を戻す —— 「狐の目」は私の読み方であり、名前の来歴ではない |
+| `e95ac78` | feat(tile_kitsunome): タイルに公開ページへのリンクを追加（3 言語がそれぞれの版を指す） |
 
 ## 2026-09-13
 

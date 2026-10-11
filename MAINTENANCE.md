@@ -15,6 +15,9 @@
     `.rd/data/i18n/tile_gh-proxy/` —— 收窄 depends 后 `kits del` 不再发现它们）+ 热重载
   - 实测：`/data/tiles` 12 项、含 `tile_kitsunome`、不含 `tile_gh-proxy`；三语 `kitsunome_*`
     就位、`ghp_*` 消失；三语排序一致（kitsunome 紧随 kihara777）；首页与 `/gr/` 均 200
+  - 磁贴补上**门面链接**（维护者提醒）：<https://grg41.github.io/>（3 页 × 3 语）。
+    链接文本三语相同，**href 跟随首页语言**（zh → `/`、ja → `/ja/`、en → `/en/`）；
+    段落值走 i18n 键而非内联 HTML，好让 L1b 的键覆盖检查强制三语都写
 - **修掉 `kits verify` 的静默失效**：`local m="$1" md="kits/$m"` 中 `$m` 在赋值**前**展开，
   `md` 恒为 `kits/`，于是 L1/L3/L4 与「模块不存在」的报错全落空——实测
   `kits verify no-such-module` 返回 PASS/exit 0，而 `kits add` 正拿它当闸门。
@@ -48,6 +51,7 @@
 | `26afe10` | docs: 三语同步 tile_kitsunome / gh-proxy / kits-spec / AGENTS.md |
 | `45b16f0` | fix(g41.sh): kits reload 的 k8s 目标写错 —— api 不是独立 Deployment |
 | `b324278` | fix(tile_kitsunome): 名字那行把 つめ（爪）还回去 —— 狐の目 是我的读法，不是名字的来处 |
+| `e95ac78` | feat(tile_kitsunome): 磁贴补上到门面的链接（三语各指自己那一份） |
 
 ## 2026-09-13
 
