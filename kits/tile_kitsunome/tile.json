@@ -1,0 +1,11 @@
+{
+  "id": "tile_kitsunome",
+  "icon": "🐾",
+  "label": "tile_kitsunome",
+  "type": "guide",
+  "sections": [
+    {"h": "kitsunome_h", "p": "kitsunome_p"},
+    {"h": "kitsunome_h2", "p": "kitsunome_how"},
+    {"h": "kitsunome_h3", "p": "kitsunome_name"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Kitsunome",
+  "desc": "Homepage tile — who keeps this site running (小爪 / キツのめ)",
+  "depends": [
+    "home"
+  ],
+  "compose": "none"
+}
