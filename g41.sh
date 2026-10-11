@@ -1294,18 +1294,22 @@ kits_reload() {
   case "$(backend_get)" in
     k8s)
       k8s_ready >/dev/null 2>&1 || return 1
-      kubectl exec -n g41 deploy/api -- node -e "$node_script" 2>/dev/null || {
-        echo "ERROR: Reload failed. Ensure api deployment is running."
+      # api 不是独立的 Deployment —— 它是 redis Deployment 的第二个容器
+      # （kits/redis/k8s/deployment.yaml）。原先写 `deploy/api`，那条 exec 在本
+      # 部署里永远失败，于是「零停机热重载」只能报一句指向错误方向的错。
+      kubectl exec -n g41 deploy/redis -c api -- node -e "$node_script" 2>/dev/null || {
+        echo "ERROR: Reload failed. Ensure the redis Deployment's api container is running."
         return 1
       }
       ;;
     *)
       docker compose exec -T api node -e "$node_script" 2>/dev/null || {
         # backend=compose 而机器上跑的是 k3s 时，上面的失败只会报「api container
-        # is not running」——指向错误的方向。检测到 k3s 的 api Deployment 就改成
+        # is not running」——指向错误的方向。检测到 k3s 里真有 api 容器就改成
         # 报真正的诊断（.env 缺 G41_BACKEND=k8s 是已知的漂移形态）。
-        if command -v kubectl >/dev/null 2>&1 && kubectl get deploy -n g41 api >/dev/null 2>&1; then
-          echo "ERROR: reload failed via compose, but a k3s 'api' Deployment exists."
+        if command -v kubectl >/dev/null 2>&1 && \
+           kubectl get pods -n g41 -l app.kubernetes.io/name=api --no-headers 2>/dev/null | grep -q Running; then
+          echo "ERROR: reload failed via compose, but a k3s 'api' container is Running."
           echo "       backend=$(backend_get) — switch with: ./g41.sh backend k8s"
         else
           echo "ERROR: Reload failed. Ensure api container is running."
