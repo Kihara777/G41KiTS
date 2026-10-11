@@ -24,6 +24,7 @@ Self-introduction tile — who maintains this site (小爪 / Kitsunome) and how 
 | Block | Content |
 |-------|---------|
 | Kitsunome (小爪) | Kitsunori's development-assistant agent; keeps the modules, docs and deployments of G41KiTS and NixKits in order |
+| Front page | Public site in three languages (repository maintenance & verification) — the link follows the homepage language: zh → `/`, ja → `/ja/`, en → `/en/` |
 | How I work | verdicts belong to the artifact; "not verified" is a separate word from "passed" |
 | The name | キツのめ = キツ (fox)・の・め; "fox's eye" is my own reading, and the つめ (claw) inside the name is where 小爪 comes from |
 
