@@ -189,7 +189,11 @@ kits_help() {
 }
 
 kits_verify() {
-  local m="$1" md="kits/$m" errors=0
+  # md 必须单独赋值：`local m="$1" md="kits/$m"` 里 $m 的展开发生在赋值**之前**
+  # （local 的右值先作为参数统一展开），于是 md 恒为 "kits/" —— L1/L3/L4 与
+  # 模块不存在时的报错会全部落在 kits/ 这一层，等于从不检查，却照样打印 PASS。
+  local m="$1" errors=0
+  local md="kits/$m"
   [ -n "$m" ] || { echo "ERROR: module name required"; return 1; }
   [ -d "$md" ] || { echo "ERROR: module '$m' not found"; return 1; }
   echo "Verify: $m"
@@ -208,6 +212,28 @@ kits_verify() {
     [ -n "$(jq -r '.webroot // ""' "$md/info.json" 2>/dev/null)" ] && [ "$(jq -r '.webroot.method // ""' "$md/info.json" 2>/dev/null)" != "mkdir" ] && [ ! -d "$md/webroot" ] && { echo "  ERR: webroot declared but no webroot/ dir"; errors=$((errors+1)); }
   fi
   [ -f "$md/tile.json" ] && [ ! -d "$md/i18n" ] && { echo "  ERR: tile module missing i18n dir"; errors=$((errors+1)); }
+  # L1b — tile i18n key coverage.
+  # tile.json 的 label / sections[].h / sections[].p / items[].label|desc 在页面上经
+  # t() 解析：值若是 i18n 键，**缺键不会报错**，只是把键名原样渲染到首页；server.js
+  # 解析不了的 i18n 文件也只 console.error（数据端点照样 200）。两种都是静默劣化，
+  # 所以逐语言要求存在。只把「纯标识符形状的值」当键 —— 含空格/HTML 的值是字面文本
+  # （如 home 磁贴里的 <a href=…>），不参与检查。
+  if [ -f "$md/tile.json" ] && [ -d "$md/i18n" ]; then
+    local lfiles=$(ls "$md"/i18n/*.json 2>/dev/null)
+    [ -n "$lfiles" ] || { echo "  ERR: tile.json present but i18n/ has no *.json"; errors=$((errors+1)); }
+    local tkeys=$(jq -r '[.label, (.sections[]?|.h,.p), (.items[]?|.label,.desc)]
+                          | map(select(type=="string" and test("^[A-Za-z][A-Za-z0-9_]*$")))
+                          | unique[]' "$md/tile.json" 2>/dev/null)
+    local lf lang k hit
+    for lf in $lfiles; do
+      lang=$(basename "$lf" .json)
+      jq empty "$lf" 2>/dev/null || { echo "  ERR: i18n/$lang.json is not valid JSON"; errors=$((errors+1)); continue; }
+      for k in $tkeys; do
+        hit=$(jq -r --arg k "$k" 'has($k)' "$lf" 2>/dev/null)
+        [ "$hit" = "true" ] || { echo "  ERR: i18n/$lang.json missing key '$k' (referenced by tile.json)"; errors=$((errors+1)); }
+      done
+    done
+  fi
   if [ -d "$md/site" ]; then
     local has_zone=0 has_upstream=0 has_location=0
     local ext=$(kit_site_ext "$m")
@@ -983,7 +1009,9 @@ kits_add() {
     done
   fi
 
-  kits_mark "$m" "add"
+  # 记账只在真装时写：G41_KITS 是「已安装」状态的记录，dry-run 写进去之后
+  # 就分不出「真装过」和「只是演练过」了（演练会污染 `kits check` 与 include 生成）。
+  [ -z "$dry" ] && kits_mark "$m" "add"
 
   # k8s backend: build local images and apply manifests (after content assembly)
   if [ "$(backend_get)" = "k8s" ]; then
@@ -1273,7 +1301,15 @@ kits_reload() {
       ;;
     *)
       docker compose exec -T api node -e "$node_script" 2>/dev/null || {
-        echo "ERROR: Reload failed. Ensure api container is running."
+        # backend=compose 而机器上跑的是 k3s 时，上面的失败只会报「api container
+        # is not running」——指向错误的方向。检测到 k3s 的 api Deployment 就改成
+        # 报真正的诊断（.env 缺 G41_BACKEND=k8s 是已知的漂移形态）。
+        if command -v kubectl >/dev/null 2>&1 && kubectl get deploy -n g41 api >/dev/null 2>&1; then
+          echo "ERROR: reload failed via compose, but a k3s 'api' Deployment exists."
+          echo "       backend=$(backend_get) — switch with: ./g41.sh backend k8s"
+        else
+          echo "ERROR: Reload failed. Ensure api container is running."
+        fi
         return 1
       }
       ;;
