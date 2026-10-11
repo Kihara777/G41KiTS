@@ -76,7 +76,7 @@ nginx リバースプロキシを通じて公開されるユーザー向けサ�
 
 | モジュール | 説明 | ドキュメント |
 |-----------|------|-------------|
-| gh-proxy | raw.githubusercontent.com のリバースプロキシ | [docs/ja/tile_gh-proxy.md](ja/tile_gh-proxy.md) |
+| gh-proxy | raw.githubusercontent.com のリバースプロキシ（タイル撤去済み） | [docs/ja/tile_gh-proxy.md](ja/tile_gh-proxy.md) |
 | nix-cache | NixOS バイナリキャッシュミラー — channels、cache、releases | [docs/ja/tile_nix-cache.md](ja/tile_nix-cache.md) |
 
 ## ナビゲーション
@@ -111,6 +111,7 @@ nginx リバースプロキシを通じて公開されるユーザー向けサ�
 | mail | MailKits — Cloudflare Email Workers 透過メールプロキシ | [docs/ja/tile_mail.md](ja/tile_mail.md) |
 | kihara777 | GitHub プロフィール — プロジェクト、貢献、連絡先 | [docs/ja/tile_kihara777.md](ja/tile_kihara777.md) |
 | friends | フレンドリンク — 相互リンクしているサイト | [docs/ja/tile_friends.md](ja/tile_friends.md) |
+| kitsunome | サイト保守者の自己紹介 — 小爪（キツのめ）が誰で、どう仕事をするか | [docs/ja/tile_kitsunome.md](ja/tile_kitsunome.md) |
 
 
 ## 作者

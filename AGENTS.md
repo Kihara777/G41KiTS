@@ -119,11 +119,16 @@ G41KiTS/
 
 ### 模块命名约定
 
-- **`tile_*`** — `compose: "none"` 纯磁贴模块（例如 `tile_apps`、`tile_gh-proxy`）
+- **`tile_*`** — `compose: "none"` 纯磁贴模块（例如 `tile_apps`、`tile_friends`）
 - **`link_*`** — `compose: "none"` 纯短链接模块（例如 `link_7zip`、`link_vscode`）
 - **裸名** — Docker 服务模块（例如 `nginx`、`redis`、`aria2`、`hy2`）
 
 前缀是模块目录名的一部分，必须与 `tile.json` / `link.json` 的 `id` 字段匹配。
+
+**已知例外**：`tile_gh-proxy` 于 2026-10-12 撤下首页磁贴，现在只剩 `/gr/` 反代的
+nginx 片段（`depends` 收窄为 `nginx`）。目录名不再改了 —— 改名会一并改掉已部署的
+片段名与 `G41_KITS` 记账。**新模块不要照抄这个形状**：只提供站点/服务片段的模块不该用
+`tile_` 前缀。
 
 ### compose 模式
 
@@ -218,7 +223,7 @@ Store、data、webroot、persist 和 local 文件分别处理。
 
 ### 验证
 ```bash
-./g41.sh kits verify <module>    # L1 自身 → L2 依赖 → L3 provides → L4 .local
+./g41.sh kits verify <module>    # L1 自身（含磁贴 i18n 键覆盖）→ L2 依赖 → L3 provides → L4 .local
 ./g41.sh kits check <module>     # 发现已安装的构件
 ```
 

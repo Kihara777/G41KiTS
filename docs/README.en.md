@@ -76,7 +76,7 @@ Reverse proxy and cache acceleration services.
 
 | Module | Description | Docs |
 |--------|-------------|------|
-| gh-proxy | Reverse proxy for raw.githubusercontent.com | [docs/en/tile_gh-proxy.md](en/tile_gh-proxy.md) |
+| gh-proxy | Reverse proxy for raw.githubusercontent.com (homepage tile retired) | [docs/en/tile_gh-proxy.md](en/tile_gh-proxy.md) |
 | nix-cache | NixOS binary cache mirror — channels, cache, releases | [docs/en/tile_nix-cache.md](en/tile_nix-cache.md) |
 
 ## Navigation
@@ -111,6 +111,7 @@ Static link tiles on the homepage pointing to external downloads (no Docker serv
 | mail | MailKits — Cloudflare Email Workers transparent proxy | [docs/en/tile_mail.md](en/tile_mail.md) |
 | kihara777 | GitHub profile — projects, contributions & contact | [docs/en/tile_kihara777.md](en/tile_kihara777.md) |
 | friends | Friend links — sites with mutual links to this homepage | [docs/en/tile_friends.md](en/tile_friends.md) |
+| kitsunome | Self-introduction of the site's maintainer — who Kitsunome is and how it works | [docs/en/tile_kitsunome.md](en/tile_kitsunome.md) |
 
 
 ## Author

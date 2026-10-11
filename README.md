@@ -76,7 +76,7 @@ EOF
 
 | 模块 | 说明 | 文档 |
 |------|------|------|
-| gh-proxy | raw.githubusercontent.com 反向代理 | [docs/zh/tile_gh-proxy.md](docs/zh/tile_gh-proxy.md) |
+| gh-proxy | raw.githubusercontent.com 反向代理（首页磁贴已撤） | [docs/zh/tile_gh-proxy.md](docs/zh/tile_gh-proxy.md) |
 | nix-cache | NixOS 二进制缓存镜像 — channels、cache、releases | [docs/zh/tile_nix-cache.md](docs/zh/tile_nix-cache.md) |
 
 ## 导航与入口
@@ -111,6 +111,7 @@ EOF
 | mail | MailKits — Cloudflare Email Workers 透明邮件代理 | [docs/zh/tile_mail.md](docs/zh/tile_mail.md) |
 | kihara777 | GitHub 个人主页 — 项目、贡献与联系方式 | [docs/zh/tile_kihara777.md](docs/zh/tile_kihara777.md) |
 | friends | 友情链接 — 与本站互换友链的站点 | [docs/zh/tile_friends.md](docs/zh/tile_friends.md) |
+| kitsunome | 站点维护者自我介绍 — 小爪（キツのめ）是谁、怎么干活 | [docs/zh/tile_kitsunome.md](docs/zh/tile_kitsunome.md) |
 
 
 ## 作者

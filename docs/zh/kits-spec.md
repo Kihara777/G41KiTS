@@ -27,6 +27,10 @@
 | link | `none` | link.json | `link_` 前缀 |
 | app | `none` | app.json | 裸名称 |
 
+`tile_*` / `link_*` 是**纯**磁贴 / 短链接模块。历史例外：`tile_gh-proxy` 已于
+2026-10-12 撤下磁贴、只剩 nginx 片段（见 [tile_gh-proxy](tile_gh-proxy.md)）——
+**新模块不要照抄这个形状**，只提供站点/服务片段的模块不该用 `tile_` 前缀。
+
 ## compose 模式
 
 | 模式 | 含义 | 片段 |
@@ -116,3 +120,9 @@ Node.js 服务禁用 `kill -0 1`（事件循环阻塞不崩溃）。
 ## i18n
 
 3 种语言：JA / ZH / EN。磁贴和链接标签为翻译键。全局 i18n 由 `home` 模块提供。API 端点：`/data/i18n_ja|zh|en`。
+
+**键覆盖是一道判据，不是约定**：`./g41.sh kits verify <module>` 的 L1 取 `tile.json` 中
+`label` / `sections[].h` / `sections[].p` / `items[].label|desc` 的**纯标识符形状**取值
+（`^[A-Za-z][A-Za-z0-9_]*$`）当作键，逐语言（`i18n/*.json`）要求存在；含空格或 HTML 的
+值视为字面文本。缺键在页面上**不报错** —— `t()` 原样渲染键名，i18n 文件解析失败时
+server.js 也只 `console.error`（`/data/*` 照样 200），这道检查就是让那种静默劣化变成 FAIL。
