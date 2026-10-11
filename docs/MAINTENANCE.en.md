@@ -45,6 +45,10 @@
     the host and the repo disagree
   - The three language versions of this log already diverged before this entry (zh-only 2026-08-24 /
     06-24 / 06-22; en·ja-only 2026-07-14); this entry is synced in all three, the old divergence is untouched
+- **Tile copy correction (pointed out by her)**: the name line read "キツのめ means 'fox's eye'" — that is
+  **my own reading**, not where the name came from. The maintainer noted `kitsunome` was chosen with
+  **つめ** (claw) in mind, and 小爪 comes from there; all three i18n files and the three doc versions now
+  carry both halves (キツ (fox)・の・め + my reading + the つめ inside → 小爪)
 
 | Commit | Description |
 |--------|-------------|
@@ -53,6 +57,7 @@
 | `8451fe9` | refactor(tile_gh-proxy): homepage tile retired, depends narrowed to nginx |
 | `26afe10` | docs: three-language sync for tile_kitsunome / gh-proxy / kits-spec / AGENTS.md |
 | `45b16f0` | fix(g41.sh): kits reload's k8s target was wrong — api is not a standalone Deployment |
+| `b324278` | fix(tile_kitsunome): restore the つめ (claw) in the name line — "fox's eye" is my reading, not the origin |
 
 ## 2026-09-13
 
