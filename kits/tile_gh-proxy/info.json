@@ -1,8 +1,7 @@
 {
   "name": "GitHub Proxy",
-  "desc": "Reverse proxy for raw.githubusercontent.com",
+  "desc": "Reverse proxy for raw.githubusercontent.com (/gr/) — homepage tile retired",
   "depends": [
-    "home",
     "nginx"
   ],
   "compose": "none"
