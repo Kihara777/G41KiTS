@@ -29,46 +29,49 @@ Site core data — character messages, theme colors, status codes, i18n. Directl
 
 The first paint waits for all six data requests in `G41.js` (tiles / chars / status / three i18n
 payloads) before `init()` runs, and `#g41-app` stays at `opacity:0` until then. That blank gap is
-filled by the **WP8 boot ring** in `#g41-loading`: its styles are **inlined in `G41.html`'s
-`<style>` block** (all three `.css` files were inlined on 2026-10-12), so the first paint makes a
-single request and is never blocked by an external stylesheet. Measured locally (a stub delaying the
-stylesheets by 3 s): first contentful paint went from **3024 / 6908 ms to 36 / 928 ms**, and the
-`/css/` requests disappear from `performance` entirely. Under `prefers-reduced-motion` the ring
-degrades to a **static five-dot ring**.
+filled by the **WP8 boot ring** in `#g41-loading`.
 
-**Second revision (2026-10-12)**: the first version was a bare 64 px ring (6 px dots) and the
-maintainer reported on a phone that it "did not appear or was not obvious enough" — measured at
-412×915 it was 15% of the screen width in diameter, with dots at 1.4%. Three things were
-strengthened: the diameter and dot size now scale with `vmin` (≈99 px / 9 px on a phone), a
-**visible** "読み込み中 / Loading" line sits under the ring, and the overlay carries a
-`rgba(0,0,0,.55)` scrim (otherwise the full-screen artwork swallows the ring).
+**Why the styles live inside `G41.html`**: the three `.css` files (~15 KB) used to be render-blocking —
+the HTML could arrive and still leave a blank page, because the first pixel had to wait for the
+stylesheets. Measured locally with a stub delaying them by 3 s: first contentful paint went from
+**3024 / 6908 ms to 36 / 928 ms** after inlining, and `/css/` disappears from `performance` entirely.
+**The first paint makes a single request (the HTML itself)** and the ring can be painted on the first
+byte. Edit styles in `G41.html`'s `<style>` block — there are no standalone `.css` sources any more
+(two copies would drift).
 
-**Third revision (2026-10-12, same day)**: three points, two of them measurable:
+**Geometry and colour**: ring and dot sizes scale with `vmin` (≈99 px / 9 px on a phone), the five dots
+sit at even 72° spacing, **dot size is fixed**, the colour is `--wp-amber`, and the backdrop is
+**opaque black** (a WP8 boot screen is flat colour anyway, and the artwork no longer competes for
+attention). A **visible** "読み込み中 / Loading" line sits under the ring (static, bilingual: i18n has
+not been read yet at that point).
 
-1. **The five dots must form one chain.** The old build had every dot run the whole keyframe track
-   (including its own pauses), so the phases only guaranteed an even distribution, never an order —
-   measured at one instant the adjacent gaps were 96°/282°/81°/147°/114°, with two dots almost
-   overlapping. Now all five share a single rotation curve (2.4 s /
-   `cubic-bezier(.5,.08,.5,.92)`) and only differ by negative delays: the order can never break, the
-   easing makes the arc breathe, and dot sizes of 100/85/70/55/42% form a comet tail. Measured
-   internal gaps 38–44°, monotonic in both samples. Dot centres compensate for their size
-   (`top = (dot − size)/2`), so unequal dots still sit on one circle.
-2. **When the ring goes away**: `main-entry` used to be added in `init()`, so the entrance animation
-   played behind `opacity:0` and the ring revealed a frozen result. It now lives in `revealApp()`:
-   the ring is dismissed first, then `requestAnimationFrame` adds the entrance class and fades in.
-   Measured order: `ring 1 → (0.28 with entry:true and tiles:12) → app 1 → ring removed`.
-3. **No background while loading**: the overlay changed from a translucent scrim to **opaque black**
-   (a WP8 boot screen is flat colour anyway); the artwork no longer competes for attention and the
-   failure text gains contrast.
+**The animation is a three-phase cycle** (3.2 s):
+
+| Phase | Implementation | Criterion (one cycle of sampling) |
+|-------|----------------|-----------------------------------|
+| Enter | each dot only fades in, staggered by 0.12 s | visible count `0 → 1 → 2 → 3 → 4 → 5` |
+| Spin | the whole ring rotates, `cubic-bezier(.55,.05,.45,.95)` gives it momentum | the ring angle advances monotonically |
+| Exit | the same stagger, in reverse | visible count `5 → 4 → … → 0`, then a ~0.36 s gap before the next cycle |
+
+Dot size and position never change during the animation (only `opacity` does), so "fixed dot size" is
+measurable: all five `::after` computed widths come back equal. Under `prefers-reduced-motion` both
+animations are switched off — five static dots, all lit.
 
 | State | Switched by | What shows |
 |-------|-------------|------------|
 | Booting | nothing (CSS only) | amber five-dot ring, centred in the viewport |
-| Ready | `endLoading()` inside `applyStatus()` | ring fades out, `#g41-app` fades in (status-code pages included) |
+| Ready | `revealApp()`, called from `applyStatus()` | the ring is dismissed **first**, then `requestAnimationFrame` adds the entrance class and fades in |
 | Boot failed | `bootFailed()` | the ring is replaced by "読み込みに失敗しました / Failed to load" plus the real error text |
+
+**The reveal order is a criterion**: `main-entry` used to be added in `init()`, so the entrance
+animation played behind `opacity:0` and dismissing the ring revealed a frozen result. Measured order
+now: `ring 1 → (0.28 with entry:true and tiles:12) → app 1 → ring removed` — tiles ready and the
+entrance animation in the same frame, with the ring fading out at the same moment.
 
 **The ring must not spin forever** — spinning forever says "still loading".
 That is exactly why `bootFailed()` exists.
+
+(Four revisions' worth of history is in the 2026-10-12 entry of `MAINTENANCE.md`.)
 
 ### The script order is a criterion, not a style choice
 

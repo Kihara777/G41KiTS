@@ -133,6 +133,21 @@
   - Instrument note: `curl -H 'Accept-Encoding: gzip'` does **not** decompress, so piping it into grep
     reads binary — that "any external stylesheets left?" check was invalid until redone with
     `--compressed`
+- **Boot ring v4 (fixed dot size + enter/spin/exit) and `no-store` for the entry document**
+  (the maintainer's third round of feedback the same day):
+  - **Animation structure**: the comet tail is gone (dot sizes no longer differ), all five dots share
+    one size; the whole ring rotates while each dot only fades, staggered by 0.12 s → dots light up one
+    by one (enter) / all visible and spinning / fade out one by one (exit), with a short gap at the end
+    of each cycle. Criteria (one sampled cycle): visible-count sequence `5×11 4 2 1 0 0 0 1 2 3 4 5`;
+    dot widths `[9,9,9,9,9]` all equal; the ring angle advances monotonically; under `--reduced` both
+    animations are off and all five dots stay lit
+  - **A phone refresh did not pick up the new build** (in her words: only clearing the local cache showed
+    the new ring): `no-cache` only asks for revalidation, and a mobile refresh does not guarantee it →
+    the entry document is now **`no-store`** (never stored at all). Implemented with
+    `map $uri $g41_cache_control` plus a **server-level** `add_header` rather than a new `location` —
+    a location-level `add_header` **cancels the inheritance** of all the server-level security headers
+    (CSP/HSTS would silently disappear). Measured: two consecutive navigations with the cache enabled
+    both report `fromCache:false` and `transferSize 7501`, and CSP/HSTS are still present
 
 | Commit | Description |
 |--------|-------------|
@@ -148,6 +163,7 @@
 | `f2d7197` | fix(home): boot ring enlarged + visible label + scrim; `Cache-Control: no-cache` added |
 | `e243c0c` | fix(home): ring v3 — five dots form one chain, reveal timing, no background while loading |
 | `cb8cd28` | perf: first paint no longer waits — all styles inlined + nginx gzip enabled |
+| `923a306` | feat(home): ring v4 — fixed dot size + enter/spin/exit phases; entry document `no-store` |
 
 ## 2026-09-13
 
