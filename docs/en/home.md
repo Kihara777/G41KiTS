@@ -33,6 +33,13 @@ filled by the **WP8 boot ring** in `#g41-loading`: pure CSS (`.g41-ring` in `bas
 visible on the first frame, before any JS arrives; under `prefers-reduced-motion` it degrades to a
 **static ring of five dots**.
 
+**Second revision (2026-10-12)**: the first version was a bare 64 px ring (6 px dots) and the
+maintainer reported on a phone that it "did not appear or was not obvious enough" — measured at
+412×915 it was 15% of the screen width in diameter, with dots at 1.4%. Three things were
+strengthened: the diameter and dot size now scale with `vmin` (≈99 px / 9 px on a phone), a
+**visible** "読み込み中 / Loading" line sits under the ring, and the overlay carries a
+`rgba(0,0,0,.55)` scrim (otherwise the full-screen artwork swallows the ring).
+
 | State | Switched by | What shows |
 |-------|-------------|------------|
 | Booting | nothing (CSS only) | amber five-dot ring, centred in the viewport |

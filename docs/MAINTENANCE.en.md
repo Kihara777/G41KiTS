@@ -74,6 +74,28 @@
     appOpacity 0 before the fix and, under the same conditions after it, ring removed / appOpacity 1 /
     no error; live verification used headless chromium (CDP: read the state, then take the pixels in one
     session) for the boot, failure and loaded states
+- **Boot ring, second revision (bigger + visible label + scrim) and `Cache-Control` for static assets**
+  (the maintainer sent a phone screenshot: "the loading animation did not appear or was not obvious"):
+  - Measured: the ring really was too weak — at 412×915 the first version was a 64 px ring with 6 px
+    dots (15% of the screen width in diameter, dots at 1.4%). Now the geometry scales with `vmin`
+    (≈99 px / 9 px on a phone), a **visible** "読み込み中 / Loading" line sits under the ring, and the
+    overlay carries a `rgba(0,0,0,.55)` scrim; the failure state is unchanged and `.g41-sr` was removed
+    because the label is now visible
+  - Criterion: local stub plus phone viewport (412×915 @2.6) screenshots before/after; CDP measured the
+    overlay covering (0,0,412,915) and the ring+label column exactly centred (span 384–530, centre 457 = 915/2)
+  - **Fixed the structural reason she may have been served old files**: the site sent no `Cache-Control`
+    at all, so browsers used heuristic freshness from `Last-Modified` (10%) and could mix old HTML with
+    new JS/CSS. `kits/nginx/store/nginx.conf` now adds
+    `add_header Cache-Control "no-cache" always` in the server block; verified live that `no-cache` is
+    served and that `If-None-Match` answers 304 (cheap revalidation)
+  - **Found (not fixed — fixing it restarts the pod, the maintainer decides)**: the `reloader` container
+    in `kits/nginx/k8s/deployment.yaml` has ① **no volumeMounts at all**, so it scans its own image's
+    directories and can never see the mounted ConfigMap/Secret (`/tmp/.last` is stuck at 2026-09-26);
+    ② even with mounts, `kill -HUP 1` targets the wrong process — the pod sets
+    `shareProcessNamespace`, so PID 1 is the **pause** container. Consequence: after `k8s conf` / CD
+    re-renders the ConfigMaps, **nginx keeps running the old config** until the pod restarts — this time
+    `Cache-Control` only went live after a manual `kubectl exec … nginx -s reload`. The claim in
+    `k8s/host/g41-cert-reload.sh` that nginx hot-reloads via this sidecar is therefore false
 
 | Commit | Description |
 |--------|-------------|
@@ -86,6 +108,7 @@
 | `e95ac78` | feat(tile_kitsunome): add the front-page link to the tile (each language points at its own copy) |
 | `8b35b39` | feat(home): WP8 boot ring for the first-paint gap; boot failures are now visible |
 | `7d3b7b8` | fix(home): cold-load blank pages were caused by the G41.js / tiles.js load order |
+| `f2d7197` | fix(home): boot ring enlarged + visible label + scrim; `Cache-Control: no-cache` added |
 
 ## 2026-09-13
 

@@ -72,6 +72,29 @@
   - 判据：ローカルのスタブで `tiles.js` を 3 秒遅らせると、修正前は `is-failed` + ReferenceError +
     appOpacity 0、修正後は同じ条件でリングが消え appOpacity 1・エラーなし。実機はヘッドレス
     chromium（CDP で同一セッションのうちに状態を読んでから画素を取得）で起動・失敗・完了の 3 状態を撮影
+- **起動リング第二版（拡大 + 見える文案 + 暗幕）と静的アセットの `Cache-Control`**
+  （保守者が手機のスクリーンショットを送信：「読み込みアニメーションが出ない、あるいは目立たない」）：
+  - 実測：リングは確かに弱すぎました —— 412×915 で第一版は 64px の環＋6px の点
+    （直径は画面幅の 15%、点は 1.4%）。現在は `vmin` でスケール（手機で約 99px / 9px）、
+    環の下に**見える**「読み込み中 / Loading」、全体に `rgba(0,0,0,.55)` の暗幕。
+    失敗状態は変更なし。文案が可視になったため `.g41-sr` は削除
+  - 判据：ローカルのスタブ＋手機ビューポート（412×915 @2.6）で前後比較のスクリーンショット。
+    CDP で overlay が (0,0,412,915) を覆い、環＋文案の列がちょうど中央
+    （跨度 384–530、中心 457 = 915/2）であることを計測
+  - **「古いファイルが配られていた」構造的な原因も修正**：サイトは `Cache-Control` を
+    一切送っておらず、ブラウザは `Last-Modified` によるヒューリスティック（10%）を使うため
+    「古い HTML と新しい JS/CSS」の混合世代になり得ました。`kits/nginx/store/nginx.conf` の
+    server ブロックに `add_header Cache-Control "no-cache" always` を追加。
+    実機で `no-cache` が付き、`If-None-Match` が 304 を返すことを確認（再検証は安価）
+  - **発見（未修正 —— 直すには pod 再起動が必要。保守者の判断に委ねる）**：
+    `kits/nginx/k8s/deployment.yaml` の `reloader` コンテナは ① **volumeMounts が一つも無く**、
+    自分のイメージ内のディレクトリを走査するためマウントされた ConfigMap/Secret を見られません
+    （`/tmp/.last` は 2026-09-26 で停止）② 仮にマウントしても `kill -HUP 1` は誤ったプロセスを撃ちます
+    —— pod は `shareProcessNamespace` を有効にしているので PID 1 は **pause** です。
+    結果として `k8s conf` / CD が ConfigMap を再描画しても **nginx は古い設定のまま動き続け**、
+    pod の再起動だけが反映します —— 今回は手作業の `kubectl exec … nginx -s reload` で
+    `Cache-Control` を反映させました。`k8s/host/g41-cert-reload.sh` の
+    「reloader sidecar がホットリロードする」という記述はしたがって誤りです
 
 | コミット | 説明 |
 |----------|------|
@@ -84,6 +107,7 @@
 | `e95ac78` | feat(tile_kitsunome): タイルに公開ページへのリンクを追加（3 言語がそれぞれの版を指す） |
 | `8b35b39` | feat(home): 初回表示の空白に WP8 起動リングを追加、起動失敗を可視化 |
 | `7d3b7b8` | fix(home): コールドスタート白画面の原因は G41.js と tiles.js の読み込み順 |
+| `f2d7197` | fix(home): 起動リングを拡大＋見える文案＋暗幕、`Cache-Control: no-cache` を追加 |
 
 ## 2026-09-13
 

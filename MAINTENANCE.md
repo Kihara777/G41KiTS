@@ -56,6 +56,24 @@
   - 判据：本地桩把 `tiles.js` 延迟 3 秒 → 修复前 `is-failed`+ReferenceError+appOpacity 0，
     修复后同条件环已移除、appOpacity 1、无错误；线上用无头 chromium（CDP 同一会话先读状态再取像素）
     拍下启动环、失败态、已加载三种状态
+- **启动环第二版（放大 + 可见文案 + 暗幕）与静态资源的 `Cache-Control`**（维护者发来手机截图：
+  「加载动画没有出现或者不够明显」）：
+  - 量出环确实太弱：412×915 手机视口下第一版是 64px 环 + 6px 点（直径占屏宽 15%、点占 1.4%）。
+    现在按 `vmin` 缩放（手机约 99px / 9px）、环下加**可见**的「読み込み中 / Loading」、
+    整体压一层 `rgba(0,0,0,.55)` 暗幕；失败态不变，`.g41-sr` 随文案转可见而删除
+  - 判据：本地桩 + 手机视口（412×915 @2.6）截图前后对比；CDP 量到 overlay 铺满 (0,0,412,915)、
+    环与文案组成的列正好居中（跨度 384–530，中心 457 = 915/2）
+  - **顺带修掉「她可能拿到旧文件」的结构性原因**：站点原先一个 `Cache-Control` 都没有，
+    浏览器按 `Last-Modified` 走启发式缓存（10%）→ 部署后可能是「旧 HTML 配新 JS/CSS」的混合体。
+    `kits/nginx/store/nginx.conf` 的 server 块加 `add_header Cache-Control "no-cache" always`；
+    实测 `no-cache` 生效、`If-None-Match` 返回 304（再验证很便宜）
+  - **发现（未修，修它要重启 pod，留维护者定夺）**：`kits/nginx/k8s/deployment.yaml` 的
+    `reloader` 容器①**没有任何 volumeMounts**，`find` 的是自己镜像里的目录，永远看不到
+    挂载的 ConfigMap/Secret（`/tmp/.last` 停在 2026-09-26）②即使挂上了，`kill -HUP 1` 也打错进程：
+    pod 开了 `shareProcessNamespace`，PID 1 是 **pause** 容器。后果是 `k8s conf` / CD 重渲染
+    ConfigMap 之后 **nginx 仍跑旧配置**，只有 pod 重启才生效——本次是靠手工
+    `kubectl exec … nginx -s reload` 才让 `Cache-Control` 上线的。
+    `k8s/host/g41-cert-reload.sh` 里「交由 reloader sidecar 热加载」的说法因此不成立
 
 | 提交 | 说明 |
 |------|------|
@@ -68,6 +86,7 @@
 | `e95ac78` | feat(tile_kitsunome): 磁贴补上到门面的链接（三语各指自己那一份） |
 | `8b35b39` | feat(home): 首屏空白期补上 WP8 启动环，并让启动失败变成可见状态 |
 | `7d3b7b8` | fix(home): 冷启动白屏的根因是 G41.js 与 tiles.js 的加载顺序 |
+| `f2d7197` | fix(home): 启动环放大 + 可见文案 + 暗幕；补 `Cache-Control: no-cache` |
 
 ## 2026-09-13
 
