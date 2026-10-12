@@ -149,6 +149,27 @@
     (CSP/HSTS would silently disappear). Measured: two consecutive navigations with the cache enabled
     both report `fromCache:false` and `transferSize 7501`, and CSP/HSTS are still present
 
+- **Boot ring v5 (every dot travels the circle itself) and splash text localisation**
+  (the maintainer: "this animation is completely wrong"):
+  - **Animation**: v4 implemented the three phases as a rigidly rotating ring plus per-dot opacity
+    pulses — the dots never moved relative to each other (relative angle stuck at **0.0°**). The real
+    mechanism has each dot make its own journey: fade in at the start (enter) → visibly travel (spin) →
+    fade out at the end (exit); the five differ only by negative delays, so they always move the same way,
+    the order never breaks, and the angular spacing breathes. Dot size never changes (only `transform`
+    and `opacity` are animated)
+  - **The criteria changed with it**: the old ones (count / dot size / monotonic angle) **passed v4** —
+    they cannot tell whether the dots move relative to each other. New criterion C4 measures the angular
+    span of each dot relative to dot 0: v4 = **0.0°** (fails), v5 = **81.8°** (passes). C3's first version
+    had a bug of its own: it sorted angles **without unwrapping the circle** (−178° sorted before 91°),
+    reporting a false failure on a *correct* animation — I only saw it right after fixing the criterion.
+    `--reduced` gets its own two criteria (static, 72° spacing)
+  - **Text localisation**: the splash must be readable before any JS or extra request (a client script
+    arrives too late and the CSP's `script-src 'self'` forbids inline) → nginx-side
+    `map $http_accept_language` + `sub_filter` (first language wins, same rule as `detectLang`);
+    the response now varies by language → `gzip_vary off` plus a single combined
+    `Vary: Accept-Encoding, Accept-Language` in the server block.
+    Measured: zh→载入中, ja→読み込み中, en/unknown→Loading
+
 | Commit | Description |
 |--------|-------------|
 | `ba86aba` | fix(g41.sh): kits verify's L1/L3/L4 never ran; tile i18n key coverage added |
@@ -164,6 +185,7 @@
 | `e243c0c` | fix(home): ring v3 — five dots form one chain, reveal timing, no background while loading |
 | `cb8cd28` | perf: first paint no longer waits — all styles inlined + nginx gzip enabled |
 | `923a306` | feat(home): ring v4 — fixed dot size + enter/spin/exit phases; entry document `no-store` |
+| `5426225` | fix(home): ring v5 — each dot travels the circle itself; splash text localised by Accept-Language |
 
 ## 2026-09-13
 

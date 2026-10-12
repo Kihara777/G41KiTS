@@ -65,3 +65,27 @@ gzip_types text/plain text/css application/javascript application/json image/svg
 HTML（スタイル内聯後で約 19.7KB）も JS もそのまま送信されていました。実測：`G41.html` → **6.9KB**、
 `G41.js` 7.0KB → 約 2KB。`gzip_vary on` は `Cache-Control: no-cache` と組で、キャッシュが
 エンコーディングを混ぜないようにします。
+
+## splash 文案のローカライズ
+
+起動画面の一行（`読み込み中 / Loading`）は**あらゆる JS と追加要求より前に**読める必要があります ——
+クライアント側スクリプトは遅すぎるか（往復が増える）、CSP に阻まれます（`script-src` は `'self'` で
+インラインスクリプト不可）。そこで `Accept-Language` により **nginx 側**で置換します：
+
+```nginx
+map $http_accept_language $g41_loading_text {   # http ブロック
+    default       "Loading";
+    "~*^\s*zh"    "载入中";
+    "~*^\s*ja"    "読み込み中";
+    "~*^\s*en"    "Loading";
+}
+sub_filter_once on;                              # server ブロック
+sub_filter '読み込み中 / Loading' $g41_loading_text;
+```
+
+- **第一言語優先**、`G41.js` の `detectLang` と同じ規則。`zh` は簡体字（サイト全体の中国語と揃える）
+- 応答が `Accept-Language` で変わるため `Vary` に記載が必要。`gzip_vary` を切り、
+  server ブロックで `Vary: Accept-Encoding, Accept-Language` を 1 本にまとめています（Vary が二重にならないよう）
+- 置換対象は `G41.html` の**二言語フォールバック**（ファイルを直接開いても読める）—— 文案の変更は二箇所
+- 既知の境界：nginx は `localStorage` の言語設定を見られないため、日本語端末で手動で中国語に
+  切り替えた訪客は、splash が日本語で出て app 起動直後に中国語へ変わります（1〜2 秒の差）

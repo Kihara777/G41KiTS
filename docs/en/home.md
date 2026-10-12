@@ -45,17 +45,25 @@ sit at even 72° spacing, **dot size is fixed**, the colour is `--wp-amber`, and
 attention). A **visible** "読み込み中 / Loading" line sits under the ring (static, bilingual: i18n has
 not been read yet at that point).
 
-**The animation is a three-phase cycle** (3.2 s):
+**The animation is a three-phase cycle** (3.6 s; every dot makes its own journey):
 
 | Phase | Implementation | Criterion (one cycle of sampling) |
 |-------|----------------|-----------------------------------|
-| Enter | each dot only fades in, staggered by 0.12 s | visible count `0 → 1 → 2 → 3 → 4 → 5` |
-| Spin | the whole ring rotates, `cubic-bezier(.55,.05,.45,.95)` gives it momentum | the ring angle advances monotonically |
-| Exit | the same stagger, in reverse | visible count `5 → 4 → … → 0`, then a ~0.36 s gap before the next cycle |
+| Enter | each dot fades in at the start of its own journey | every dot appears (`opacity 0 → 1`) |
+| Spin | **each dot travels around the circle itself** (`g41-travel`, eased so it speeds up and slows down); the five differ only by negative delays | the angle advances monotonically; **the angle *between* dots changes** (measured span 81.8°, versus 0.0° for a rigidly rotating ring) |
+| Exit | each dot fades out at the end of its journey | every dot disappears (`opacity 1 → 0`); visible count `5 →…→ 0 →…→ 5` |
 
-Dot size and position never change during the animation (only `opacity` does), so "fixed dot size" is
-measurable: all five `::after` computed widths come back equal. Under `prefers-reduced-motion` both
-animations are switched off — five static dots, all lit.
+**"The angle between dots changes" is the dividing line**: one revision (v4) implemented the three phases
+as "the whole ring rotates rigidly + each dot pulses its opacity" — the dots never moved relative to each
+other, the relative angle stayed at 0.0°, and the criteria of the day (count, dot size, monotonic angle)
+**passed it**, so I could not see it while she saw "completely wrong" at a glance. Only `transform` and
+`opacity` are animated, so "fixed dot size" has a direct criterion: all five `::after` computed widths
+come back equal. Under `prefers-reduced-motion` both animations are off — five static dots, evenly
+spaced at 72°, all lit.
+
+**Text localisation**: the splash line must be readable **before any JS and any extra request**, so it is
+substituted server-side by `Accept-Language` (`map` + `sub_filter`, first language wins, the same rule
+as `G41.js`'s `detectLang`).
 
 | State | Switched by | What shows |
 |-------|-------------|------------|

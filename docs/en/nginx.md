@@ -63,3 +63,31 @@ gzip_types text/plain text/css application/javascript application/json image/svg
 HTML (~19.7 KB with the styles inlined) and the JS shipped uncompressed. Measured: `G41.html` →
 **6.9 KB**, `G41.js` 7.0 KB → ~2 KB. `gzip_vary on` pairs with `Cache-Control: no-cache` so caches
 keep encodings apart.
+
+## Splash text localisation
+
+The splash line (`読み込み中 / Loading`) must be readable **before any JS and any extra request** —
+a client-side script would either arrive too late (an extra round trip) or be blocked by the CSP
+(`script-src` is `'self'`, so inline scripts are not allowed). It is therefore substituted **server-side**
+by `Accept-Language`:
+
+```nginx
+map $http_accept_language $g41_loading_text {   # http block
+    default       "Loading";
+    "~*^\s*zh"    "载入中";
+    "~*^\s*ja"    "読み込み中";
+    "~*^\s*en"    "Loading";
+}
+sub_filter_once on;                              # server block
+sub_filter '読み込み中 / Loading' $g41_loading_text;
+```
+
+- **First language wins**, the same rule as `G41.js`'s `detectLang`; `zh` uses simplified characters
+  (consistent with the rest of the site's Chinese)
+- The response now varies by `Accept-Language`, so `Vary` must mention it. `gzip_vary` is switched off
+  and the server block emits a single `Vary: Accept-Encoding, Accept-Language` instead of two headers
+- The replaced string is the **bilingual fallback** in `G41.html` (still readable when the file is opened
+  directly) — editing the copy means touching both places
+- Known boundary: nginx cannot see the language preference in `localStorage`, so a visitor who manually
+  switched to Chinese on a Japanese device sees the Japanese splash for a second or two before the app
+  applies their choice
