@@ -48,3 +48,14 @@ add_header Cache-Control "no-cache" always;   # server 块，与安全头并列
 后果：`k8s conf` / CD 重新渲染 ConfigMap 之后，**nginx 仍在跑旧配置**，只有 pod 重启才生效。
 `k8s/host/g41-cert-reload.sh` 里「交由 reloader sidecar 热加载」的说明因此是错的
 （证书续期后 nginx 不会自动重载，仍持有旧证书）。
+
+## 压缩（gzip）
+
+```nginx
+gzip on;  gzip_comp_level 5;  gzip_min_length 256;  gzip_proxied any;  gzip_vary on;
+gzip_types text/plain text/css application/javascript application/json image/svg+xml application/manifest+json;
+```
+
+**2026-10-12 之前一个 `gzip` 指令都没有**（nginx 默认关闭）——首页 HTML（样式内联后约 19.7KB）
+与 JS 全是原样发送。实测：`G41.html` → **6.9KB**、`G41.js` 7.0KB → 约 2KB。
+`gzip_vary on` 与 `Cache-Control: no-cache` 配合，缓存按编码分开存。

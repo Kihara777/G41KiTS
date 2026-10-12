@@ -53,3 +53,15 @@ add_header Cache-Control "no-cache" always;   # server ブロック、セキュ�
 pod の再起動だけが反映します。`k8s/host/g41-cert-reload.sh` の「reloader sidecar が
 ホットリロードする」という記述はしたがって誤りです（証明書更新後も nginx は古い証明書を
 持ち続けます）。
+
+## 圧縮（gzip）
+
+```nginx
+gzip on;  gzip_comp_level 5;  gzip_min_length 256;  gzip_proxied any;  gzip_vary on;
+gzip_types text/plain text/css application/javascript application/json image/svg+xml application/manifest+json;
+```
+
+**2026-10-12 より前は `gzip` 指令が一つもありませんでした**（nginx の既定は off）—— ホームページの
+HTML（スタイル内聯後で約 19.7KB）も JS もそのまま送信されていました。実測：`G41.html` → **6.9KB**、
+`G41.js` 7.0KB → 約 2KB。`gzip_vary on` は `Cache-Control: no-cache` と組で、キャッシュが
+エンコーディングを混ぜないようにします。

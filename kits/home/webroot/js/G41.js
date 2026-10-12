@@ -1,7 +1,7 @@
 /* ═══════════ G41 core: init, i18n, status, detail ── */
 function $json(url){return fetch(url).then(function(r){return r.json();});}
 
-// ═══ 启动环（G41.html + base.css）═══
+// ═══ 启动环（G41.html 内联样式）═══
 // 成功、失败、状态码页——三条路都必须把它关掉。**失败时让它一直转是最坏的一种**：
 // 空白页只是没说话，一直转是在说「还在读」。
 function endLoading(){

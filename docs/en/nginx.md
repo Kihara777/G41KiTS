@@ -51,3 +51,15 @@ The `reloader` container in `kits/nginx/k8s/deployment.yaml` is supposed to send
 Consequence: after `k8s conf` / CD re-renders the ConfigMaps, **nginx keeps running the old config**;
 only a pod restart applies it. The claim in `k8s/host/g41-cert-reload.sh` that nginx hot-reloads via
 this sidecar is therefore false (after a certificate renewal nginx keeps serving the old certificate).
+
+## Compression (gzip)
+
+```nginx
+gzip on;  gzip_comp_level 5;  gzip_min_length 256;  gzip_proxied any;  gzip_vary on;
+gzip_types text/plain text/css application/javascript application/json image/svg+xml application/manifest+json;
+```
+
+**Before 2026-10-12 there was not a single `gzip` directive** (nginx defaults to off), so the homepage
+HTML (~19.7 KB with the styles inlined) and the JS shipped uncompressed. Measured: `G41.html` →
+**6.9 KB**, `G41.js` 7.0 KB → ~2 KB. `gzip_vary on` pairs with `Cache-Control: no-cache` so caches
+keep encodings apart.

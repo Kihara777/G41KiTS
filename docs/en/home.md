@@ -29,9 +29,12 @@ Site core data — character messages, theme colors, status codes, i18n. Directl
 
 The first paint waits for all six data requests in `G41.js` (tiles / chars / status / three i18n
 payloads) before `init()` runs, and `#g41-app` stays at `opacity:0` until then. That blank gap is
-filled by the **WP8 boot ring** in `#g41-loading`: pure CSS (`.g41-ring` in `base.css`), so it is
-visible on the first frame, before any JS arrives; under `prefers-reduced-motion` it degrades to a
-**static ring of five dots**.
+filled by the **WP8 boot ring** in `#g41-loading`: its styles are **inlined in `G41.html`'s
+`<style>` block** (all three `.css` files were inlined on 2026-10-12), so the first paint makes a
+single request and is never blocked by an external stylesheet. Measured locally (a stub delaying the
+stylesheets by 3 s): first contentful paint went from **3024 / 6908 ms to 36 / 928 ms**, and the
+`/css/` requests disappear from `performance` entirely. Under `prefers-reduced-motion` the ring
+degrades to a **static five-dot ring**.
 
 **Second revision (2026-10-12)**: the first version was a bare 64 px ring (6 px dots) and the
 maintainer reported on a phone that it "did not appear or was not obvious enough" — measured at
