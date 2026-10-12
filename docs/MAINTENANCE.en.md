@@ -113,6 +113,26 @@
     (a WP8 boot screen is flat colour anyway), so the artwork no longer competes for attention
   - Criterion: local stub plus quantitative CDP sampling (angular gaps, reveal order); under
     `--reduced`, `animationName=none` (a static ring)
+- **First paint treated like a splash screen: all styles inlined + gzip enabled**
+  (the maintainer: do not make the user wait long before they even see the loading animation):
+  - Root cause measured: the three `<link rel="stylesheet">` tags (15.4 KB total) are
+    **render-blocking** — the HTML can arrive and still leave a blank page. With a stub delaying the
+    stylesheets by 3 s, **FCP = 3024 / 6908 ms**, i.e. exactly when the stylesheets arrived
+  - All three CSS files are now **inlined into `G41.html`'s `<style>` block** (moved by a script that
+    proves byte-for-byte equality), and the `.css` sources were deleted (single source). Under the same
+    conditions **FCP = 36 / 928 ms** and `performance` shows **0** `/css/` requests. The CSP already had
+    `style-src 'self' 'unsafe-inline'`, so inlining a `<style>` needs no policy change
+  - **The site had no compression at all** (nginx defaults to off and nginx.conf had no `gzip`
+    directive): now `gzip on` / `gzip_vary on` etc.; measured live, the homepage HTML drops from
+    **19728 to 6873 bytes**
+  - Deployment: `kits add home -C` plus a manual removal of the leftover `.wr/G41/css/` (reinstalling
+    never deletes hardlinks whose source files are gone) + `kits add nginx -C` + `k8s conf` +
+    `nginx -t` + a manual `nginx -s reload` (the reloader is still broken)
+  - Live measurement: 600 ms after navigation the boot ring is already painted
+    (`bg=rgb(0,0,0)`, `css:[]`, FCP 568 ms)
+  - Instrument note: `curl -H 'Accept-Encoding: gzip'` does **not** decompress, so piping it into grep
+    reads binary — that "any external stylesheets left?" check was invalid until redone with
+    `--compressed`
 
 | Commit | Description |
 |--------|-------------|
@@ -127,6 +147,7 @@
 | `7d3b7b8` | fix(home): cold-load blank pages were caused by the G41.js / tiles.js load order |
 | `f2d7197` | fix(home): boot ring enlarged + visible label + scrim; `Cache-Control: no-cache` added |
 | `e243c0c` | fix(home): ring v3 — five dots form one chain, reveal timing, no background while loading |
+| `cb8cd28` | perf: first paint no longer waits — all styles inlined + nginx gzip enabled |
 
 ## 2026-09-13
 

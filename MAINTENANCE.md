@@ -85,6 +85,19 @@
   - **加载期不显示背景**：覆盖层由半透明暗幕改为**不透明黑**（WP8 启动画面本是纯色），
     立绘抢视线的问题一并消失
   - 判据：本地桩 + CDP 量化采样（角度间隔、就绪时序）；`--reduced` 下 `animationName=none`（静止环）
+- **首屏「像 splashscreen 一样优先」：样式全部内联 + 开启 gzip**（维护者：别让用户在看到加载动画前也等很久）：
+  - 量到根因：head 里 3 个 `<link rel="stylesheet">`（共 15.4KB）是**渲染阻塞**的——HTML 到了也只是
+    白屏。用桩把样式表延迟 3 秒实测 **FCP = 3024 / 6908ms**（正好等于样式表到达的时刻）
+  - 三份 CSS 全部**内联进 `G41.html` 的 `<style>`**（脚本搬运并自证逐字节一致），`.css` 源文件随之
+    删除（单一来源）；同条件实测 **FCP = 36 / 928ms**、`performance` 里 `/css/` 请求 **0** 个。
+    CSP 已有 `style-src 'self' 'unsafe-inline'`，内联 `<style>` 不需要改策略
+  - **站点此前完全没有压缩**（nginx 默认 off，本仓 nginx.conf 一个 `gzip` 指令都没有）：
+    加 `gzip on` / `gzip_vary on` 等；线上实测首页 HTML **19728 → 6873 字节**
+  - 部署：`kits add home -C` + 手工删除遗留的 `.wr/G41/css/`（重装不会删「源文件已移除」的旧硬链接）
+    + `kits add nginx -C` + `k8s conf` + `nginx -t` + 手工 `nginx -s reload`（reloader 仍未修）
+  - 线上实测：导航后 600ms 启动环已在画（`bg=rgb(0,0,0)`、`css:[]`、FCP 568ms）
+  - 仪器坑记一笔：`curl -H 'Accept-Encoding: gzip'` **不会解压**，管道给 grep 读到的是二进制——
+    那条「页面里还有没有外部样式表」的检查一度是无效的，用 `--compressed` 重做后才算数
 
 | 提交 | 说明 |
 |------|------|
@@ -99,6 +112,7 @@
 | `7d3b7b8` | fix(home): 冷启动白屏的根因是 G41.js 与 tiles.js 的加载顺序 |
 | `f2d7197` | fix(home): 启动环放大 + 可见文案 + 暗幕；补 `Cache-Control: no-cache` |
 | `e243c0c` | fix(home): 启动环第三版 —— 五点成一条链、收环时机、加载期不显示背景 |
+| `cb8cd28` | perf: 首屏不再等 —— 样式全部内联 + nginx 开启 gzip |
 
 ## 2026-09-13
 
