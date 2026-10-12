@@ -11,11 +11,19 @@
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/tiles.css">
 <link rel="stylesheet" href="/css/hc.css">
-<style>#g41-app{opacity:0}</style>
+<style>#g41-app{opacity:0;transition:opacity .35s ease}</style>
 </head>
 <body>
 
 <div id="g41-bg"><img id="g41-bg-img" src="/img/Pic_G41.png" alt=""></div>
+
+<!-- 起動中のローディングリング（WP8 風）。#g41-app はデータが揃うまで opacity:0 なので、
+     その間ずっと真っ黒だった。CSS だけで動く＝JS が来る前の最初の描画から出る。
+     中の sr 用テキストは**静的な二言語**：この時点で i18n はまだ読めていない。 -->
+<div id="g41-loading" role="status">
+  <div class="g41-ring" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <p class="g41-sr">読み込み中 / Loading</p>
+</div>
 
 <div id="g41-app">
 

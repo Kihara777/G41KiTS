@@ -1,6 +1,28 @@
 /* ═══════════ G41 core: init, i18n, status, detail ── */
 function $json(url){return fetch(url).then(function(r){return r.json();});}
 
+// ═══ 启动环（G41.html + base.css）═══
+// 成功、失败、状态码页——三条路都必须把它关掉。**失败时让它一直转是最坏的一种**：
+// 空白页只是没说话，一直转是在说「还在读」。
+function endLoading(){
+  var l=document.getElementById('g41-loading');if(!l)return;
+  l.classList.add('is-done');
+  setTimeout(function(){l.remove();},400);
+}
+// 起动的六个请求（或 init 自身）失败时的**可见**失败态。这里刻意不用 i18n：
+// 正是因为 i18n 没读到才走到这条路上。错误原文照实显示（运维要看得出是哪一种失败）。
+function bootFailed(e){
+  console.error('G41 boot failed:',e);
+  var l=document.getElementById('g41-loading');if(!l)return;
+  l.classList.add('is-failed');
+  var p=document.createElement('p');p.className='g41-load-msg';
+  p.appendChild(document.createTextNode('読み込みに失敗しました / Failed to load'));
+  var c=document.createElement('span');c.className='code';
+  c.textContent=String((e&&e.message)||e||'(no message)').slice(0,140);
+  p.appendChild(c);
+  l.innerHTML='';l.appendChild(p);
+}
+
 var LANGS=['ja','zh','en'],I18N={},lang,TILES,CHARS,STATUS;
 var METRO=['lime','cobalt','magenta','teal','amber','emerald'];
 
@@ -25,7 +47,7 @@ Promise.all([
   I18N.ja=d[3];I18N.zh=d[4];I18N.en=d[5];window.G41_I18N=I18N;
   try{computeHC();}catch(e){console.error(e);}
   init();
-}).catch(function(e){console.error('G41 init failed:',e);});
+}).catch(bootFailed);
 
 function detectLang(){var n=(navigator.language||'').toLowerCase();return n.indexOf('ja')===0?'ja':n.indexOf('zh')===0?'zh':'en';}
 function t(k,i){var v=I18N[lang];v=v&&v[k]!==undefined?v[k]:k;if(!Array.isArray(v))return v;return i!==undefined?v[i]:v[0];}
@@ -93,5 +115,6 @@ function applyStatus(code){
     bgImg.src=img;bgImg.style.opacity='.55';bgImg.style.filter='none';
   }
   document.getElementById('g41-app').style.opacity='1';
+  endLoading();
 }
 function reload(){try{buildTiles();}catch(e){console.error(e);}getCode(applyStatus);}
