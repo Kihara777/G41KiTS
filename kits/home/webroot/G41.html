@@ -98,24 +98,31 @@ body{font-family:'Segoe UI','Segoe WP','Noto Sans CJK SC','Noto Sans CJK JP',san
 #g41-loading.is-done{opacity:0;pointer-events:none}
 #g41-loading.is-failed{color:rgba(255,255,255,.75)}
 #g41-loading.is-failed .g41-ring{display:none}
-.g41-ring{--dot:clamp(9px,1.7vmin,15px);position:relative;width:clamp(5.5rem,24vmin,11rem);height:clamp(5.5rem,24vmin,11rem)}
-.g41-ring i{--size:var(--dot);position:absolute;inset:0;animation:g41-orbit 2.4s cubic-bezier(.5,.08,.5,.92) infinite}
-.g41-ring i::after{content:"";position:absolute;left:50%;top:calc((var(--dot) - var(--size)) / 2);width:var(--size);height:var(--size);margin-left:calc(var(--size) / -2);border-radius:50%;background:currentColor}
-.g41-ring i:nth-child(1){animation-delay:0s}
-.g41-ring i:nth-child(2){--size:calc(var(--dot) * .85);animation-delay:-.16s}
-.g41-ring i:nth-child(3){--size:calc(var(--dot) * .70);animation-delay:-.32s}
-.g41-ring i:nth-child(4){--size:calc(var(--dot) * .55);animation-delay:-.48s}
-.g41-ring i:nth-child(5){--size:calc(var(--dot) * .42);animation-delay:-.64s}
-@keyframes g41-orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-/* 動きを減らす設定の利用者には**静止したリング**（5 点を 72° ずつ等間隔に）。
-   回さないだけで「読み込み中」の意味は保つ（文案は下に出るので伝わる）。 */
+/* ═══ 启动环 v4（2026-10-12 第三轮反馈）═══
+   两点：① **圆点大小固定**（上一版做成头大尾小的彗尾是不对的）
+        ② 环不是一直转，而是「**进场 → 旋转 → 退场**」三个阶段。
+   实现：整个环匀速旋转（缓动让快慢有致），每个点只做**透明度**的进出，
+   五点各错开 0.12s：依次亮起 → 全部可见并旋转 → 依次熄灭；
+   一周期末尾有一段「一个点都没有」的空档（约 0.48s），三个阶段因此各自读得出来。
+   点径与位置不随动画变化（只有 opacity 在变），所以「大小固定」是可量的。 */
+.g41-ring{--dot:clamp(9px,1.7vmin,15px);position:relative;width:clamp(5.5rem,24vmin,11rem);height:clamp(5.5rem,24vmin,11rem);animation:g41-spin 3.2s cubic-bezier(.55,.05,.45,.95) infinite}
+.g41-ring i{position:absolute;inset:0;transform:rotate(var(--a,0deg))}
+.g41-ring i::after{content:"";position:absolute;left:50%;top:0;width:var(--dot);height:var(--dot);margin-left:calc(var(--dot) / -2);border-radius:50%;background:currentColor;animation:g41-blink 3.2s linear infinite}
+.g41-ring i:nth-child(1){--a:0deg}
+.g41-ring i:nth-child(2){--a:72deg}
+.g41-ring i:nth-child(3){--a:144deg}
+.g41-ring i:nth-child(4){--a:216deg}
+.g41-ring i:nth-child(5){--a:288deg}
+.g41-ring i:nth-child(2)::after{animation-delay:-.12s}
+.g41-ring i:nth-child(3)::after{animation-delay:-.24s}
+.g41-ring i:nth-child(4)::after{animation-delay:-.36s}
+.g41-ring i:nth-child(5)::after{animation-delay:-.48s}
+@keyframes g41-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes g41-blink{0%{opacity:0}3%{opacity:1}72%{opacity:1}78%{opacity:0}100%{opacity:0}}
+/* 動きを減らす設定の利用者には**静止したリング**（五点是等间隔地静止）。
+   回さないだけで「読み込み中」の意味は保つ（文案は下に出る）。 */
 @media (prefers-reduced-motion:reduce){
-  .g41-ring i{animation:none}
-  .g41-ring i:nth-child(1){transform:rotate(0deg)}
-  .g41-ring i:nth-child(2){transform:rotate(72deg)}
-  .g41-ring i:nth-child(3){transform:rotate(144deg)}
-  .g41-ring i:nth-child(4){transform:rotate(216deg)}
-  .g41-ring i:nth-child(5){transform:rotate(288deg)}
+  .g41-ring,.g41-ring i::after{animation:none}
 }
 /* 起動中に出る**見える**文案。i18n はまだ読めていないので静的（二言語）。
    role="status" は親（#g41-loading）に付けてある。 */
