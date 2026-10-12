@@ -19,10 +19,12 @@
 
 <!-- 起動中のローディングリング（WP8 風）。#g41-app はデータが揃うまで opacity:0 なので、
      その間ずっと真っ黒だった。CSS だけで動く＝JS が来る前の最初の描画から出る。
-     中の sr 用テキストは**静的な二言語**：この時点で i18n はまだ読めていない。 -->
+     文案は**見える**が i18n はまだ読めていないので静的（二言語）。
+     2026-10-12：第一版（64px の環だけ）は手機で「不够明显」だったため、
+     環を vmin で拡大し、この文案を可視化し、暗幕を敷いた（base.css の boot loading 節）。 -->
 <div id="g41-loading" role="status">
   <div class="g41-ring" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-  <p class="g41-sr">読み込み中 / Loading</p>
+  <p class="g41-load-txt">読み込み中 / Loading</p>
 </div>
 
 <div id="g41-app">
