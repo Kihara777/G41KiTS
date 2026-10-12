@@ -65,35 +65,29 @@ body{font-family:'Segoe UI','Segoe WP','Noto Sans CJK SC','Noto Sans CJK JP',san
 #g41-footer p+p{margin-top:.1rem}
 
 /* ═══════════ CSS: boot loading（WP8 启动环） ═══════════ */
-/* #g41-app 在数据到齐前是 opacity:0（G41.html 里的内联 <style>），那段时间整页全黑。
-   这里补上 WP8 风格的启动环：**纯 CSS**，所以在 JS 到达之前的第一帧就能显示。
-   2026-10-12 第二版：第一版 64px 环 + 6px 点，在 412×915 的手机上只有全屏宽度的 1.4%，
-   维护者反馈「没有出现或者不够明显」——实测截图确认太弱。于是三处加强：
-   ① 直径/点径按 vmin 缩放 ② 环下加一行**可见**文案 ③ 压一层暗幕，
-   否则背景立绘（本身就是全屏大图）会把环吃掉。
+/* #g41-app 在数据到齐前是 opacity:0（G41.html 里的内联 <style>），这里补上那段时间的画面：
+   **纯 CSS**，JS 到达前的第一帧就能显示。覆盖层是**不透明黑**——WP8 的启动画面本来就是
+   纯色，而且背景立绘（全屏大图）会跟环抢视线；黑底也顺带保证文案的对比度。
+   2026-10-12 第三版（维护者反馈「轨迹不对，小圆点没形成一条连贯的动画，各自为政」）：
+   测量证实旧实现确实是散的——同一时刻五个点相邻间隔 96°/282°/81°/147°/114°。
+   原因：每个点各自跑完整条 keyframes（含各自的停顿），相位差只保证均匀分布，不保证成链。
+   现在改成**一条链**：五点共用同一条旋转曲线，只用负延迟错开相位（间距 24°），
+   顺序永远不会乱；缓动曲线让弧长自然呼吸（WP8 的收放感），头大尾小让方向一眼可见。
    失败态由 G41.js 的 bootFailed() 把环换成一句话（环不能一直转——
    一直转就成了「还在读」的谎）。 */
-#g41-loading{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;background:rgba(0,0,0,.55);color:var(--wp-amber);transition:opacity .35s ease}
+#g41-loading{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;background:#000;color:var(--wp-amber);transition:opacity .35s ease}
 #g41-loading.is-done{opacity:0;pointer-events:none}
 #g41-loading.is-failed{color:rgba(255,255,255,.75)}
 #g41-loading.is-failed .g41-ring{display:none}
 .g41-ring{--dot:clamp(9px,1.7vmin,15px);position:relative;width:clamp(5.5rem,24vmin,11rem);height:clamp(5.5rem,24vmin,11rem)}
-.g41-ring i{position:absolute;inset:0;animation:g41-orbit 5.5s cubic-bezier(.5,.15,.5,.85) infinite}
-.g41-ring i::after{content:"";position:absolute;left:50%;top:0;width:var(--dot);height:var(--dot);margin-left:calc(var(--dot) / -2);border-radius:50%;background:currentColor}
-.g41-ring i:nth-child(2){animation-delay:-1.1s}
-.g41-ring i:nth-child(3){animation-delay:-2.2s}
-.g41-ring i:nth-child(4){animation-delay:-3.3s}
-.g41-ring i:nth-child(5){animation-delay:-4.4s}
-@keyframes g41-orbit{
-  0%{transform:rotate(225deg);opacity:1;animation-timing-function:ease-out}
-  7%{transform:rotate(345deg);animation-timing-function:linear}
-  30%{transform:rotate(455deg);animation-timing-function:ease-in-out}
-  39%{transform:rotate(690deg);animation-timing-function:linear}
-  70%{transform:rotate(815deg);opacity:1;animation-timing-function:ease-out}
-  75%{transform:rotate(945deg)}
-  76%{transform:rotate(945deg);opacity:0}
-  100%{transform:rotate(945deg);opacity:0}
-}
+.g41-ring i{--size:var(--dot);position:absolute;inset:0;animation:g41-orbit 2.4s cubic-bezier(.5,.08,.5,.92) infinite}
+.g41-ring i::after{content:"";position:absolute;left:50%;top:calc((var(--dot) - var(--size)) / 2);width:var(--size);height:var(--size);margin-left:calc(var(--size) / -2);border-radius:50%;background:currentColor}
+.g41-ring i:nth-child(1){animation-delay:0s}
+.g41-ring i:nth-child(2){--size:calc(var(--dot) * .85);animation-delay:-.16s}
+.g41-ring i:nth-child(3){--size:calc(var(--dot) * .70);animation-delay:-.32s}
+.g41-ring i:nth-child(4){--size:calc(var(--dot) * .55);animation-delay:-.48s}
+.g41-ring i:nth-child(5){--size:calc(var(--dot) * .42);animation-delay:-.64s}
+@keyframes g41-orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 /* 動きを減らす設定の利用者には**静止したリング**（5 点を 72° ずつ等間隔に）。
    回さないだけで「読み込み中」の意味は保つ（文案は下に出るので伝わる）。 */
 @media (prefers-reduced-motion:reduce){

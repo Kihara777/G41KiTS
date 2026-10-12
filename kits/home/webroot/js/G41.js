@@ -9,6 +9,18 @@ function endLoading(){
   l.classList.add('is-done');
   setTimeout(function(){l.remove();},400);
 }
+// 就绪：收掉启动环，然后才让主视图播入场动画并淡入。
+// **顺序是判据**：main-entry 一旦在数据刚到时就加上，动画会在 opacity:0 的幕后播完，
+// 等环收掉时看到的是「静止的成品」而不是入场（维护者 2026-10-12 指出时机不对）。
+// requestAnimationFrame 保证环的淡出先开始一帧，入场动画再起。
+function revealApp(){
+  endLoading();
+  var main=dom['g41-view-main'],app=document.getElementById('g41-app');
+  requestAnimationFrame(function(){
+    if(main&&!main.classList.contains('main-entry'))main.classList.add('main-entry');
+    if(app)app.style.opacity='1';
+  });
+}
 // 起动的六个请求（或 init 自身）失败时的**可见**失败态。这里刻意不用 i18n：
 // 正是因为 i18n 没读到才走到这条路上。错误原文照实显示（运维要看得出是哪一种失败）。
 function bootFailed(e){
@@ -77,7 +89,6 @@ function init(){
   document.addEventListener('click',function(){langMenu.classList.remove('open');});
   langMenu.addEventListener('click',function(e){var b=e.target.closest('.lang-opt');if(!b)return;lang=b.dataset.lang;localStorage.setItem('g41-lang',lang);window.G41_LANG=lang;langMenu.classList.remove('open');setLangUI();reload();});
   dom['g41-back'].addEventListener('click',closeDetail);
-  dom['g41-view-main'].classList.add('main-entry');
   reload();
 }
 
@@ -115,6 +126,6 @@ function applyStatus(code){
     bgImg.src=img;bgImg.style.opacity='.55';bgImg.style.filter='none';
   }
   document.getElementById('g41-app').style.opacity='1';
-  endLoading();
+  revealApp();
 }
 function reload(){try{buildTiles();}catch(e){console.error(e);}getCode(applyStatus);}
