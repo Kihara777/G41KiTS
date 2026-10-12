@@ -40,6 +40,24 @@ strengthened: the diameter and dot size now scale with `vmin` (≈99 px / 9 px o
 **visible** "読み込み中 / Loading" line sits under the ring, and the overlay carries a
 `rgba(0,0,0,.55)` scrim (otherwise the full-screen artwork swallows the ring).
 
+**Third revision (2026-10-12, same day)**: three points, two of them measurable:
+
+1. **The five dots must form one chain.** The old build had every dot run the whole keyframe track
+   (including its own pauses), so the phases only guaranteed an even distribution, never an order —
+   measured at one instant the adjacent gaps were 96°/282°/81°/147°/114°, with two dots almost
+   overlapping. Now all five share a single rotation curve (2.4 s /
+   `cubic-bezier(.5,.08,.5,.92)`) and only differ by negative delays: the order can never break, the
+   easing makes the arc breathe, and dot sizes of 100/85/70/55/42% form a comet tail. Measured
+   internal gaps 38–44°, monotonic in both samples. Dot centres compensate for their size
+   (`top = (dot − size)/2`), so unequal dots still sit on one circle.
+2. **When the ring goes away**: `main-entry` used to be added in `init()`, so the entrance animation
+   played behind `opacity:0` and the ring revealed a frozen result. It now lives in `revealApp()`:
+   the ring is dismissed first, then `requestAnimationFrame` adds the entrance class and fades in.
+   Measured order: `ring 1 → (0.28 with entry:true and tiles:12) → app 1 → ring removed`.
+3. **No background while loading**: the overlay changed from a translucent scrim to **opaque black**
+   (a WP8 boot screen is flat colour anyway); the artwork no longer competes for attention and the
+   failure text gains contrast.
+
 | State | Switched by | What shows |
 |-------|-------------|------------|
 | Booting | nothing (CSS only) | amber five-dot ring, centred in the viewport |

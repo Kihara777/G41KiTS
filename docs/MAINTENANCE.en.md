@@ -96,6 +96,23 @@
     re-renders the ConfigMaps, **nginx keeps running the old config** until the pod restarts — this time
     `Cache-Control` only went live after a manual `kubectl exec … nginx -s reload`. The claim in
     `k8s/host/g41-cert-reload.sh` that nginx hot-reloads via this sidecar is therefore false
+- **Boot ring, third revision: one chain, reveal order, no background while loading**
+  (the maintainer gave three more points the same day, with three screenshots):
+  - **One chain**: the old build had every dot run the whole keyframe track (pauses included), so the
+    phases guaranteed distribution but never order — measured at one instant the adjacent gaps were
+    **96°/282°/81°/147°/114°** (two dots almost overlapping), which makes "each doing its own thing"
+    an accurate description. Now all five share one rotation curve (2.4 s /
+    `cubic-bezier(.5,.08,.5,.92)`) and differ only by negative delays: the order can never break and
+    the easing makes the arc breathe; dot sizes of 100/85/70/55/42% form a comet tail. Measured
+    internal gaps **38–44°**, monotonic
+  - **Reveal timing**: `main-entry` used to be added in `init()`, so the entrance animation played
+    behind `opacity:0`. It moved into `revealApp()`: dismiss the ring first, then add the entrance
+    class and fade in inside `requestAnimationFrame`. Live measurement:
+    `ring 1 → (0.28 with entry:true and tiles:12) → app 1 → ring removed`
+  - **No background while loading**: the overlay went from a translucent scrim to **opaque black**
+    (a WP8 boot screen is flat colour anyway), so the artwork no longer competes for attention
+  - Criterion: local stub plus quantitative CDP sampling (angular gaps, reveal order); under
+    `--reduced`, `animationName=none` (a static ring)
 
 | Commit | Description |
 |--------|-------------|
@@ -109,6 +126,7 @@
 | `8b35b39` | feat(home): WP8 boot ring for the first-paint gap; boot failures are now visible |
 | `7d3b7b8` | fix(home): cold-load blank pages were caused by the G41.js / tiles.js load order |
 | `f2d7197` | fix(home): boot ring enlarged + visible label + scrim; `Cache-Control: no-cache` added |
+| `e243c0c` | fix(home): ring v3 — five dots form one chain, reveal timing, no background while loading |
 
 ## 2026-09-13
 
