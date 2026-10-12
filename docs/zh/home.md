@@ -24,3 +24,30 @@
 ```bash
 ./g41.sh kits add home
 ```
+
+## 首屏加载（启动环与失败态）
+
+首屏要等 `G41.js` 的六个数据请求（tiles / chars / status / 三语 i18n）全部到齐才 `init()`，
+`#g41-app` 在此之前是 `opacity:0`。这段空白期由 `#g41-loading` 的 **WP8 启动环**填充：
+纯 CSS（`base.css` 的 `.g41-ring`），JS 到达前的第一帧就能显示；
+`prefers-reduced-motion` 下退化为**静止的 5 点**。
+
+| 状态 | 谁来切 | 表现 |
+|------|--------|------|
+| 启动中 | 无需 JS | 琥珀色 5 点环（视口居中） |
+| 就绪 | `applyStatus()` 里的 `endLoading()` | 环淡出，`#g41-app` 淡入（成功页与状态码页都走到） |
+| 启动失败 | `bootFailed()` | 环换成「読み込みに失敗しました / Failed to load」+ 错误原文 |
+
+**环不能一直转**：一直转等于在说「还在读」。`bootFailed()` 存在的理由就是它。
+
+### 脚本顺序是判据，不是风格
+
+```html
+<script src="/js/tiles.js"></script>   <!-- 必须先执行：closeDetail / buildTiles 在这里 -->
+<script src="/js/G41.js"></script>     <!-- 一执行就发起数据请求，回调里要用上面那些函数 -->
+```
+
+反过来的话，冷启动（无缓存）时数据可能先回来，`init()` 抛 `ReferenceError: closeDetail is not defined`
+→ 整页停在 `opacity:0`。**2026-10-12 实测：修复前冷启动 5/5 白屏**；
+把 `tiles.js` 延迟 3 秒可在本地确定性复现。`tiles.js` 顶层只有函数声明、不依赖 `G41.js`，
+所以放在前面是安全的。

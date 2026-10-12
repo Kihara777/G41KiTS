@@ -53,6 +53,27 @@
   **my own reading**, not where the name came from. The maintainer noted `kitsunome` was chosen with
   **つめ** (claw) in mind, and 小爪 comes from there; all three i18n files and the three doc versions now
   carry both halves (キツ (fox)・の・め + my reading + the つめ inside → 小爪)
+- **Added a WP8 boot ring for the first-paint gap — and it caught the cause of cold-load blank pages**
+  (the maintainer observed "the tiles took longer to load"):
+  - Measured first: the server is not the bottleneck (API from inside the container:
+    `/data/tiles` **2.6 ms**, `/data/i18n_zh` **2.7 ms**; first-paint payload ≈ 45 KB). The cost is
+    **structural** — `init()` waits for all six requests, and `#g41-app` stays at `opacity:0` until then
+  - Added `#g41-loading` (a pure-CSS five-dot ring, visible on the first frame before any JS;
+    it degrades to a static five-dot ring under `prefers-reduced-motion`), with `endLoading()` inside
+    `applyStatus()` (shared by the normal page and the status-code pages) and `bootFailed()` replacing
+    the ring with "読み込みに失敗しました / Failed to load" plus the real error text — **a ring that
+    spins forever claims "still loading", which is worse than the blank screen it replaces**
+  - The failure state immediately caught itself: cold loads (no cache) failed **5/5** with
+    `closeDetail is not defined` and the page stuck at `opacity:0`. Root cause: `tiles.js` sat **after**
+    `G41.js`, while `G41.js` starts the data requests as soon as it runs and its `init()` callback needs
+    functions from `tiles.js` — so a faster data response throws a ReferenceError (the old build had no
+    failure state, so it looked like "blank page + one console line"; that is most likely what felt slower)
+  - Fix: move `tiles.js` before `G41.js` (it has only top-level function declarations and does not depend
+    on `G41.js`); cold loads on the live site then passed **5/5**
+  - Criterion: a local stub delaying `tiles.js` by 3 s reproduced `is-failed` + ReferenceError +
+    appOpacity 0 before the fix and, under the same conditions after it, ring removed / appOpacity 1 /
+    no error; live verification used headless chromium (CDP: read the state, then take the pixels in one
+    session) for the boot, failure and loaded states
 
 | Commit | Description |
 |--------|-------------|
@@ -63,6 +84,8 @@
 | `45b16f0` | fix(g41.sh): kits reload's k8s target was wrong — api is not a standalone Deployment |
 | `b324278` | fix(tile_kitsunome): restore the つめ (claw) in the name line — "fox's eye" is my reading, not the origin |
 | `e95ac78` | feat(tile_kitsunome): add the front-page link to the tile (each language points at its own copy) |
+| `8b35b39` | feat(home): WP8 boot ring for the first-paint gap; boot failures are now visible |
+| `7d3b7b8` | fix(home): cold-load blank pages were caused by the G41.js / tiles.js load order |
 
 ## 2026-09-13
 
