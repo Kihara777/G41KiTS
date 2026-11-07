@@ -2,6 +2,23 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-08（迁移）
+
+- **生产已切到「聚合内容种子」供给**（
+  `g41.moe`，手工定向推送，未触发 CD）
+  - 备份：`cp -a /root/G41KiTS /root/G41KiTS.bak.20261108T042001`（13G，含数据目录）
+  - **迁移前发现**：`/opt/g41/.rd/server.js` 与仓库 `kits/redis/store/server.js` **不是同一个 inode**，
+    所以改仓库文件不会改到 Pod 实际挂载的那份。两处都写了，三份 sha256 一致
+  - 顺序：应用 `g41-content` → 推两个文件 → `scale 0` → `apply deployment` → `scale 1`
+    （先缩到 0 是必要的：单副本 + hostPath 数据目录，滚动更新会让两个 Redis 同时写同一份 AOF）
+  - 实测：`seed: tiles=12 i18n=36 unknown=0`；`data:tiles` 12 条、唯一 12 个（去重生效）；
+    tile_links 6、home data 5、i18n 三语；首页 / `/data/tiles` / blc 模板页均 200
+  - 顺带记录两个既存问题（不是本次引入）：`data:tile_apps/hexo` 是已删除模块留下的键——
+    loader 不清理 Redis 里过期的键；宿主 `tile_apps` 4 个而 Redis 里 5 个即由此而来
+  - **遗留风险**：生产现在跑的两个文件（`server.js`、`deployment.yaml`）只存在于分支
+    `feat/k8s-remote-modules`，main 上还没有。在合并之前，任何对 main 的推送都会让 CD 用旧内容覆盖
+    仓库副本（`.rd/server.js` 不被 rsync 触碰，故线上不会立刻坏，但会出现仓库与部署漂移）
+
 ## 2026-11-08（续）
 
 - **内容种子改为「聚合一张 ConfigMap」，并新增 `kits content`**——实测推翻了我先前的判断

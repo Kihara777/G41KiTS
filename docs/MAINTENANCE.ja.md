@@ -2,6 +2,25 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-08（移行）
+
+- **本番を「集約コンテンツシード」供給に切り替えた**（`g41.moe`、手動の的を絞ったプッシュで、CD は未発火）
+  - バックアップ：`cp -a /root/G41KiTS /root/G41KiTS.bak.20261108T042001`（13G、データディレクトリ込み）
+  - **移行前に判明**：`/opt/g41/.rd/server.js` とリポジトリの `kits/redis/store/server.js` は
+    **同じ inode ではない**。ゆえにリポジトリ側を書き換えても Pod が実際にマウントしている中身は変わらない。
+    両方に書き、三つのコピーの sha256 が一致した
+  - 手順：`g41-content` を apply → 二ファイルを配置 → `scale 0` → `apply deployment` → `scale 1`
+    （先に 0 にするのは必須：単一レプリカ＋hostPath データディレクトリのため、ローリング更新では
+    Redis が二つ同時に同じ AOF へ書いてしまう）
+  - 実測：`seed: tiles=12 i18n=36 unknown=0`、`data:tiles` は 12 件・一意 id 12（重複除去が効いている）、
+    tile_links 6、home data 5、i18n 三言語。トップページ・`/data/tiles`・blc テンプレートページはいずれも 200
+  - 既存の問題を二つ記録（今回の変更で生じたものではない）：`data:tile_apps/hexo` は削除済みモジュールが
+    残したキーで、loader は Redis のキーを掃除しない。ホストに tile_apps が 4 なのに Redis が 5 なのはそのため
+  - **残るリスク**：本番が現在動かしている二ファイル（`server.js`、`deployment.yaml`）は
+    ブランチ `feat/k8s-remote-modules` にしか存在しない。マージまでに main へ push すると、CD が古い内容で
+    リポジトリ側を上書きする（`.rd/server.js` は rsync の対象外なので直ちに壊れはしないが、
+    リポジトリとデプロイが乖離する）
+
 ## 2026-11-08（続）
 
 - **コンテンツシードを「集約した一枚の ConfigMap」に変更し、`kits content` を追加**——

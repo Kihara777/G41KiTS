@@ -2,6 +2,27 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-08 (migration)
+
+- **Production now runs the aggregated content seed** (`g41.moe`; manual targeted push, CD was not triggered)
+  - Backup: `cp -a /root/G41KiTS /root/G41KiTS.bak.20261108T042001` (13G, data dirs included)
+  - **Found before migrating**: `/opt/g41/.rd/server.js` and the repo
+    `kits/redis/store/server.js` are **not the same inode**, so editing the repo file does not change what
+    the Pod actually mounts. Both were written; all three copies now share one sha256
+  - Order: apply `g41-content` → push the two files → `scale 0` → `apply deployment` → `scale 1`
+    (scaling to zero first is required: one replica plus a hostPath data dir means a rolling update would
+    leave two Redis instances writing the same AOF)
+  - Measured: `seed: tiles=12 i18n=36 unknown=0`; `data:tiles` holds 12 entries with 12 unique ids
+    (dedupe working); tile_links 6, home data 5, i18n in three languages; the homepage, `/data/tiles` and
+    the blc template page all return 200
+  - Two pre-existing issues recorded, not introduced here: `data:tile_apps/hexo` is a key left behind by a
+    removed module (the loader never prunes Redis keys), which is why the host has 4 tile_apps files while
+    Redis shows 5
+  - **Leftover risk**: the two files production now runs (`server.js`, `deployment.yaml`) exist only on
+    `feat/k8s-remote-modules`. Until that branch is merged, any push to main lets CD overwrite the repo copy
+    with older content (`.rd/server.js` is not touched by rsync, so the live service will not break at once,
+    but repo and deployment will drift)
+
 ## 2026-11-08 (cont.)
 
 - **The content seed is now one aggregated ConfigMap, with a new `kits content` command** — an experiment
