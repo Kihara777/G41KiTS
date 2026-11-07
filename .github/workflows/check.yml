@@ -1,0 +1,36 @@
+# 模块系统自检 — **只跑检查，不部署**
+#
+# 为什么单独一个 workflow 而不并进 deploy.yml：
+#   deploy.yml 只在 push main 时跑，并且会 rsync + apply 到生产。
+#   把检查塞进去，等于「检查只在要部署的那一刻才跑」——那时发现问题已经晚了，
+#   而且一旦检查挂在 deploy 里，人就会倾向于让它变成可跳过的步骤。
+#
+# 这个 workflow 在任何分支、任何 PR 上都跑，且**没有任何 secrets**。
+name: Check modules
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 工具版本
+        run: |
+          jq --version
+          node --version
+          ruby --version
+
+      - name: 装 kubeconform
+        run: |
+          curl -fsSL -o /tmp/kc.tar.gz \
+            https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          sudo tar -xzf /tmp/kc.tar.gz -C /usr/local/bin kubeconform
+          kubeconform -v
+
+      - name: 跑模块自检
+        run: bash develop/check-modules.sh
