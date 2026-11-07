@@ -13,5 +13,6 @@
     "method": "mkdir"
   },
   "local": [{"file": "rpc.daemon", "to": "rpc.daemon"}],
-  "persist": ".ad"
+  "persist": ".ad",
+  "version": "1.0.0"
 }

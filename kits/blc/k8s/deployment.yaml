@@ -26,6 +26,10 @@ spec:
             - { name: config, mountPath: /mnt/data/data/config.ini }
             - { name: db, mountPath: /mnt/data/data/database.db }
             - { name: templates, mountPath: /mnt/data/data/custom_public/templates }
+            # 模板内容改由 ConfigMap 供给（2026-11-07）。挂在 hostPath 目录的**子路径**上，
+            # 这样宿主目录里其它模板照常可见，只有这一个由 k8s 管。
+            # optional: true —— ConfigMap 不存在时 Pod 照常起来，页面少一个而不是整站挂掉。
+            - { name: tmpl-blct-tts, mountPath: /mnt/data/data/custom_public/templates/blct_tts }
           resources:
             limits: { memory: 192Mi, cpu: "1" }
             requests: { memory: 32Mi, cpu: 50m }
@@ -43,3 +47,7 @@ spec:
           hostPath: { path: /opt/g41/.lc/database.db, type: FileOrCreate }
         - name: templates
           hostPath: { path: /opt/g41/.lc/custom_public/templates, type: DirectoryOrCreate }
+        - name: tmpl-blct-tts
+          configMap:
+            name: blc-template-blct-tts
+            optional: true

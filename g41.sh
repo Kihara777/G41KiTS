@@ -182,6 +182,9 @@ kits_help() {
   echo "  kits del <mod>    Uninstall module (-y skip, -C core, 'all' cascading)"
   echo "  kits reload       Hot-reload tile/i18n/link data into Redis (zero downtime)"
   echo "  kits pack [-L] [-S] [-A] [-D]  Build archive (-L .local, -S store, -A agents, -D docs)"
+  echo "  kits export <mod> [-o <path>]  Bundle a module's k8s manifests into one file (可远程分发)"
+  echo "  kits remote <url> [--apply] [-n <ns>] [--sha256 <hex>]"
+  echo "                   从远程地址安装模块：先取、算哈希、显示来源，--apply 才落集群"
   echo "  kits simulate       Trace mode (--dry-run)"
   echo "  backend [get|compose|k8s]  Select deployment backend"
   echo "  k8s [apply|build|status]   k8s backend operations (apply --all = bootstrap all kits)"
@@ -1322,6 +1325,228 @@ kits_reload() {
   echo "Reload complete. Tiles, i18n, and links refreshed."
 }
 
+# ==== 模块版本与远程分发（2026-11-07 加）====
+#
+# 为什么需要这两样东西一起加：
+#   「远程安装」若没有版本，装出来是什么就取决于拿到的那一刻，事后无从对账；
+#   「版本」若没有分发，只在本仓内部生效，外人还是用不上。
+#   所以 kit_version 定身份，kits_export 产可远程取的对象，kits_remote 消费它。
+#
+# 三条不许省的语义：
+#   1. 装到哪由清单自己说（namespace 在清单里），不由 URL 决定；
+#   2. 取值失败 = 显式失败（退出 2「没能验到」），不许当成「装好了」；
+#   3. 哈希默认只做事后对账，除非调用方给了 --sha256（那才是事前校验）。
+
+kit_version() {
+  local m="$1" v=""
+  # set -e 在场：模块不存在时 jq 会非零退出并直接杀脚本，所以用 || true 接住，
+  # 让它退回 "local" 而不是「什么都没输出就死了」。
+  v=$(jq -r '.version // ""' "kits/$m/info.json" 2>/dev/null || true)
+  [ -n "$v" ] && [ "$v" != "null" ] && { echo "$v"; return 0; }
+  echo "local"
+}
+
+kits_export() {
+  local m="" out=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -o|--out) out="$2"; shift;;
+      -*) echo "ERROR: unknown flag $1"; return 1;;
+      *) m="$1";;
+    esac
+    shift
+  done
+  [ -n "$m" ] || { echo "ERROR: module name required"; return 1; }
+  [ -f "kits/$m/info.json" ] || { echo "ERROR: 模块 '$m' 不存在"; return 1; }
+
+  local ver; ver=$(kit_version "$m")
+  local inj_from inj_cm inj_ns
+  inj_from=$(jq -r '.inject.from // ""' "kits/$m/info.json" 2>/dev/null || true)
+  inj_cm=$(jq -r '.inject.configmap // ""' "kits/$m/info.json" 2>/dev/null || true)
+  inj_ns=$(jq -r '.inject.namespace // "g41"' "kits/$m/info.json" 2>/dev/null || true)
+  [ "$inj_from" = "null" ] && inj_from=""
+  [ -d "kits/$m/$inj_from" ] || inj_from=""
+
+  if [ ! -d "kits/$m/k8s" ] && [ -z "$inj_from" ]; then
+    echo "ERROR: kits/$m 既没有 k8s/ 清单，也没有可注入的内容 —— 没有可导出的东西"
+    return 1
+  fi
+
+  [ -n "$out" ] || out="dist/$m-$ver.yaml"
+  mkdir -p "$(dirname "$out")" 2>/dev/null
+
+  local f count=0 objs=0
+  {
+    echo "# G41KiTS module bundle — $m @ $ver"
+    echo "# repo: https://github.com/Kihara777/G41KiTS"
+    echo "# generated: $(date -Is)"
+    echo "# 用法: kubectl apply -f <这份文件>；卸载: kubectl delete -f <同一份文件>"
+    for f in "kits/$m/k8s"/*.yaml; do
+      [ -f "$f" ] || continue
+      count=$((count+1))
+      echo "---"
+      cat "$f"
+      echo
+    done
+
+    # 内容注入类：把模块内容打成 ConfigMap。
+    # 为什么不用 Secret：这些是可公开分发的静态资源，不是凭据。
+    if [ -n "$inj_from" ]; then
+      local total=0 sz
+      for f in "kits/$m/$inj_from"/*; do
+        [ -f "$f" ] || continue
+        sz=$(wc -c < "$f" | tr -d ' ')
+        total=$((total + sz))
+      done
+      # ConfigMap 上限 1MiB（etcd 限制，超出会在 apply 时才报，且报错很难读）
+      if [ "$total" -gt 900000 ]; then
+        echo "# ERROR: 内容共 $total 字节，超过 ConfigMap 安全上限 900000 —— 该走镜像而不是 ConfigMap" >&2
+        return 1
+      fi
+      echo "---"
+      echo "apiVersion: v1"
+      echo "kind: ConfigMap"
+      echo "metadata:"
+      echo "  name: $inj_cm"
+      echo "  namespace: $inj_ns"
+      echo "  labels:"
+      echo "    app.kubernetes.io/part-of: g41"
+      echo "    g41.module: $m"
+      echo "    g41.version: \"$ver\""
+      echo "data:"
+      for f in "kits/$m/$inj_from"/*; do
+        [ -f "$f" ] || continue
+        # 块标量指示符必须跟着原文件的末尾换行走，否则还原会多/少一个换行：
+        #   无末尾换行 -> |-（strip）  恰好一个 -> |（clip）  两个以上 -> |+（keep）
+        # 这不是洁癖：多一个换行会让「逐字节还原」这条判据变成假的。
+        local ind="|" lastbyte="" last2=""
+        lastbyte=$(tail -c 1 "$f" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+        if [ "$lastbyte" != "0a" ]; then
+          ind="|-"
+        else
+          last2=$(tail -c 2 "$f" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+          [ "${last2}" = "0a0a" ] && ind="|+"
+        fi
+        echo "  $(basename "$f"): $ind"
+        sed 's/^/    /' "$f"
+        # |- 时 sed 输出没有末尾换行，补一个让下一行从行首开始；
+        # 该换行会被 strip 掉，不进入内容。| 与 |+ 自带换行，不再补。
+        [ "$ind" = "|-" ] && echo
+      done
+      count=$((count+1))
+    fi
+  } > "$out"
+
+  [ "$count" -gt 0 ] || { echo "ERROR: 没有产出任何对象"; rm -f "$out"; return 1; }
+  objs=$(grep -cE '^kind:' "$out" || true)
+  echo "导出: $out（$m @ $ver，$count 份来源，$objs 个对象${inj_from:+，含内容注入 $inj_from}）"
+}
+
+kits_remote() {
+  local url="" apply="" ns="" expect=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --apply) apply="1";;
+      -n|--namespace) ns="$2"; shift;;
+      --sha256) expect="$2"; shift;;
+      -h|--help)
+        echo "Usage: $0 kits remote <url> [--apply] [-n <namespace>] [--sha256 <hex>]"
+        echo "  不加 --apply 只取下来算哈希并做静态语法检查，不连集群。"
+        echo "  --sha256 给了期望值才做事前校验；不给则哈希仅供事后对账。"
+        return 0;;
+      -*) echo "ERROR: unknown flag $1"; return 1;;
+      *) url="$1";;
+    esac
+    shift
+  done
+  [ -n "$url" ] || { echo "ERROR: url required"; return 1; }
+  command -v curl >/dev/null 2>&1 || { echo "ERROR: curl 未找到 —— 没能验到"; return 2; }
+
+  # 临时文件名必须带 .yaml 后缀：kubeconform 会静默跳过无扩展名的文件，
+  # 并打印 "0 resource found in 0 file"、退出码仍是 0 —— 看起来像通过。
+  local tmp; tmp=$(mktemp "${TMPDIR:-/tmp}/g41-remote-XXXXXX.yaml" 2>/dev/null) \
+    || tmp=$(mktemp) || { echo "ERROR: mktemp 失败"; return 2; }
+
+  if ! curl -fsSL --max-time 30 "$url" -o "$tmp"; then
+    echo "ERROR: 取不到 $url（网络不可达或 404）——**没能验到**，不是通过"
+    rm -f "$tmp"; return 2
+  fi
+
+  local sha bytes docs
+  sha=$(sha256sum "$tmp" | awk '{print $1}')
+  bytes=$(wc -c < "$tmp" | tr -d ' ')
+  docs=$(grep -cE '^kind:' "$tmp" 2>/dev/null || true)
+  [ -n "$docs" ] || docs=0
+
+  echo "来源   : $url"
+  echo "sha256 : $sha"
+  echo "大小   : $bytes 字节"
+  echo "对象数 : $docs"
+
+  # 0 个对象不是「空清单」，是「这不是清单」——拒绝，且不许静默通过。
+  if [ "$docs" -eq 0 ]; then
+    echo "ERROR: 内容里没有任何 k8s 对象（0 个 kind:），拒绝安装"
+    rm -f "$tmp"; return 1
+  fi
+
+  if [ -n "$expect" ]; then
+    if [ "$expect" != "$sha" ]; then
+      echo "ERROR: sha256 不匹配"
+      echo "  期望: $expect"
+      echo "  实际: $sha"
+      echo "  文件未被应用。"
+      rm -f "$tmp"; return 1
+    fi
+    echo "校验   : sha256 与期望一致"
+  else
+    echo "注意   : 未给 --sha256，上面的哈希只能**事后对账**，不是事前校验"
+  fi
+
+  if [ -z "$apply" ]; then
+    # 静态检查：kubeconform 若能取到就做 schema 校验；取不到就明说没验。
+    # 注意：不许写成 `if kubeconform … | tail -5; then` —— 那样判的是 tail 的
+    # 退出码（恒 0），等于永远「通过」。必须先收集输出再判状态。
+    if command -v kubeconform >/dev/null 2>&1; then
+      # set -e 在场：`kc_out=$(cmd)` 失败会当场退出脚本、连理由都不打印。
+      # 用 `|| kc_rc=$?` 接住，才能既拿到状态码又打印诊断。
+      local kc_out="" kc_rc=0
+      kc_out=$(kubeconform -strict -summary "$tmp" 2>&1) || kc_rc=$?
+      echo "$kc_out" | tail -5
+      if [ "$kc_rc" -ne 0 ]; then
+        echo "静态校验: kubeconform 失败（退出码 $kc_rc）"
+        rm -f "$tmp"; return 1
+      fi
+      # 校验了 0 个对象也算失败：说明这份文件根本没被读到，不是「全绿」。
+      case "$kc_out" in
+        *"Valid: 0, Invalid: 0"*)
+          echo "静态校验: 0 个对象被校验 —— 没能验到，不算通过"
+          rm -f "$tmp"; return 2;;
+      esac
+      echo "静态校验: kubeconform 通过（schema 层，不含集群实际状态）"
+    else
+      echo "静态校验: 未执行（没有 kubeconform）——**没能验到**"
+    fi
+    echo "未加 --apply：清单已取到并核对，**没有**发送到集群。"
+    rm -f "$tmp"; return 0
+  fi
+
+  local kubectl="kubectl"
+  if ! command -v kubectl >/dev/null 2>&1; then
+    command -v k3s >/dev/null 2>&1 || { echo "ERROR: 找不到 kubectl 或 k3s —— 没能验到"; rm -f "$tmp"; return 2; }
+    kubectl="k3s kubectl"
+  fi
+
+  local nsf=(); [ -n "$ns" ] && nsf=(-n "$ns")
+
+  echo "--- 应用到集群${ns:+（namespace=$ns）} ---"
+  if $kubectl apply --validate=false "${nsf[@]}" -f "$tmp" 2>&1; then
+    echo "已应用。卸载：kubectl delete ${nsf[*]} -f <同一份清单>"
+    rm -f "$tmp"; return 0
+  fi
+  echo "ERROR: apply 失败（清单见 $tmp，保留以便排查）"
+  return 1
+}
+
 main() {
   case "${1:-}" in
     init)
@@ -1336,6 +1561,8 @@ main() {
         del) shift 2; kits_del "$@";;
 
         pack) shift 2; kits_pack "$@";;
+        export) shift 2; kits_export "$@";;
+        remote) shift 2; kits_remote "$@";;
         reload) kits_reload;;
         simulate) echo "Use: ./g41.sh kits add <name> --dry-run";;
         "") kits_list;;

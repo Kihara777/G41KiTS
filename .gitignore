@@ -7,3 +7,7 @@
 # Python 构建产物（k8s/host/g41-notify.py 编译缓存）
 __pycache__/
 *.pyc
+
+# 模块导出包（kits export 的产物）——生成物不入库：
+# 入库就变成「同一份内容两个产地」，改了一处另一处不会跟着变。
+dist/

@@ -69,7 +69,12 @@ for m in $mods; do
     log "SKIP  $m — 无 Dockerfile"
     continue
   fi
-  tag="g41k8s/$m:local"
+  # 版本化 tag（2026-11-07）：info.json 的 version 有值就用它，没有就退回 local。
+  # 同时保留 :local 别名 —— 现有清单全部引用 :local，删掉别名会让 apply 拉不到镜像，
+  # 而 kubelet 只会报 ImagePullBackOff，看不出是「tag 换了名字」。
+  ver=$(jq -r '.version // ""' "$REPO/kits/$m/info.json" 2>/dev/null)
+  [ -n "$ver" ] && [ "$ver" != "null" ] || ver=local
+  tag="g41k8s/$m:$ver"
 
   # 构建上下文取决于 Dockerfile 的 COPY/ADD 路径风格：
   #   形如 kits/<m>/xxx -> 上下文为仓库根（如 redis）
@@ -87,6 +92,15 @@ for m in $mods; do
         build --buildkit-host "$BUILDKIT_SOCK" \
         -f "$dfrel" -t "$tag" . ) >/tmp/g41-build-$m.log 2>&1; then
     d=$(k3s ctr -n "$NS" images ls 2>/dev/null | grep -F "$tag" | awk '{print $3}' | head -1)
+    # :local 别名 —— 现有清单引用它；版本化 tag 与别名指向同一个 digest。
+    if [ "$ver" != "local" ]; then
+      if nerdctl --address "$CONTAINERD_SOCK" --namespace "$NS" \
+           tag "$tag" "g41k8s/$m:local" >/dev/null 2>&1; then
+        log "TAG   $m -> g41k8s/$m:local（兼容别名）"
+      else
+        log "WARN  $m -> :local 别名打不上；引用 :local 的清单会拉不到镜像"
+      fi
+    fi
     log "OK    $m -> ${d:-?}"
     built="$built $m"
   else
