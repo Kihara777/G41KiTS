@@ -1,6 +1,20 @@
 # Maintenance Log
 
-[中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
+[中文](../MAINTENANCE.md) ## 2026-11-07 (night, verification)
+
+- **A real deployment verification ran on the VPS**, using only the throwaway namespace `g41-verify`; production
+  `g41` was untouched (images still `:local`, restart counts on all 7 Pods unchanged)
+  - Built the image under a version tag, `g41k8s/aria2:1.0.0` (nerdctl + BuildKit, 11.8 s)
+  - Actually ran that image in `g41-verify`: `aria2c 1.37.0`, `/webroot/aria2.html` 2,273,965 bytes, Pod Running
+  - Both exported bundles passed a server dry-run: the `aria2` bundle → Deployment `download` configured plus
+    two Services unchanged; the `blct_tts` bundle → ConfigMap created
+  - Mounted the `blct_tts` ConfigMap into a Pod: all three files match the repository originals **byte for byte**;
+    the mounted directory **really does contain** `..2026_11_07_13_11_25.…` and `..data` — so the `..` filter in
+    `server.js` is required by observation, not defensive guessing
+  - Cleanup: `g41-verify` deleted, nothing left behind. The local mihomo was stopped then restarted per the
+    maintainer and is active again
+
+## 2026-11-07 (evening)| English | [日本語](MAINTENANCE.ja.md) 
 
 ## 2026-11-07 (evening)
 

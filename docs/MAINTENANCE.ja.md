@@ -1,6 +1,19 @@
 # メンテナンス記録
 
-[中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
+[中文](../MAINTENANCE.md) ## 2026-11-07（夜・検証）
+
+- **VPS 上で実デプロイ検証を一度実施**。終始とき限りの名前空間 `g41-verify` のみを使い、
+  本番 `g41` は無傷（検証後もイメージは `:local` のまま、7 つの Pod の再起動回数は不変）
+  - バージョンタグでイメージをビルド：`g41k8s/aria2:1.0.0`（nerdctl + BuildKit、11.8 秒）
+  - `g41-verify` で実際に起動：`aria2c 1.37.0`、`/webroot/aria2.html` 2,273,965 バイト、Pod Running
+  - 二つの書き出しバンドルはサーバ側 dry-run を通過：`aria2` は Deployment `download` configured と
+    Service 二つ unchanged、`blct_tts` は ConfigMap created
+  - `blct_tts` の ConfigMap を実際に Pod へマウント：三つのファイルの sha256 がリポジトリ原本と
+    **バイト単位で一致**。マウント先には `..2026_11_07_13_11_25.…` と `..data` が**実在**した——
+    `server.js` の `..` フィルタは推測ではなく観測に基づく要件である
+  - 後始末：`g41-verify` を削除、残留なし。本機の mihomo は保守者の指示どおり停止後に再起動し active
+
+## 2026-11-07（夜）| [English](MAINTENANCE.en.md) | 日本語 
 
 ## 2026-11-07（夜）
 

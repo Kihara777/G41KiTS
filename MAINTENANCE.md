@@ -1,6 +1,19 @@
 # 维护记录
 
-中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
+中文 ## 2026-11-07（夜·验证）
+
+- **上 VPS 做了一次真实部署验证**，全程只用临时命名空间 `g41-verify`，生产 `g41` 未受影响
+  （验证后镜像仍为 `:local`、7 个 Pod 的重启计数不变）
+  - 用版本 tag 构建镜像 `g41k8s/aria2:1.0.0`（nerdctl + BuildKit，11.8 秒）
+  - 在 `g41-verify` 里真跑该镜像：`aria2c 1.37.0`、`/webroot/aria2.html` 2,273,965 字节、Pod Running
+  - 两个导出包过服务端 dry-run：`aria2` 包 → Deployment `download` configured + 两个 Service unchanged；
+    `blct_tts` 包 → ConfigMap created
+  - 把 `blct_tts` 的 ConfigMap 真挂进 Pod：三个文件 sha256 与仓库原件**逐字节相同**；
+    目录里**确实出现** `..2026_11_07_13_11_25.…` 与 `..data` —— 实测证实 `server.js` 的 `..` 过滤是必需的，
+    不是防御性猜测
+  - 清理：`g41-verify` 已删除，无残留。本机 mihomo 按维护者要求先停后启，现为 active
+
+## 2026-11-07（晚）| [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
 ## 2026-11-07（晚）
 
