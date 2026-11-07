@@ -79,6 +79,10 @@ spec:
           volumeMounts:
             - { name: server-js, mountPath: /app/server.js, readOnly: true }
             - { name: conf-data, mountPath: /conf-data, readOnly: true }
+            # 内容种子（2026-11-08）：tile/i18n 类模块的内容由 ConfigMap 供给，
+            # 启动/重载时被还原成目录布局再读进 Redis。optional: true ——
+            # ConfigMap 不存在时是「少几个磁贴」，不是「API 起不来」。
+            - { name: seed, mountPath: /seed, readOnly: true }
           resources:
             limits: { memory: 256Mi, cpu: "1" }
             requests: { memory: 32Mi, cpu: 50m }
@@ -96,3 +100,5 @@ spec:
           hostPath: { path: /opt/g41/.rd/server.js, type: FileOrCreate }
         - name: conf-data
           hostPath: { path: /opt/g41/.rd/data, type: DirectoryOrCreate }
+        - name: seed
+          configMap: { name: g41-content, optional: true }

@@ -1393,7 +1393,12 @@ kits_export() {
   [ "$inj_from" = "null" ] && inj_from=""
   [ -d "kits/$m/$inj_from" ] || inj_from=""
 
-  if [ ! -d "kits/$m/k8s" ] && [ -z "$inj_from" ]; then
+  local has_seed=""
+  # 末尾必须 || true：三者都为假时这个复合命令返回 1，set -e 会当场杀脚本，
+  # 而它本该走到下面那句人话报错。
+  { [ -f "kits/$m/tile.json" ] || [ -f "kits/$m/link.json" ] || [ -d "kits/$m/i18n" ]; } && has_seed=1 || true
+
+  if [ ! -d "kits/$m/k8s" ] && [ -z "$inj_from" ] && [ -z "$has_seed" ]; then
     echo "ERROR: kits/$m 既没有 k8s/ 清单，也没有可注入的内容 —— 没有可导出的东西"
     return 1
   fi
@@ -1480,6 +1485,64 @@ kits_export() {
         # |- 时 sed 输出没有末尾换行，补一个让下一行从行首开始；
         # 该换行会被 strip 掉，不进入内容。| 与 |+ 自带换行，不再补。
         [ "$ind" = "|-" ] && echo
+      done
+      count=$((count+1))
+    fi
+
+    # 内容种子（2026-11-08）：tile / link / i18n 这类模块的内容最终是喂给 Redis 的数据。
+    # 它们不打成「一个模块一个 ConfigMap」——那要在核心 Pod 上加 N 个挂载。
+    # 统一进一张 g41-content，键名扁平（tile.<模块>.json / i18n.<模块>.<语言>.json），
+    # 由 server.js 启动时还原成目录布局。`kubectl apply` 对 ConfigMap 的 data 是按键合并的，
+    # 所以每个模块的包只带自己的键，装多个模块会自然累积。
+    local has_content=""
+    [ -f "kits/$m/tile.json" ] && has_content=1
+    [ -f "kits/$m/link.json" ] && has_content=1
+    [ -d "kits/$m/i18n" ] && has_content=1
+    if [ -n "$has_content" ]; then
+      local ctotal=0 csz cf
+      for cf in "kits/$m/tile.json" "kits/$m/link.json" "kits/$m/i18n"/*.json; do
+        [ -f "$cf" ] || continue
+        csz=$(wc -c < "$cf" | tr -d ' ')
+        ctotal=$((ctotal + csz))
+      done
+      if [ "$ctotal" -gt 900000 ]; then
+        echo "# ERROR: 内容种子共 $ctotal 字节，超过 ConfigMap 安全上限 900000" >&2
+        rm -f "$tmpout"; return 1
+      fi
+      echo "---"
+      echo "apiVersion: v1"
+      echo "kind: ConfigMap"
+      echo "metadata:"
+      echo "  name: g41-content"
+      echo "  namespace: g41"
+      echo "  labels:"
+      echo "    app.kubernetes.io/part-of: g41"
+      echo "    g41.content: \"seed\""
+      echo "    g41.module: $m"
+      echo "data:"
+      # 与上面同一套块标量规则；抽成函数，免得两处规则漂移。
+      cm_emit() {
+        local key="$1" src="$2" ind="|" lb="" l2=""
+        lb=$(tail -c 1 "$src" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+        if [ "$lb" != "0a" ]; then
+          ind="|-"
+        else
+          l2=$(tail -c 2 "$src" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+          [ "${l2}" = "0a0a" ] && ind="|+"
+        fi
+        echo "  ${key}: $ind"
+        sed 's/^/    /' "$src"
+        [ "$ind" = "|-" ] && echo
+        # 必须显式 return 0：最后那条 test 为假时函数会返回 1，
+        # 而调用方式是 `[ -f X ] && cm_emit …`——它们失败的正是 && 后面的那条命令，
+        # set -e 会当场退出，且一字不打印。
+        return 0
+      }
+      [ -f "kits/$m/tile.json" ] && cm_emit "tile.$m.json" "kits/$m/tile.json"
+      [ -f "kits/$m/link.json" ] && cm_emit "link.$m.json" "kits/$m/link.json"
+      for cf in "kits/$m/i18n"/*.json; do
+        [ -f "$cf" ] || continue
+        cm_emit "i18n.$m.$(basename "${cf%.json}").json" "$cf"
       done
       count=$((count+1))
     fi

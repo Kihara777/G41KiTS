@@ -101,7 +101,14 @@ exported=0
 bad_export=""
 for d in kits/*/; do
   m=$(basename "$d")
-  [ -d "$d/k8s" ] || [ -n "$(jq -r '.inject.from // ""' "$d/info.json" 2>/dev/null | grep -v null)" ] || continue
+  # 三类都要覆盖：有 k8s 清单的、声明了 inject 的、以及带内容种子（tile/link/i18n）的。
+  # 漏掉第三类时，`tile_*` 这些模块**一个包都不会生成**，而检查照样全绿——
+  # 2026-11-08 变异测试正是这样发现漏洞的。
+  if [ -d "$d/k8s" ] \
+     || [ -n "$(jq -r '.inject.from // ""' "$d/info.json" 2>/dev/null | grep -v null)" ] \
+     || [ -f "$d/tile.json" ] || [ -f "$d/link.json" ] || [ -d "$d/i18n" ]; then :; else
+    continue
+  fi
   if "$ROOT/g41.sh" kits export "$m" >/tmp/cm-export.log 2>&1; then
     exported=$((exported+1))
   else
@@ -136,6 +143,24 @@ if [ "$exported" -gt 0 ]; then
         docs = YAML.load_stream(File.read(ARGV[0])).compact
         cm = docs.find { |d| d["kind"] == "ConfigMap" }
         exit 0 if cm.nil?
+
+        # 两种 ConfigMap：
+        #   g41.content=seed → 键名映射到 tile/link/i18n 源文件
+        #   其余（blc 模板一类）→ g41.module 指向的 blc_template 目录
+        if cm.dig("metadata", "labels", "g41.content") == "seed"
+          bad = cm["data"].any? do |k, c|
+            src =
+              case k
+              when /^tile\.(.+)\.json$/        then "kits/#{$1}/tile.json"
+              when /^link\.(.+)\.json$/        then "kits/#{$1}/link.json"
+              when /^i18n\.(.+)\.([a-z]{2,3})\.json$/ then "kits/#{$1}/i18n/#{$2}.json"
+              else nil
+              end
+            src.nil? || !File.exist?(src) || File.binread(src) != c.b
+          end
+          exit(bad ? 1 : 0)
+        end
+
         mod = cm.dig("metadata", "labels", "g41.module")
         exit 0 if mod.nil?
         src = "kits/#{mod}/blc_template"

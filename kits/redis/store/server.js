@@ -66,6 +66,29 @@ if(process.env.G41_FS_SELFTEST){
     // 于是磁贴的多语言标签静默丢失。这一条必须为真，否则反证本身不成立。
     var oldWay=path.join(path.dirname(fs.realpathSync(path.join(tiles,'tile_friends.json'))),'i18n');
     ok('旧 realpath 路径确实找不到 i18n（反证）', !fs.existsSync(oldWay));
+
+    // --- 内容种子 ---
+    var k1=parseSeedKey('tile.foo.json');
+    ok('种子键 tile.foo.json', k1 && k1.kind==='tile' && k1.mod==='foo');
+    var k2=parseSeedKey('i18n.foo.zh.json');
+    ok('种子键 i18n.foo.zh.json', k2 && k2.kind==='i18n' && k2.mod==='foo' && k2.lang==='zh');
+    ok('种子键拒绝 index.html', parseSeedKey('index.html')===null);
+    ok('种子键拒绝带点的模块名', parseSeedKey('tile.a.b.json')===null);
+
+    var seedDir=path.join(tmp,'seed');fs.mkdirSync(seedDir);
+    fs.writeFileSync(path.join(seedDir,'tile.foo.json'),'{"id":"foo"}');
+    fs.writeFileSync(path.join(seedDir,'i18n.foo.zh.json'),'{"t":"名称"}');
+    fs.writeFileSync(path.join(seedDir,'notes.txt'),'x');
+    try{fs.symlinkSync(path.basename(payload),path.join(seedDir,'..data'));}catch(e){}
+    var out=path.join(tmp,'seedout');
+    var seed=materializeSeed(seedDir,out);
+    ok('种子还原 tile → tiles/foo.json', fs.existsSync(path.join(out,'tiles','foo.json')));
+    ok('种子还原 i18n → i18n/foo/zh.json', fs.existsSync(path.join(out,'i18n','foo','zh.json')));
+    ok('种子统计正确（tile 1 / i18n 1 / unknown 0）', seed.tiles===1 && seed.i18n===1 && seed.unknown===0);
+    ok('非 .json 的键被忽略而不是报 unknown', fs.existsSync(path.join(out,'tiles','notes.txt'))===false);
+    // 反证：若 readDir 不过滤 `..`，`..data` 会变成无法识别的键，unknown 不为 0。
+    ok('种子还原的内容与源一致',
+       fs.readFileSync(path.join(out,'tiles','foo.json'),'utf8')===fs.readFileSync(path.join(seedDir,'tile.foo.json'),'utf8'));
   }catch(e){
     console.log('✘ 自检自身出错: '+e.message);fails++;
   }finally{
@@ -102,6 +125,52 @@ function mergeDir(confDir,dirName){
 }
 
 // ==== Data loader (re-entrant: callable at startup or on /admin/reload) ====
+// --- 内容种子（2026-11-08）---
+//
+// tile/i18n 这类模块的内容，最终是喂给 Redis 的**数据**，不是容器要读的配置文件。
+// 所以它们不适合像 blc 模板那样直接挂进工作目录，也不适合「一个模块一个挂载」——
+// 那要改核心 Pod 的清单，等于模板仓库挂了 API 就起不来。
+//
+// 折中：一个 ConfigMap（g41-content）挂到 /seed，键名是扁平的
+//   tile.<模块>.json      → tiles/<模块>.json
+//   i18n.<模块>.<语言>.json → i18n/<模块>/<语言>.json
+// 启动/重载时**还原成现有目录布局**，然后让 loader 多读一个根目录。
+// 好处是解析逻辑一行不改——键怎么映射是唯一的新知识，也正好是可以被自检覆盖的那部分。
+function parseSeedKey(name){
+  var m;
+  if((m=String(name).match(/^tile\.([A-Za-z0-9_-]+)\.json$/))) return {kind:'tile',mod:m[1]};
+  if((m=String(name).match(/^i18n\.([A-Za-z0-9_-]+)\.([a-z]{2,3})\.json$/))) return {kind:'i18n',mod:m[1],lang:m[2]};
+  return null;
+}
+
+function materializeSeed(seedDir,outDir){
+  var res={tiles:0,i18n:0,unknown:0,dir:null};
+  try{ if(!fs.existsSync(seedDir))return res; }catch(e){ return res; }
+  var names=readDir(seedDir).filter(function(f){return /\.json$/.test(f);});
+  if(names.length===0)return res;
+
+  try{fs.rmSync(outDir,{recursive:true,force:true});}catch(e){}
+  fs.mkdirSync(path.join(outDir,'tiles'),{recursive:true});
+  fs.mkdirSync(path.join(outDir,'i18n'),{recursive:true});
+
+  names.forEach(function(f){
+    var p=parseSeedKey(f);
+    if(!p){res.unknown++;console.error('seed: 无法识别的键 '+f);return;}
+    try{
+      var src=path.join(seedDir,f);
+      if(p.kind==='tile'){
+        fs.copyFileSync(src,path.join(outDir,'tiles',p.mod+'.json'));res.tiles++;
+      }else{
+        var d=path.join(outDir,'i18n',p.mod);
+        fs.mkdirSync(d,{recursive:true});
+        fs.copyFileSync(src,path.join(d,p.lang+'.json'));res.i18n++;
+      }
+    }catch(e){res.unknown++;console.error('seed: 写入失败 '+f+' '+e.message);}
+  });
+  res.dir=outDir;
+  return res;
+}
+
 function loadData(callback) {
   redisGet('data:loading',function(loading){
     if(loading){console.log('Reload blocked: already in progress');callback(new Error('already loading'));return;}
@@ -110,19 +179,29 @@ function loadData(callback) {
 
     var confDir='/conf-data',perLang={},pending=0,tileList=[];
 
+    // 内容种子里记的模块/语言，若键名不合规会在 materializeSeed 里被拒并计入 unknown。
+    // 这里把统计打出来：静默跳过 = 页面上少东西而没人知道。
+    var seed=materializeSeed('/seed','/tmp/g41-seed');
+    if(seed.dir){
+      console.log('seed: tiles='+seed.tiles+' i18n='+seed.i18n+' unknown='+seed.unknown);
+    }
+    var roots=seed.dir?[confDir,seed.dir]:[confDir];
+
     function done(){if(--pending<=0)finish();}
 
-    /* Load tiles */
-    var tileDir=path.join(confDir,'tiles');
-    if(fs.existsSync(tileDir)){
+    /* Load tiles（两个根目录：宿主直供 + 内容种子还原出来的那份） */
+    var tileSeen=0;
+    roots.forEach(function(root){
+      var tileDir=path.join(root,'tiles');
+      if(!fs.existsSync(tileDir))return;
       readDir(tileDir).forEach(function(f){
         if(!f.endsWith('.json'))return;
-        pending++;
+        pending++;tileSeen++;
         var td=JSON.parse(fs.readFileSync(path.join(tileDir,f),'utf8'));
         try{
           // 模块名取自文件名，不再用 realpath 反查源目录（理由见文件顶部的注释）。
           var modName=tileModuleName(f);
-          var modI18n=resolveTileI18nDir(confDir,f);
+          var modI18n=resolveTileI18nDir(root,f);
           if(fs.existsSync(modI18n)){
             readDir(modI18n).forEach(function(lf){
               var m=lf.match(/^(\w+)\.json$/);if(!m)return;
@@ -132,8 +211,8 @@ function loadData(callback) {
           }
         }catch(e){console.error('tile i18n:',f,e.message);}
         if(td.type==='list'){
-          var dd=path.join(confDir,td.id);
-          if(fs.existsSync(dd))td.items=mergeDir(confDir,td.id).map(function(it){
+          var dd=path.join(root,td.id);
+          if(fs.existsSync(dd))td.items=mergeDir(root,td.id).map(function(it){
             return{label:it.short||it.label,desc:it.desc,href:it.target||it.href,icon:it.icon};
           });
         }
@@ -141,12 +220,13 @@ function loadData(callback) {
         var id=f.replace('.json','');
         redisSet('data:tiles/'+id,JSON.stringify(td),function(){console.log('data:tiles/'+id);done();});
       });
-      if(tileList.length===0)finish();
-    } else { finish(); }
+    });
+    if(tileSeen===0)finish();
 
-    /* Load global i18n */
-    var i18nDir=path.join(confDir,'i18n');
-    if(fs.existsSync(i18nDir)){
+    /* Load global i18n（同样两个根目录） */
+    roots.forEach(function(root){
+      var i18nDir=path.join(root,'i18n');
+      if(!fs.existsSync(i18nDir))return;
       try{
         var mods=readDir(i18nDir).filter(function(d){return fs.statSync(path.join(i18nDir,d)).isDirectory();});
         mods.forEach(function(mod){
@@ -158,7 +238,7 @@ function loadData(callback) {
           });
         });
       }catch(e){}
-    }
+    });
 
     /* Load top-level JSON files */
     var topFiles=readDir(confDir).filter(function(f){return f.endsWith('.json');});
