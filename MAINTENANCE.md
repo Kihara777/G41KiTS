@@ -2,6 +2,31 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-07
+
+- **模块系统新增「远程安装」与「版本化镜像」，并把 `blct_tts` 的内容从宿主机硬链接改到 ConfigMap**
+  （维护者要求：让不使用本仓部署流程的人也能单独用上模板；模块的装/更新/管理尽量交给 k8s 原生机制）
+  - `info.json` 新增可选 `version`；`kits` 命令新增 `export`（把模块打成可远程分发的清单）与
+    `remote`（从任意 URL 取清单、打印来源与 sha256、`--apply` 才落集群）
+  - 镜像 tag 由恒定的 `:local` 改为 `g41k8s/<mod>:<version>`，**并保留 `:local` 别名**——
+    现有清单全部引用 `:local`，删别名会让 kubelet 只报 `ImagePullBackOff`，看不出是「tag 改名了」
+  - `blct_tts` 的 `blc_template/` 经 `kits export` 产出 ConfigMap `blc-template-blct-tts`；
+    `blc` 的 Deployment 在 hostPath 目录的**子路径**上挂它，且 `optional: true`——
+    ConfigMap 缺失时是「少一个模板」，不是「整站起不来」
+  - 实测（本地，无集群）：`kits remote` 九条臂全对——真清单 0 / schema 非法 1（带理由）/
+    404 → 2「没能验到」/ 非清单 1 / sha 不匹配 1 / sha 匹配 0 / 缺参 1 / 缺模块 1 /
+    kubeconform 校验到 0 个对象 → 2。三个产物过 `kubeconform -strict`：
+    `blct_tts` 包 1/1、`blc` Deployment 1/1、`aria2` 包 2/2
+  - **ConfigMap 逐字节还原**用 ruby 的 YAML 验过：三个文件 sha256 全等（0 差异）。
+    第一版不成立——`|` 块标量会把末尾裁成一个换行，而 `index.html` 原本没有末尾换行；
+    改成按原文件末尾选择 `|` / `|-` / `|+` 之后才相等
+  - **撞到两个假绿，都已修**：① `if kubeconform … | tail -5; then` 判的是 `tail` 的退出码（恒 0），
+    永远「通过」；② `kubeconform` 对**无 `.yaml` 扩展名**的文件静默跳过、退出码仍是 0，
+    而 `mktemp` 默认不给扩展名。现在「校验到 0 个对象」显式判为「没能验到」（退出 2）
+  - **未验证**：VPS 上的实际部署（维护者决定先补完能力再动线上）。因此本条目只声称
+    本地静态验证通过，**不声称线上可用**
+- **`dist/` 加入 `.gitignore`**：`kits export` 的产物是生成物，入库会变成同一份内容两个产地
+
 ## 2026-10-12
 
 - **撤下 gh-proxy 首页磁贴，换上自我介绍磁贴 `tile_kitsunome`**（维护者要求）：

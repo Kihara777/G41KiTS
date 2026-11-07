@@ -2,6 +2,40 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-07
+
+- **The module system gained remote installation and versioned images; `blct_tts` content moved from a
+  host hardlink to a ConfigMap** (maintainer's request: let people who do not use this repo's deployment
+  flow use the template on its own, and hand module install/update/management to native k8s mechanisms
+  as far as possible)
+  - Optional `version` added to `info.json`; two new `kits` subcommands: `export` (bundle a module into a
+    remotely distributable manifest) and `remote` (fetch a manifest from any URL, print source and
+    sha256, and only `--apply` touches the cluster)
+  - Image tags went from a constant `:local` to `g41k8s/<mod>:<version>`, **keeping the `:local` alias** —
+    every existing manifest references `:local`, and dropping the alias would make kubelet report only
+    `ImagePullBackOff`, which does not read as "the tag was renamed"
+  - `blct_tts`'s `blc_template/` is exported by `kits export` into the ConfigMap `blc-template-blct-tts`;
+    `blc`'s Deployment mounts it on a **sub-path** of the hostPath directory, with `optional: true`, so a
+    missing ConfigMap means "one template is absent", not "the site will not start"
+  - Measured (local, no cluster): all nine arms of `kits remote` behave — real manifest 0 /
+    invalid schema 1 (with the reason) / 404 → 2 "could not verify" / not-a-manifest 1 /
+    sha mismatch 1 / sha match 0 / missing arg 1 / missing module 1 / kubeconform validating zero
+    objects → 2. Three artifacts pass `kubeconform -strict`: the `blct_tts` bundle 1/1, the `blc`
+    Deployment 1/1, the `aria2` bundle 2/2
+  - **Byte-exact ConfigMap round-trip** was verified with ruby's YAML: all three files have identical
+    sha256 (zero differences). The first version did not hold — a `|` block scalar clips trailing
+    newlines to one, and `index.html` had none to begin with; it only matched after choosing
+    `|` / `|-` / `|+` from the source file's own ending
+  - **Two false greens were hit and fixed**: (1) `if kubeconform … | tail -5; then` tests `tail`'s exit
+    status (always 0), so it always "passes"; (2) `kubeconform` silently skips files **without a `.yaml`
+    extension** while still exiting 0, and `mktemp` gives no extension by default. "Zero objects
+    validated" is now explicitly "could not verify" (exit 2)
+  - **Not verified**: the actual deployment on the VPS (the maintainer chose to finish the capability
+    first). This entry therefore claims local static verification only and **does not claim the VPS
+    works**
+- **`dist/` added to `.gitignore`**: `kits export` output is generated, and committing it would mean one
+  piece of content with two producers
+
 ## 2026-10-12
 
 - **Retired the gh-proxy homepage tile and added a self-introduction tile, `tile_kitsunome`** (maintainer's request):
