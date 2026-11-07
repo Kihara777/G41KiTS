@@ -13,5 +13,7 @@
     "method": "mkdir"
   },
   "local": [{"file": "settings.json", "to": "settings.json"}],
-  "persist": ".tr"
+  "persist": ".tr",
+  "version": "1.0.0",
+  "k8s": {"pod": "download"}
 }

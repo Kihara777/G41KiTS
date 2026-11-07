@@ -183,6 +183,9 @@ kits_help() {
   echo "  kits reload       Hot-reload tile/i18n/link data into Redis (zero downtime)"
   echo "  kits pack [-L] [-S] [-A] [-D]  Build archive (-L .local, -S store, -A agents, -D docs)"
   echo "  kits export <mod> [-o <path>]  Bundle a module's k8s manifests into one file (可远程分发)"
+  echo "  kits update <mod> [--to <ver>] [--apply]   改版本号并重出包（默认不落集群）"
+  echo "  kits rollback <mod> [--to <ver>] [--apply] 回滚到 dist/ 里现存的一个旧版本"
+  echo "  kits selftest [mod]  跑模块自带的自检（info.json 的 selftest 字段）"
   echo "  kits remote <url> [--apply] [-n <ns>] [--sha256 <hex>]"
   echo "                   从远程地址安装模块：先取、算哈希、显示来源，--apply 才落集群"
   echo "  kits simulate       Trace mode (--dry-run)"
@@ -1346,6 +1349,29 @@ kit_version() {
   echo "local"
 }
 
+# Pod 组（2026-11-07 加）：一个 k8s Deployment 里可能塞着多个模块的容器。
+# 1GB 机上「Pod 整合」是刻意决策（见 k8s/README.md），不能为了模块化把它拆开。
+# 所以安装单位不是模块，是 Pod 组——拆开装只会得到没有后端的 Service。
+kit_k8s_pod() {
+  local m="$1" p=""
+  p=$(jq -r '.k8s.pod // ""' "kits/$m/info.json" 2>/dev/null || true)
+  [ -n "$p" ] && [ "$p" != "null" ] && { echo "$p"; return 0; }
+  echo "$m"
+}
+
+kit_k8s_group() {
+  local m="$1" pod d n
+  pod=$(kit_k8s_pod "$m")
+  for d in kits/*/; do
+    n=$(basename "$d")
+    [ -f "$d/info.json" ] || continue
+    [ "$(kit_k8s_pod "$n")" = "$pod" ] && echo "$n"
+  done
+  # 必须显式 return 0：最后一次比较若为假，函数会以 1 退出，
+  # 而调用方是 `group=$(…)` —— set -e 会把整个脚本杀掉且**一字不打印**。
+  return 0
+}
+
 kits_export() {
   local m="" out=""
   while [ $# -gt 0 ]; do
@@ -1374,19 +1400,41 @@ kits_export() {
 
   [ -n "$out" ] || out="dist/$m-$ver.yaml"
   mkdir -p "$(dirname "$out")" 2>/dev/null
+  # 先写临时文件再 mv：直接写 $out 时，中途失败会留下**上一版或半截**的文件，
+  # 而下一个读它的人（常常是我）会把旧产物当成这次的结果。
+  local tmpout="${out}.tmp.$$"
+  rm -f "$tmpout" 2>/dev/null || true
 
   local f count=0 objs=0
+  local group; group=$(kit_k8s_group "$m")
   {
     echo "# G41KiTS module bundle — $m @ $ver"
     echo "# repo: https://github.com/Kihara777/G41KiTS"
     echo "# generated: $(date -Is)"
+    if [ "$(echo "$group" | wc -l)" -gt 1 ]; then
+      echo "# pod group '$(kit_k8s_pod "$m")' — 本次含同组模块: $(echo "$group" | tr '\n' ' ')"
+      echo "# 一个 Pod 不能拆开装：只装其中一个会得到没有后端的 Service。"
+    fi
     echo "# 用法: kubectl apply -f <这份文件>；卸载: kubectl delete -f <同一份文件>"
-    for f in "kits/$m/k8s"/*.yaml; do
-      [ -f "$f" ] || continue
-      count=$((count+1))
-      echo "---"
-      cat "$f"
-      echo
+    local gm
+    # 镜像 tag 钉到各模块自己的版本：`g41k8s/<m>:local` → `g41k8s/<m>:<version>`。
+    # 必须对**组内全部模块**做替换：一个 Pod 里可能跑着别的模块的容器
+    # （如 download 里的 bt），它的镜像 tag 写在 aria2 的文件里。
+    # 不钉住的话，包与镜像的对应只存在于「当时 :local 指向谁」，而那是会变的。
+    local seds=() gm gmver
+    for gm in $group; do
+      gmver=$(kit_version "$gm")
+      seds+=(-e "s|g41k8s/${gm}:local|g41k8s/${gm}:${gmver}|g")
+    done
+    for gm in $group; do
+      for f in "kits/$gm/k8s"/*.yaml; do
+        [ -f "$f" ] || continue
+        count=$((count+1))
+        echo "---"
+        echo "# from: kits/$gm/${f##*/}"
+        sed "${seds[@]}" "$f"
+        echo
+      done
     done
 
     # 内容注入类：把模块内容打成 ConfigMap。
@@ -1435,10 +1483,16 @@ kits_export() {
       done
       count=$((count+1))
     fi
-  } > "$out"
+  } > "$tmpout"
 
-  [ "$count" -gt 0 ] || { echo "ERROR: 没有产出任何对象"; rm -f "$out"; return 1; }
-  objs=$(grep -cE '^kind:' "$out" || true)
+  if [ "$count" -le 0 ]; then
+    echo "ERROR: 没有产出任何对象"; rm -f "$tmpout"; return 1
+  fi
+  objs=$(grep -cE '^kind:' "$tmpout" || true)
+  if [ -z "$objs" ] || [ "$objs" -le 0 ]; then
+    echo "ERROR: 产物里没有一个 kind: —— 生成失败，不留下半截文件"; rm -f "$tmpout"; return 1
+  fi
+  mv -f "$tmpout" "$out"
   echo "导出: $out（$m @ $ver，$count 份来源，$objs 个对象${inj_from:+，含内容注入 $inj_from}）"
 }
 
@@ -1547,6 +1601,134 @@ kits_remote() {
   return 1
 }
 
+kits_update() {
+  local m="" to="" apply=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --to) to="$2"; shift;;
+      --apply) apply="1";;
+      -*) echo "ERROR: unknown flag $1"; return 1;;
+      *) m="$1";;
+    esac
+    shift
+  done
+  [ -n "$m" ] || { echo "ERROR: module name required"; return 1; }
+  [ -f "kits/$m/info.json" ] || { echo "ERROR: 模块 '$m' 不存在"; return 1; }
+
+  if [ -n "$to" ]; then
+    # 只接受安全的 tag 字符；版本会直接进镜像 tag 与文件名。
+    case "$to" in
+      *[!A-Za-z0-9._+-]*) echo "ERROR: 版本 '$to' 含非法字符（只允许字母数字 . _ + -）"; return 1;;
+    esac
+    grep -q '"version"' "kits/$m/info.json" || {
+      echo "ERROR: kits/$m/info.json 还没有 version 字段——先手工加上再 update"; return 1; }
+    local cur; cur=$(kit_version "$m")
+    if [ "$cur" = "$to" ]; then
+      echo "版本已是 $to，无需改动"
+    else
+      sed "s/\"version\": *\"[^\"]*\"/\"version\": \"$to\"/" \
+        "kits/$m/info.json" > "kits/$m/info.json.new.$$"
+      mv -f "kits/$m/info.json.new.$$" "kits/$m/info.json"
+      local now; now=$(kit_version "$m")
+      # 写后读回：sed 没匹配上时会「成功」但什么都没改。
+      [ "$now" = "$to" ] || { echo "ERROR: 写回后读到的是 '$now'，不是 '$to'——版本未生效"; return 1; }
+      echo "版本: $cur → $to"
+    fi
+  fi
+
+  local ver; ver=$(kit_version "$m")
+  kits_export "$m" || return 1
+
+  if [ -z "$apply" ]; then
+    echo "未加 --apply：包已生成，**没有**发送到集群。"
+    echo "  应用: kubectl apply -f dist/$m-$ver.yaml"
+    return 0
+  fi
+  command -v kubectl >/dev/null 2>&1 || { echo "ERROR: 找不到 kubectl —— 没能验到"; return 2; }
+  kubectl apply --validate=false -f "dist/$m-$ver.yaml"
+}
+
+kits_rollback() {
+  local m="" to="" apply=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --to) to="$2"; shift;;
+      --apply) apply="1";;
+      -*) echo "ERROR: unknown flag $1"; return 1;;
+      *) m="$1";;
+    esac
+    shift
+  done
+  [ -n "$m" ] || { echo "ERROR: module name required"; return 1; }
+
+  # 可回滚的版本 = dist/ 里现存的本模块包。
+  # 注意：dist/ 是生成物、不入库，所以**旧包不存在就回不去**——
+  # 这不是保守，是事实；真正可靠的来源是 git 历史（重新 export 对应提交）。
+  local list; list=$(ls -1 dist/"$m"-*.yaml 2>/dev/null | sed "s|dist/$m-||; s|\.yaml$||" | sort -V || true)
+  if [ -z "$list" ]; then
+    echo "ERROR: dist/ 里没有任何 '$m' 的包——回滚需要旧包还在。"
+    echo "       先导出当前版本，或从 git 历史里找回对应提交再 export。"
+    return 2
+  fi
+
+  local target="$to"
+  if [ -z "$target" ]; then
+    # 默认回退到「当前版本的前一个」；只有当前一个版本时明确拒绝，不猜。
+    local cur; cur=$(kit_version "$m")
+    # 必须 `|| true`：只剩当前版本时 grep 无匹配返回 1，而 set -e 会让
+    # `target=$(…)` 直接把脚本杀掉——连下面那句「没有可回滚的目标」都打不出来。
+    target=$(echo "$list" | grep -vx "$cur" | tail -1 || true)
+    if [ -z "$target" ]; then
+      echo "ERROR: 只有 '$cur' 一个版本可选，没有可回滚的目标"
+      echo "       现存版本: $(echo "$list" | tr '\n' ' ')"
+      return 1
+    fi
+  fi
+  echo "$list" | grep -qx "$target" || {
+    echo "ERROR: 没有 '$target' 这个版本的包"; echo "       现存: $(echo "$list" | tr '\n' ' ')"; return 1; }
+
+  echo "回滚目标: $m @ $target（现存: $(echo "$list" | tr '\n' ' ')）"
+  if [ -z "$apply" ]; then
+    echo "未加 --apply：**没有**发送到集群。"
+    echo "  应用: kubectl apply -f dist/$m-$target.yaml"
+    echo "  注意：包里的镜像 tag 是 g41k8s/$m:$target，该镜像必须仍在 containerd 里，否则会 ImagePullBackOff。"
+    return 0
+  fi
+  command -v kubectl >/dev/null 2>&1 || { echo "ERROR: 找不到 kubectl —— 没能验到"; return 2; }
+  kubectl apply --validate=false -f "dist/$m-$target.yaml"
+}
+
+kits_selftest() {
+  local m="${1:-}" fails=0 ran=0 mod cmd
+  local list
+  if [ -n "$m" ]; then
+    list="$m"
+  else
+    list=$(ls -1 kits/*/info.json 2>/dev/null | sed 's|kits/||; s|/info.json||' || true)
+  fi
+  for mod in $list; do
+    [ -f "kits/$mod/info.json" ] || { echo "ERROR: 模块 '$mod' 不存在"; return 1; }
+    cmd=$(jq -r '.selftest // ""' "kits/$mod/info.json" 2>/dev/null || true)
+    [ -n "$cmd" ] && [ "$cmd" != "null" ] || continue
+    ran=$((ran+1))
+    echo "--- $mod: $cmd"
+    # 在模块目录里跑，路径相对模块根，与部署时的相对关系一致。
+    if ( cd "kits/$mod" && sh -c "$cmd" ); then
+      echo "    ✔ $mod"
+    else
+      echo "    ✘ $mod 自检失败"
+      fails=$((fails+1))
+    fi
+  done
+  if [ "$ran" -eq 0 ]; then
+    echo "没有模块声明 selftest —— 没能验到，不是通过"
+    return 2
+  fi
+  echo
+  echo "自检：$ran 个模块，失败 $fails 个"
+  [ "$fails" -eq 0 ]
+}
+
 main() {
   case "${1:-}" in
     init)
@@ -1562,6 +1744,9 @@ main() {
 
         pack) shift 2; kits_pack "$@";;
         export) shift 2; kits_export "$@";;
+        update) shift 2; kits_update "$@";;
+        rollback) shift 2; kits_rollback "$@";;
+        selftest) shift 2; kits_selftest "$@";;
         remote) shift 2; kits_remote "$@";;
         reload) kits_reload;;
         simulate) echo "Use: ./g41.sh kits add <name> --dry-run";;
