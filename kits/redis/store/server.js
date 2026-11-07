@@ -78,13 +78,20 @@ if(process.env.G41_FS_SELFTEST){
     var seedDir=path.join(tmp,'seed');fs.mkdirSync(seedDir);
     fs.writeFileSync(path.join(seedDir,'tile.foo.json'),'{"id":"foo"}');
     fs.writeFileSync(path.join(seedDir,'i18n.foo.zh.json'),'{"t":"名称"}');
+    fs.writeFileSync(path.join(seedDir,'app.foo.json'),'{"id":"foo"}');
+    fs.writeFileSync(path.join(seedDir,'link.foo.json'),'{"short":"f","target":"https://x"}');
+    fs.writeFileSync(path.join(seedDir,'data.foo.langs.json'),'{"a":1}');
     fs.writeFileSync(path.join(seedDir,'notes.txt'),'x');
     try{fs.symlinkSync(path.basename(payload),path.join(seedDir,'..data'));}catch(e){}
     var out=path.join(tmp,'seedout');
     var seed=materializeSeed(seedDir,out);
     ok('种子还原 tile → tiles/foo.json', fs.existsSync(path.join(out,'tiles','foo.json')));
     ok('种子还原 i18n → i18n/foo/zh.json', fs.existsSync(path.join(out,'i18n','foo','zh.json')));
-    ok('种子统计正确（tile 1 / i18n 1 / unknown 0）', seed.tiles===1 && seed.i18n===1 && seed.unknown===0);
+    ok('种子还原 app → tile_apps/foo.json', fs.existsSync(path.join(out,'tile_apps','foo.json')));
+    ok('种子还原 link → tile_links/foo.json', fs.existsSync(path.join(out,'tile_links','foo.json')));
+    ok('种子还原 data → foo/langs.json', fs.existsSync(path.join(out,'foo','langs.json')));
+    ok('种子统计正确（tile1/i18n1/app1/link1/data1/unknown0）',
+       seed.tiles===1 && seed.i18n===1 && seed.app===1 && seed.link===1 && seed.data===1 && seed.unknown===0);
     ok('非 .json 的键被忽略而不是报 unknown', fs.existsSync(path.join(out,'tiles','notes.txt'))===false);
     // 反证：若 readDir 不过滤 `..`，`..data` 会变成无法识别的键，unknown 不为 0。
     ok('种子还原的内容与源一致',
@@ -139,31 +146,42 @@ function mergeDir(confDir,dirName){
 function parseSeedKey(name){
   var m;
   if((m=String(name).match(/^tile\.([A-Za-z0-9_-]+)\.json$/))) return {kind:'tile',mod:m[1]};
+  if((m=String(name).match(/^app\.([A-Za-z0-9_-]+)\.json$/)))  return {kind:'app',mod:m[1]};
+  if((m=String(name).match(/^link\.([A-Za-z0-9_-]+)\.json$/))) return {kind:'link',mod:m[1]};
   if((m=String(name).match(/^i18n\.([A-Za-z0-9_-]+)\.([a-z]{2,3})\.json$/))) return {kind:'i18n',mod:m[1],lang:m[2]};
+  if((m=String(name).match(/^data\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.json$/))) return {kind:'data',mod:m[1],name:m[2]};
   return null;
 }
 
 function materializeSeed(seedDir,outDir){
-  var res={tiles:0,i18n:0,unknown:0,dir:null};
+  var res={tiles:0,app:0,link:0,i18n:0,data:0,unknown:0,dir:null};
   try{ if(!fs.existsSync(seedDir))return res; }catch(e){ return res; }
   var names=readDir(seedDir).filter(function(f){return /\.json$/.test(f);});
   if(names.length===0)return res;
 
   try{fs.rmSync(outDir,{recursive:true,force:true});}catch(e){}
-  fs.mkdirSync(path.join(outDir,'tiles'),{recursive:true});
-  fs.mkdirSync(path.join(outDir,'i18n'),{recursive:true});
+  ['tiles','tile_apps','tile_links','i18n'].forEach(function(d){
+    fs.mkdirSync(path.join(outDir,d),{recursive:true});
+  });
 
   names.forEach(function(f){
     var p=parseSeedKey(f);
     if(!p){res.unknown++;console.error('seed: 无法识别的键 '+f);return;}
     try{
       var src=path.join(seedDir,f);
-      if(p.kind==='tile'){
-        fs.copyFileSync(src,path.join(outDir,'tiles',p.mod+'.json'));res.tiles++;
-      }else{
+      if(p.kind==='tile'){fs.copyFileSync(src,path.join(outDir,'tiles',p.mod+'.json'));res.tiles++;}
+      else if(p.kind==='app'){fs.copyFileSync(src,path.join(outDir,'tile_apps',p.mod+'.json'));res.app++;}
+      else if(p.kind==='link'){fs.copyFileSync(src,path.join(outDir,'tile_links',p.mod+'.json'));res.link++;}
+      else if(p.kind==='i18n'){
         var d=path.join(outDir,'i18n',p.mod);
         fs.mkdirSync(d,{recursive:true});
         fs.copyFileSync(src,path.join(d,p.lang+'.json'));res.i18n++;
+      }else{
+        // data 型：落到 <模块>/<名字>.json，与宿主上 .rd/data/<模块>/ 的形状一致，
+        // 这样「静态数据子目录」那段循环不用为种子单独写一遍。
+        var dd=path.join(outDir,p.mod);
+        fs.mkdirSync(dd,{recursive:true});
+        fs.copyFileSync(src,path.join(dd,p.name+'.json'));res.data++;
       }
     }catch(e){res.unknown++;console.error('seed: 写入失败 '+f+' '+e.message);}
   });
@@ -178,6 +196,7 @@ function loadData(callback) {
     redisSet('data:loading','1');
 
     var confDir='/conf-data',perLang={},pending=0,tileList=[];
+    var byId={};
 
     // 内容种子里记的模块/语言，若键名不合规会在 materializeSeed 里被拒并计入 unknown。
     // 这里把统计打出来：静默跳过 = 页面上少东西而没人知道。
@@ -216,7 +235,16 @@ function loadData(callback) {
             return{label:it.short||it.label,desc:it.desc,href:it.target||it.href,icon:it.icon};
           });
         }
+      // 去重：迁移期宿主目录与内容种子会**同时**供同一批磁贴，
+      // 若原样 push，`data:tiles` 里每个 id 会出现两次（首页显示重复卡片），
+      // 而 `data:tiles/<id>` 因为同键覆盖看不出来——正是那种「看着正常」的重复。
+      // 同一个 id 后来读到的覆盖先前那个（种子排在宿主之后，故种子优先）。
+      if(td && td.id){
+        if(byId[td.id]===undefined){ byId[td.id]=tileList.length; tileList.push(td); }
+        else { tileList[byId[td.id]]=td; }
+      } else {
         tileList.push(td);
+      }
         var id=f.replace('.json','');
         redisSet('data:tiles/'+id,JSON.stringify(td),function(){console.log('data:tiles/'+id);done();});
       });
@@ -257,11 +285,12 @@ function loadData(callback) {
       });
     });
 
-    /* Load static data subdirectories */
-    readDir(confDir).forEach(function(f){
-      var fp=path.join(confDir,f);
-      try{if(!fs.statSync(fp).isDirectory())return;}catch(e){return;}
-      if(f==='tiles'||f==='i18n'||f==='apps'||f==='links')return;
+    /* Load static data subdirectories（两个根目录：tile_apps / tile_links / <模块> 都在这里） */
+    roots.forEach(function(root){
+      readDir(root).forEach(function(f){
+        var fp=path.join(root,f);
+        try{if(!fs.statSync(fp).isDirectory())return;}catch(e){return;}
+        if(f==='tiles'||f==='i18n'||f==='apps'||f==='links')return;
       readDir(fp).forEach(function(df){
         if(!df.endsWith('.json'))return;
         var key=f+'/'+df.replace('.json','');
@@ -275,6 +304,7 @@ function loadData(callback) {
           }catch(e){console.error('home/chars inject:',e.message);}
         }
         redisSet('data:'+key,data,function(){console.log('data:'+key);});
+      });
       });
     });
 

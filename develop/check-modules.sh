@@ -104,9 +104,11 @@ for d in kits/*/; do
   # 三类都要覆盖：有 k8s 清单的、声明了 inject 的、以及带内容种子（tile/link/i18n）的。
   # 漏掉第三类时，`tile_*` 这些模块**一个包都不会生成**，而检查照样全绿——
   # 2026-11-08 变异测试正是这样发现漏洞的。
+  # 只导出有 k8s 清单或 inject 的模块。
+  # 内容（tile/app/link/i18n/data）不再按模块导出——2026-11-08 实测发现同名 ConfigMap
+  # 依次 apply 会互相修剪，所以内容统一由 `kits content` 生成一张聚合的。
   if [ -d "$d/k8s" ] \
-     || [ -n "$(jq -r '.inject.from // ""' "$d/info.json" 2>/dev/null | grep -v null)" ] \
-     || [ -f "$d/tile.json" ] || [ -f "$d/link.json" ] || [ -d "$d/i18n" ]; then :; else
+     || [ -n "$(jq -r '.inject.from // ""' "$d/info.json" 2>/dev/null | grep -v null)" ]; then :; else
     continue
   fi
   if "$ROOT/g41.sh" kits export "$m" >/tmp/cm-export.log 2>&1; then
@@ -152,8 +154,10 @@ if [ "$exported" -gt 0 ]; then
             src =
               case k
               when /^tile\.(.+)\.json$/        then "kits/#{$1}/tile.json"
+              when /^app\.(.+)\.json$/         then "kits/#{$1}/app.json"
               when /^link\.(.+)\.json$/        then "kits/#{$1}/link.json"
               when /^i18n\.(.+)\.([a-z]{2,3})\.json$/ then "kits/#{$1}/i18n/#{$2}.json"
+              when /^data\.(.+)\.([A-Za-z0-9_-]+)\.json$/ then "kits/#{$1}/data/#{$2}.json"
               else nil
               end
             src.nil? || !File.exist?(src) || File.binread(src) != c.b
@@ -172,6 +176,62 @@ if [ "$exported" -gt 0 ]; then
     if [ -z "$rt_bad" ]; then pass "ConfigMap 逐字节还原"; else fail "ConfigMap 还原不一致:$rt_bad"; fi
   else
     skip "ConfigMap 逐字节还原（没有 ruby）"
+  fi
+fi
+
+# ---------- 4b. 聚合内容种子 ----------
+section "内容种子（聚合）"
+if "$ROOT/g41.sh" kits content >/tmp/cm-content.log 2>&1; then
+  seedline=$(tail -1 /tmp/cm-content.log)
+  pass "kits content：$seedline"
+else
+  fail "kits content 失败：$(tail -2 /tmp/cm-content.log | tr '\n' ' ')"
+fi
+
+if [ -f dist/g41-content.yaml ]; then
+  # 键数必须等于仓库里内容文件的总数——少了就是有模块被漏掉，
+  # 而漏掉的表现在页面上是「某个磁贴不见了」，不是任何报错。
+  want=0
+  for f in kits/*/tile.json kits/*/app.json kits/*/link.json kits/*/i18n/*.json kits/*/data/*.json; do
+    [ -f "$f" ] && want=$((want+1))
+  done
+  got=$(grep -cE '^  (tile|app|link|i18n|data)\.' dist/g41-content.yaml || true)
+  if [ "$want" -eq "$got" ]; then pass "内容键数 $got = 仓库内容文件数 $want"; else fail "内容键数 $got ≠ 仓库文件数 $want"; fi
+
+  if command -v kubeconform >/dev/null 2>&1; then
+    if kubeconform -strict -summary -ignore-missing-schemas dist/g41-content.yaml >/tmp/cm-kc2.log 2>&1 \
+       && ! grep -q 'Valid: 0, Invalid: 0' /tmp/cm-kc2.log; then
+      pass "内容种子 schema"
+    else
+      fail "内容种子 schema：$(tail -1 /tmp/cm-kc2.log)"
+    fi
+  else
+    skip "内容种子 schema（未安装 kubeconform）"
+  fi
+
+  if command -v ruby >/dev/null 2>&1; then
+    if ruby -e '
+      require "yaml"
+      cm = YAML.load_stream(File.read(ARGV[0])).compact.find { |d| d["kind"] == "ConfigMap" }
+      exit 1 if cm.nil?
+      bad = cm["data"].any? do |k, c|
+        src = case k
+              when /^tile\.(.+)\.json$/ then "kits/#{$1}/tile.json"
+              when /^app\.(.+)\.json$/  then "kits/#{$1}/app.json"
+              when /^link\.(.+)\.json$/ then "kits/#{$1}/link.json"
+              when /^i18n\.(.+)\.([a-z]{2,3})\.json$/ then "kits/#{$1}/i18n/#{$2}.json"
+              when /^data\.(.+)\.([A-Za-z0-9_-]+)\.json$/ then "kits/#{$1}/data/#{$2}.json"
+              end
+        src.nil? || !File.exist?(src) || File.binread(src) != c.b
+      end
+      exit(bad ? 1 : 0)
+    ' dist/g41-content.yaml; then
+      pass "内容种子逐字节还原"
+    else
+      fail "内容种子还原不一致"
+    fi
+  else
+    skip "内容种子逐字节还原（没有 ruby）"
   fi
 fi
 

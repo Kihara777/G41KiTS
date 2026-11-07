@@ -1372,6 +1372,97 @@ kit_k8s_group() {
   return 0
 }
 
+# ConfigMap 的 data 键 → 块标量。规则必须跟着原文件的末尾换行走：
+#   无末尾换行 |-  /  恰好一个 |  /  两个以上 |+
+# 多或少一个换行会让「逐字节还原」这条判据变成假的，而它看着照样绿。
+cm_emit() {
+  local key="$1" src="$2" ind="|" lb="" l2=""
+  lb=$(tail -c 1 "$src" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+  if [ "$lb" != "0a" ]; then
+    ind="|-"
+  else
+    l2=$(tail -c 2 "$src" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+    [ "${l2}" = "0a0a" ] && ind="|+"
+  fi
+  echo "  ${key}: $ind"
+  sed 's/^/    /' "$src"
+  [ "$ind" = "|-" ] && echo
+  # 必须显式 return 0：最后那条 test 为假时函数返回 1，
+  # 而调用方式是 `[ -f X ] && cm_emit …`——失败的正是 && 后那条命令，set -e 会当场退出且不打印。
+  return 0
+}
+
+# 内容种子（2026-11-08）：tile / app / link / i18n / data 这类内容最终是喂给 Redis 的数据。
+#
+# **必须是聚合的一张**，不是每个模块一张。2026-11-08 实测：三个模块的包依次
+# `kubectl apply` 之后，`/seed` 里只剩最后一个模块的键——ConfigMap 同名时 apply 会按
+# last-applied 修剪掉别人加的键，**不是「按键合并、自然累积」**。我一开始写反了，
+# 是那次实测推翻了它。所以改成：`kits content` 扫全部模块，生成一张完整的 g41-content。
+# 代价：内容更新是「整体一次」，不按模块粒度。内容很小、loader 也总是全量读，
+# 这个代价换「装 N 个模块得到 N 个模块的内容」是划算的。
+kits_content() {
+  local out="dist/g41-content.yaml"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -o|--out) out="$2"; shift;;
+      -*) echo "ERROR: unknown flag $1"; return 1;;
+      *) ;;
+    esac
+    shift
+  done
+  mkdir -p "$(dirname "$out")" 2>/dev/null
+  local tmp="${out}.tmp.$$"; rm -f "$tmp"
+  local n=0 m d cf total=0 sz
+
+  # 先算体积：ConfigMap 上限 1MiB，超了在 apply 时才报，报错很难读。
+  for d in kits/*/; do
+    for cf in "$d"tile.json "$d"app.json "$d"link.json "$d"i18n/*.json "$d"data/*.json; do
+      [ -f "$cf" ] || continue
+      sz=$(wc -c < "$cf" | tr -d ' '); total=$((total + sz))
+    done
+  done
+  if [ "$total" -gt 900000 ]; then
+    echo "ERROR: 内容共 $total 字节，超过 ConfigMap 安全上限 900000 —— 该走镜像而不是 ConfigMap"
+    return 1
+  fi
+
+  {
+    echo "# G41KiTS content seed —— 由 \`kits content\` 生成，勿手改"
+    echo "# generated: $(date -Is)"
+    echo "---"
+    echo "apiVersion: v1"
+    echo "kind: ConfigMap"
+    echo "metadata:"
+    echo "  name: g41-content"
+    echo "  namespace: g41"
+    echo "  labels:"
+    echo "    app.kubernetes.io/part-of: g41"
+    echo "    g41.content: \"seed\""
+    echo "data:"
+    for d in kits/*/; do
+      m=$(basename "$d")
+      [ -f "$d/info.json" ] || continue
+      [ -f "$d/tile.json" ] && { cm_emit "tile.$m.json" "$d/tile.json"; n=$((n+1)); }
+      [ -f "$d/app.json" ]  && { cm_emit "app.$m.json"  "$d/app.json";  n=$((n+1)); }
+      [ -f "$d/link.json" ] && { cm_emit "link.$m.json" "$d/link.json"; n=$((n+1)); }
+      for cf in "$d"i18n/*.json; do
+        [ -f "$cf" ] || continue
+        cm_emit "i18n.$m.$(basename "${cf%.json}").json" "$cf"; n=$((n+1))
+      done
+      for cf in "$d"data/*.json; do
+        [ -f "$cf" ] || continue
+        cm_emit "data.$m.$(basename "${cf%.json}").json" "$cf"; n=$((n+1))
+      done
+    done
+  } > "$tmp"
+
+  if [ "$n" -le 0 ]; then
+    echo "ERROR: 一个内容键都没生成 —— 没有可种的内容"; rm -f "$tmp"; return 1
+  fi
+  mv -f "$tmp" "$out"
+  echo "内容种子: $out（$n 个键，$total 字节）"
+}
+
 kits_export() {
   local m="" out=""
   while [ $# -gt 0 ]; do
@@ -1396,7 +1487,8 @@ kits_export() {
   local has_seed=""
   # 末尾必须 || true：三者都为假时这个复合命令返回 1，set -e 会当场杀脚本，
   # 而它本该走到下面那句人话报错。
-  { [ -f "kits/$m/tile.json" ] || [ -f "kits/$m/link.json" ] || [ -d "kits/$m/i18n" ]; } && has_seed=1 || true
+  { [ -f "kits/$m/tile.json" ] || [ -f "kits/$m/app.json" ] || [ -f "kits/$m/link.json" ] \
+    || [ -d "kits/$m/i18n" ] || [ -d "kits/$m/data" ]; } && has_seed=1 || true
 
   if [ ! -d "kits/$m/k8s" ] && [ -z "$inj_from" ] && [ -z "$has_seed" ]; then
     echo "ERROR: kits/$m 既没有 k8s/ 清单，也没有可注入的内容 —— 没有可导出的东西"
@@ -1489,63 +1581,6 @@ kits_export() {
       count=$((count+1))
     fi
 
-    # 内容种子（2026-11-08）：tile / link / i18n 这类模块的内容最终是喂给 Redis 的数据。
-    # 它们不打成「一个模块一个 ConfigMap」——那要在核心 Pod 上加 N 个挂载。
-    # 统一进一张 g41-content，键名扁平（tile.<模块>.json / i18n.<模块>.<语言>.json），
-    # 由 server.js 启动时还原成目录布局。`kubectl apply` 对 ConfigMap 的 data 是按键合并的，
-    # 所以每个模块的包只带自己的键，装多个模块会自然累积。
-    local has_content=""
-    [ -f "kits/$m/tile.json" ] && has_content=1
-    [ -f "kits/$m/link.json" ] && has_content=1
-    [ -d "kits/$m/i18n" ] && has_content=1
-    if [ -n "$has_content" ]; then
-      local ctotal=0 csz cf
-      for cf in "kits/$m/tile.json" "kits/$m/link.json" "kits/$m/i18n"/*.json; do
-        [ -f "$cf" ] || continue
-        csz=$(wc -c < "$cf" | tr -d ' ')
-        ctotal=$((ctotal + csz))
-      done
-      if [ "$ctotal" -gt 900000 ]; then
-        echo "# ERROR: 内容种子共 $ctotal 字节，超过 ConfigMap 安全上限 900000" >&2
-        rm -f "$tmpout"; return 1
-      fi
-      echo "---"
-      echo "apiVersion: v1"
-      echo "kind: ConfigMap"
-      echo "metadata:"
-      echo "  name: g41-content"
-      echo "  namespace: g41"
-      echo "  labels:"
-      echo "    app.kubernetes.io/part-of: g41"
-      echo "    g41.content: \"seed\""
-      echo "    g41.module: $m"
-      echo "data:"
-      # 与上面同一套块标量规则；抽成函数，免得两处规则漂移。
-      cm_emit() {
-        local key="$1" src="$2" ind="|" lb="" l2=""
-        lb=$(tail -c 1 "$src" 2>/dev/null | od -An -tx1 | tr -d ' \n')
-        if [ "$lb" != "0a" ]; then
-          ind="|-"
-        else
-          l2=$(tail -c 2 "$src" 2>/dev/null | od -An -tx1 | tr -d ' \n')
-          [ "${l2}" = "0a0a" ] && ind="|+"
-        fi
-        echo "  ${key}: $ind"
-        sed 's/^/    /' "$src"
-        [ "$ind" = "|-" ] && echo
-        # 必须显式 return 0：最后那条 test 为假时函数会返回 1，
-        # 而调用方式是 `[ -f X ] && cm_emit …`——它们失败的正是 && 后面的那条命令，
-        # set -e 会当场退出，且一字不打印。
-        return 0
-      }
-      [ -f "kits/$m/tile.json" ] && cm_emit "tile.$m.json" "kits/$m/tile.json"
-      [ -f "kits/$m/link.json" ] && cm_emit "link.$m.json" "kits/$m/link.json"
-      for cf in "kits/$m/i18n"/*.json; do
-        [ -f "$cf" ] || continue
-        cm_emit "i18n.$m.$(basename "${cf%.json}").json" "$cf"
-      done
-      count=$((count+1))
-    fi
   } > "$tmpout"
 
   if [ "$count" -le 0 ]; then
@@ -1866,6 +1901,7 @@ main() {
 
         pack) shift 2; kits_pack "$@";;
         export) shift 2; kits_export "$@";;
+        content) shift 2; kits_content "$@";;
         update) shift 2; kits_update "$@";;
         rollback) shift 2; kits_rollback "$@";;
         selftest) shift 2; kits_selftest "$@";;
