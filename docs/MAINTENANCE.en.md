@@ -2,6 +2,24 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-08 (merge and failure)
+
+- **The branch was merged into main and CD synced production**; the merge immediately exposed a mechanism I
+  had judged wrongly. Fixed, and a criterion now guards it
+  - What CD actually did: only `deployment.apps/blc configured`; everything else `unchanged`
+  - **Failure**: the `blc` manifest references the optional ConfigMap `blc-template-blct-tts`, which did not
+    exist in production. `optional: true` **does not skip the mount** — it mounts an empty volume that
+    **shadows the host directory entirely**, and the template page returned 404 at once. I had written
+    "a missing ConfigMap means one template is absent"; the outcome was half right, the mechanism backwards
+  - Fix: `kubectl apply` of the blct_tts bundle created that ConfigMap; kubelet synced it in about a minute
+    and the template page returned 200 again
+  - **New criterion** (check #16): every ConfigMap referenced by a manifest must either be produced by a
+    bundle or be generated at runtime by `k8s conf` (`nginx-conf-*` / `nginx-main`). Mutation-verified:
+    renaming blct_tts's configmap makes the gate print exactly
+    "kits/blc/k8s/deployment.yaml references ConfigMap blc-template-blct-tts but no bundle produces it"
+  - Final state: homepage / `/data/tiles` / `blc.g41.moe` / template page all 200, 12 tiles, all 7 Pods
+    Running, and the repo copy plus the deployed copy match the local sha256
+
 ## 2026-11-08 (migration)
 
 - **Production now runs the aggregated content seed** (`g41.moe`; manual targeted push, CD was not triggered)
@@ -107,10 +125,11 @@
     realpath each make it exit 1
   - Three silent failures fixed: export writes a temp file then moves (a stale artifact once posed as the
     new result); `kit_k8s_group` now ends with an explicit `return 0` (a false last iteration made
-    `set -e` kill the script silently); `rollback`'s `100 0 1 26 100 303grep -vx …)` gained `|| true` for the same reason
-  - **Not verified**: mounting these ConfigMaps into the redis Pod is not wired yet. This round only (superseded by the 2026-11-08 end-to-end run against a real Redis)
-    cleared the code-level obstacles and self-tested them; the actual migration of `tile_*` / `link_*` /
-    `i18n` is **not done** and still uses host hardlinks. The VPS remains undeployed
+    `set -e` kill the script silently); `rollback`'s `$(grep -vx …)` gained `|| true` for the same reason
+  - **Not verified**: mounting these ConfigMaps into the redis Pod is not wired yet. This round only cleared
+    the code-level obstacles and self-tested them; the actual migration of `tile_*` / `link_*` / `i18n` is
+    **not done** and still uses host hardlinks. The VPS remains undeployed (superseded by the 2026-11-08
+    end-to-end run against a real Redis, and by the production migration recorded below)
 
 ## 2026-11-07
 
@@ -125,8 +144,10 @@
     every existing manifest references `:local`, and dropping the alias would make kubelet report only
     `ImagePullBackOff`, which does not read as "the tag was renamed"
   - `blct_tts`'s `blc_template/` is exported by `kits export` into the ConfigMap `blc-template-blct-tts`;
-    `blc`'s Deployment mounts it on a **sub-path** of the hostPath directory, with `optional: true`, so a
-    missing ConfigMap means "one template is absent", not "the site will not start"
+    `blc`'s Deployment mounts it on a **sub-path** of the hostPath directory, with `optional: true`.
+    **Corrected 2026-11-08 (superseded by that day's "merge and failure" entry)**: `optional: true` does not
+    skip the mount; it mounts an empty volume that shadows the host directory and the page 404s. Build that
+    ConfigMap before deploying
   - Measured (local, no cluster): all nine arms of `kits remote` behave — real manifest 0 /
     invalid schema 1 (with the reason) / 404 → 2 "could not verify" / not-a-manifest 1 /
     sha mismatch 1 / sha match 0 / missing arg 1 / missing module 1 / kubeconform validating zero

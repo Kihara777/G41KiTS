@@ -2,6 +2,20 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-08（合并与故障）
+
+- **分支合入 main，CD 已同步到生产**；合并当场暴露一个我判断错的机制，已修并加判据
+  - CD 实跑：只有 `deployment.apps/blc configured`，其余全部 `unchanged`
+  - **故障**：`blc` 的清单引用可选 ConfigMap `blc-template-blct-tts`，而生产上那张还没建。
+    `optional: true` **不会跳过挂载**——它挂一个空卷，**把宿主目录整块遮住**，模板页当场 404。
+    我此前写的是「ConfigMap 缺失时是少一个模板」，结果对了一半，机制说反了
+  - 修复：`kubectl apply` blct_tts 的包建出该 ConfigMap，kubelet 同步约 1 分钟后模板页恢复 200
+  - **新判据**（闸门第 16 项）：清单里引用的每个 ConfigMap，要么有包生产它，要么是 `k8s conf`
+    运行期生成的（`nginx-conf-*` / `nginx-main`）。变异验证：把 blct_tts 的 configmap 名字改掉 →
+    闸门精确报出「`kits/blc/k8s/deployment.yaml` 引用 ConfigMap blc-template-blct-tts，但没有包生产它」
+  - 终态：首页 / `/data/tiles` / `blc.g41.moe` / 模板页 四项 200，磁贴 12，7 个 Pod 全 Running，
+    仓库副本与部署副本 sha256 与本地一致
+
 ## 2026-11-08（迁移）
 
 - **生产已切到「聚合内容种子」供给**（
@@ -94,7 +108,7 @@
   - 自证：`G41_FS_SELFTEST=1 node store/server.js` 造 ConfigMap 同形 fixture，5 项含 realpath 反证。
     **变异测试**：去掉 `..` 过滤、把 i18n 换回 realpath，两个变异各自让自检退出 1
   - 修掉三个静默失败：导出先写临时文件再 mv（旧产物曾冒充新结果）；`kit_k8s_group` 显式 `return 0`
-    （末轮比较为假会让 `set -e` 无声杀掉脚本）；`rollback` 的 `100 0 1 26 100 303grep -vx …)` 加 `|| true`（同上）
+    （末轮比较为假会让 `set -e` 无声杀掉脚本）；`rollback` 的 `$(grep -vx …)` 加 `|| true`（同上）
   - **未验证**：ConfigMap 真正挂进 redis Pod 尚未接线——本次只把代码层障碍清掉并自证，（已被 2026-11-08「真 Redis 端到端实测」取代）
     `tile_*` / `link_*` / `i18n` 的实际迁移**还没做**，仍走宿主机硬链接。VPS 依旧未部署
 
@@ -108,7 +122,8 @@
     现有清单全部引用 `:local`，删别名会让 kubelet 只报 `ImagePullBackOff`，看不出是「tag 改名了」
   - `blct_tts` 的 `blc_template/` 经 `kits export` 产出 ConfigMap `blc-template-blct-tts`；
     `blc` 的 Deployment 在 hostPath 目录的**子路径**上挂它，且 `optional: true`——
-    ConfigMap 缺失时是「少一个模板」，不是「整站起不来」
+    **2026-11-08 更正（已被当日「合并与故障」条取代）**：`optional: true` 不会「跳过挂载」，
+    而是挂空卷遮住宿主同名目录，模板页会 404；部署前必须先建出该 ConfigMap
   - 实测（本地，无集群）：`kits remote` 九条臂全对——真清单 0 / schema 非法 1（带理由）/
     404 → 2「没能验到」/ 非清单 1 / sha 不匹配 1 / sha 匹配 0 / 缺参 1 / 缺模块 1 /
     kubeconform 校验到 0 个对象 → 2。三个产物过 `kubeconform -strict`：

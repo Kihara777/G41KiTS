@@ -28,7 +28,10 @@ spec:
             - { name: templates, mountPath: /mnt/data/data/custom_public/templates }
             # 模板内容改由 ConfigMap 供给（2026-11-07）。挂在 hostPath 目录的**子路径**上，
             # 这样宿主目录里其它模板照常可见，只有这一个由 k8s 管。
-            # optional: true —— ConfigMap 不存在时 Pod 照常起来，页面少一个而不是整站挂掉。
+            # optional: true —— **注意它不会「跳过挂载」**：ConfigMap 不存在时 kubelet 仍会挂一个
+            # 空卷，把下面 hostPath 里的同名目录整块遮住（2026-11-08 生产实测：模板页当场 404）。
+            # 所以部署本清单之前，必须先 apply blct_tts 的包把这张 ConfigMap 建出来
+            # （`develop/check-modules.sh` 的「ConfigMap 引用闭环」就是拦这个的）。
             - { name: tmpl-blct-tts, mountPath: /mnt/data/data/custom_public/templates/blct_tts }
           resources:
             limits: { memory: 192Mi, cpu: "1" }

@@ -235,6 +235,53 @@ if [ -f dist/g41-content.yaml ]; then
   fi
 fi
 
+# ---------- 4c. ConfigMap 引用闭环 ----------
+# 2026-11-08 的真实故障：`blc` 的清单引用了一个可选 ConfigMap（`blc-template-blct-tts`），
+# 而生产上那个 ConfigMap 还没建。`optional: true` **不会跳过挂载**——它挂一个空卷，
+# **把宿主目录整块遮住**，模板页当场 404。我原以为「缺失 = 少一个模板」，那只是结果对了一半。
+# 判据：清单里引用的每个 ConfigMap 名，都必须在某个导出包（或内容种子里）被生产出来。
+section "ConfigMap 引用闭环"
+if command -v ruby >/dev/null 2>&1; then
+  if ruby -e '
+    require "yaml"
+    refs = {}
+    Dir["kits/*/k8s/*.yaml"].each do |f|
+      YAML.load_stream(File.read(f)).compact.each do |d|
+        next unless d["kind"] == "Deployment"
+        (d.dig("spec","template","spec","volumes") || []).each do |v|
+          cm = v["configMap"]; next if cm.nil?
+          refs[cm["name"]] = f
+        end
+      end
+    end
+    # nginx 的几张 ConfigMap 是 `g41.sh k8s conf` 在运行期生成的，不在导出包里；
+    # 判据要求「要么有包生产，要么 g41.sh 里提到了这个名字」。
+    src = (File.read("g41.sh") rescue "")
+    produced = []
+    Dir["dist/*.yaml"].each do |f|
+      YAML.load_stream(File.read(f)).compact.each do |d|
+        next unless d["kind"] == "ConfigMap"
+        produced << d.dig("metadata","name")
+      end
+    end
+    # nginx 的几张 ConfigMap 由 `g41.sh k8s conf` 在运行期用 `nginx-conf-$sub` 拼名生成，
+    # 导出包里没有、g41.sh 里也不是字面量。这里显式列出这类运行期生成的形状。
+    runtime = ->(n) { n.start_with?("nginx-conf-") || n == "nginx-main" }
+    missing = refs.reject { |name, _| produced.include?(name) || runtime.call(name) }
+    unless missing.empty?
+      missing.each { |name, f| warn "  #{f} 引用 ConfigMap #{name}，但没有包生产它" }
+      exit 1
+    end
+    exit 0
+  '; then
+    pass "清单引用的 ConfigMap 都有包生产"
+  else
+    fail "有 ConfigMap 被引用却没有包生产（部署时会被空卷遮住）"
+  fi
+else
+  skip "ConfigMap 引用闭环（没有 ruby）"
+fi
+
 # ---------- 5. 集群类判据：只查存在性 ----------
 section "集群类判据（不连集群）"
 if grep -q '^k8s_drift()' g41.sh; then pass "k8s drift 已实现（这里不连集群，故不验它的行为）"; else fail "k8s drift 缺失"; fi
