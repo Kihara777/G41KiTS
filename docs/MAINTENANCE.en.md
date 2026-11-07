@@ -2,6 +2,28 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-07 (evening)
+
+- **The install unit is now the Pod group; `update` / `rollback` / `selftest` added; `server.js` made ConfigMap-safe**
+  - `info.json` gained `k8s.pod`: `aria2` and `bt` share the `download` group. Export bundles the whole
+    group — a Pod cannot be split, and installing one member alone yields a Service with no backend.
+    Every module in the group needs its image tag rewritten (`bt`'s tag lives in `aria2`'s manifest)
+  - `kits update <mod> --to <ver>` bumps the version and re-exports; `kits rollback <mod>` returns to an
+    older bundle present in `dist/`; `kits selftest` runs a module's own self-test (the `selftest` field;
+    with zero modules declaring one it exits 2 = could not verify)
+  - `server.js`: `readDir` drops entries starting with `..` (kubelet's `..data` / `..2026_xx` bookkeeping);
+    tile i18n now derives the module name from the file name instead of `realpath` — under a ConfigMap
+    mount `realpath` lands inside `..2026_xx/` and **the tile's translations are silently lost**
+  - Self-test: `G41_FS_SELFTEST=1 node store/server.js` builds a ConfigMap-shaped fixture; 5 checks
+    including a realpath counterexample. **Mutation-tested**: removing the `..` filter and reverting to
+    realpath each make it exit 1
+  - Three silent failures fixed: export writes a temp file then moves (a stale artifact once posed as the
+    new result); `kit_k8s_group` now ends with an explicit `return 0` (a false last iteration made
+    `set -e` kill the script silently); `rollback`'s `100 0 1 26 100 303grep -vx …)` gained `|| true` for the same reason
+  - **Not verified**: mounting these ConfigMaps into the redis Pod is not wired yet. This round only
+    cleared the code-level obstacles and self-tested them; the actual migration of `tile_*` / `link_*` /
+    `i18n` is **not done** and still uses host hardlinks. The VPS remains undeployed
+
 ## 2026-11-07
 
 - **The module system gained remote installation and versioned images; `blct_tts` content moved from a

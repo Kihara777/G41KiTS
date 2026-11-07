@@ -2,6 +2,30 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-07（夜）
+
+- **インストール単位を Pod グループに変更し、`update` / `rollback` / `selftest` を追加。`server.js` を ConfigMap 対応に**
+  - `info.json` に `k8s.pod` を追加：`aria2` と `bt` は `download` グループに属する。エクスポートは
+    グループ単位——一つの Pod は分割できず、片方だけ入れるとバックエンドの無い Service が残る。
+    グループ内の**全**モジュールのイメージタグを書き換える必要がある（`bt` のタグは `aria2` の
+    マニフェスト内にある）
+  - `kits update <mod> --to <ver>` はバージョンを上げて再エクスポート、`kits rollback <mod>` は
+    `dist/` に残る旧バージョンへ戻す、`kits selftest` はモジュール自身の自己テストを実行する
+    （`selftest` フィールド。宣言が 0 件なら終了 2 = 検証できなかった）
+  - `server.js`：`readDir` が `..` で始まるエントリを除外（kubelet の `..data` / `..2026_xx` は
+    管理用の簿記）。タイルの i18n は `realpath` ではなくファイル名からモジュール名を導く——
+    ConfigMap マウント下では `realpath` が `..2026_xx/` を指し、**タイルの多言語ラベルが
+    黙って失われる**
+  - 自己テスト：`G41_FS_SELFTEST=1 node store/server.js` が ConfigMap と同形のフィクスチャを作り、
+    realpath の反証を含む 5 項目を検証。**変異テスト**：`..` フィルタを外す／realpath に戻す、
+    どちらも終了 1 になる
+  - 静かな失敗を三つ修正：エクスポートは一時ファイルに書いてから mv（古い成果物が新しい結果の
+    ふりをした）；`kit_k8s_group` は明示的に `return 0`（最後の比較が偽だと `set -e` が無言で
+    スクリプトを殺す）；`rollback` の `100 0 1 26 100 303grep -vx …)` に `|| true`
+  - **未検証**：これらの ConfigMap を redis Pod にマウントする配線は未着手。今回はコード上の
+    障害を取り除いて自証しただけで、`tile_*` / `link_*` / `i18n` の実移行は**まだ**で、
+    ホストのハードリンクのまま。VPS も未デプロイ
+
 ## 2026-11-07
 
 - **モジュールシステムに「リモートインストール」と「バージョン付きイメージ」を追加し、`blct_tts` の

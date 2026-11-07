@@ -2,6 +2,24 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-07（晚）
+
+- **模块安装单位改为 Pod 组，新增 `update` / `rollback` / `selftest` 三个命令；`server.js` 兼容 ConfigMap 挂载**
+  - `info.json` 新增 `k8s.pod`：`aria2` 与 `bt` 同属 `download` 组。导出以整组为单位——
+    一个 Pod 拆不开，只装其中一个只会得到没有后端的 Service。组内**每个**模块的镜像 tag
+    都要替换（`bt` 的 tag 写在 `aria2` 的清单里）
+  - `kits update <mod> --to <ver>` 改版本并重出包；`kits rollback <mod>` 回滚到 `dist/` 现存的旧版本；
+    `kits selftest` 跑模块自带自检（`info.json` 的 `selftest` 字段，0 个声明时退出 2 = 没能验到）
+  - `server.js`：`readDir` 滤掉 `..` 开头的条目（kubelet 的 `..data` / `..2026_xx` 簿记）；
+    磁贴 i18n 改按文件名推模块名，不再用 `realpath` 反查——ConfigMap 挂载下 `realpath` 会落进
+    `..2026_xx/`，**磁贴的多语言标签会静默丢失**
+  - 自证：`G41_FS_SELFTEST=1 node store/server.js` 造 ConfigMap 同形 fixture，5 项含 realpath 反证。
+    **变异测试**：去掉 `..` 过滤、把 i18n 换回 realpath，两个变异各自让自检退出 1
+  - 修掉三个静默失败：导出先写临时文件再 mv（旧产物曾冒充新结果）；`kit_k8s_group` 显式 `return 0`
+    （末轮比较为假会让 `set -e` 无声杀掉脚本）；`rollback` 的 `100 0 1 26 100 303grep -vx …)` 加 `|| true`（同上）
+  - **未验证**：ConfigMap 真正挂进 redis Pod 尚未接线——本次只把代码层障碍清掉并自证，
+    `tile_*` / `link_*` / `i18n` 的实际迁移**还没做**，仍走宿主机硬链接。VPS 依旧未部署
+
 ## 2026-11-07
 
 - **模块系统新增「远程安装」与「版本化镜像」，并把 `blct_tts` 的内容从宿主机硬链接改到 ConfigMap**
