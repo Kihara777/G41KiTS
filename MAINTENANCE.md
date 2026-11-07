@@ -2,6 +2,21 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-08
+
+- **tile / link / i18n 类内容改走单一 ConfigMap 内容种子**（`g41-content`），不再只依赖宿主硬链接
+  - 键名扁平：`tile.<模块>.json` / `i18n.<模块>.<语言>.json`；`server.js` 启动时还原成
+    `tiles/` 与 `i18n/<模块>/` 的目录布局，**解析逻辑一行不改**，只是多读一个根目录
+  - `redis` Deployment 挂 `/seed`，`optional: true` —— ConfigMap 缺失时是「少几个磁贴」，
+    不是「API 起不来」。选它而不是「一个模块一个挂载」，正是为了不让核心 Pod 依赖每个模块
+  - `kits export` 对内容类模块额外产出这张 ConfigMap；`kubectl apply` 对 ConfigMap 的 `data`
+    按键合并，所以每个模块的包只带自己的键
+  - 自检：`server.js` 内置自检扩到 14 项（键解析 / 还原 / unknown 计数 / `..data` 过滤反证），
+    两个变异各自退出 1。**变异测试还揪出自检自己的漏洞**：导出循环原先漏了内容类模块，
+    `tile_*` 一个包都不生成却全绿；补上后导出 9 → 26 个模块
+  - VPS 临时命名空间实测（生产未动）：`/seed` 里键名正确，四个文件 sha256 与仓库原件逐一相同
+  - **未验证**：本机没有 redis，`loadData` 的双根目录只在自检夹具上验过，**没有在真 Redis 上跑过**
+
 ## 2026-11-07（夜·验证）
 
 - **上 VPS 做了一次真实部署验证**，全程只用临时命名空间 `g41-verify`，生产 `g41` 未受影响

@@ -2,6 +2,27 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-08
+
+- **tile / link / i18n content now ships as one ConfigMap content seed** (`g41-content`), no longer only
+  host hardlinks
+  - Flat keys: `tile.<module>.json` / `i18n.<module>.<lang>.json`; `server.js` restores them into the
+    existing `tiles/` and `i18n/<module>/` layout at startup — **the parsing logic is untouched**, it just
+    reads one more root
+  - The `redis` Deployment mounts `/seed` with `optional: true`, so a missing ConfigMap means "a few tiles
+    are absent", not "the API will not start". That choice, over one mount per module, is exactly to keep
+    the core Pod from depending on every content module
+  - `kits export` emits that ConfigMap for content modules; `kubectl apply` merges ConfigMap `data` by key,
+    so each module's bundle carries only its own keys
+  - Self-test grew to 14 checks (key parsing / materialisation / unknown count / `..data` counterexample);
+    two mutations each exit 1. **Mutation testing also exposed a hole in the check itself**: the export
+    loop skipped content modules, so `tile_*` produced no bundle at all while everything stayed green;
+    after the fix the export count went 9 → 26
+  - Measured in a throwaway VPS namespace (production untouched): key names are correct under `/seed` and
+    all four files match the repository originals by sha256
+  - **Not verified**: no redis here, so `loadData`'s second root was only exercised against the self-test
+    fixture — **it has not run against a real Redis**
+
 ## 2026-11-07 (night, verification)
 
 - **A real deployment verification ran on the VPS**, using only the throwaway namespace `g41-verify`; production
