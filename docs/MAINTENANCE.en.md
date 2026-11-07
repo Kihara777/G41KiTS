@@ -20,8 +20,12 @@
     after the fix the export count went 9 → 26
   - Measured in a throwaway VPS namespace (production untouched): key names are correct under `/seed` and
     all four files match the repository originals by sha256
-  - **Not verified**: no redis here, so `loadData`'s second root was only exercised against the self-test
-    fixture — **it has not run against a real Redis**
+  - **End-to-end against a real Redis** (throwaway namespace, production untouched): a real redis plus the
+    repo's own `server.js` ran the loader with `/conf-data` left empty and all content coming from the mounted
+    `g41-content`. The log read `seed: tiles=1 i18n=3 unknown=0`; Redis held the full tile JSON under
+    `data:tiles/dns` and `dns_h`/`dns_p`/`dns_firefox` inside `data:i18n_zh`. **This proves a module's tile and
+    i18n can reach Redis from the content seed alone**, with no host hardlink involved
+  - The local mihomo was stopped before touching the VPS as the maintainer asked, and restored afterwards
 
 ## 2026-11-07 (night, verification)
 
@@ -61,7 +65,7 @@
   - Three silent failures fixed: export writes a temp file then moves (a stale artifact once posed as the
     new result); `kit_k8s_group` now ends with an explicit `return 0` (a false last iteration made
     `set -e` kill the script silently); `rollback`'s `100 0 1 26 100 303grep -vx …)` gained `|| true` for the same reason
-  - **Not verified**: mounting these ConfigMaps into the redis Pod is not wired yet. This round only
+  - **Not verified**: mounting these ConfigMaps into the redis Pod is not wired yet. This round only (superseded by the 2026-11-08 end-to-end run against a real Redis)
     cleared the code-level obstacles and self-tested them; the actual migration of `tile_*` / `link_*` /
     `i18n` is **not done** and still uses host hardlinks. The VPS remains undeployed
 
