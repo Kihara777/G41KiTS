@@ -1,6 +1,8 @@
 # 维护记录
 
-中文 ## 2026-11-07（夜·验证）
+中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
+
+## 2026-11-07（夜·验证）
 
 - **上 VPS 做了一次真实部署验证**，全程只用临时命名空间 `g41-verify`，生产 `g41` 未受影响
   （验证后镜像仍为 `:local`、7 个 Pod 的重启计数不变）
@@ -17,8 +19,11 @@
     复原 mtime → 5 个 Pod 无 drift、退出 0。**射程刻意只含只读挂载**——可写目录里既有配置也有数据库
     （`filebrowser.db`、`dump.rdb`），混进来会让判据天天响；代价是 `blc` 的 `config.ini` 这类
     可写配置不在射程内
-
-## 2026-11-07（晚）| [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
+  - **新增自检入口 `develop/check-modules.sh` 与 CI `Check modules`**（任何分支/PR 都跑，无 secrets、不部署）：
+    这几轮造的判据此前**只有人手动跑过**，而判据存在但不跑只是说明书。一条命令跑 11 项，
+    三种结果不合并（0 通过 / 1 有失败 / 2 有「没能验到」）。已撞三个反例（破坏 `g41.sh` 语法、
+    破坏 `info.json`、让块标量一律用 `|`），各让自检退出 1；缺 `kubeconform`/`ruby` 时退出 2。
+    GitHub Actions 实测跑完 11 项全绿
 
 ## 2026-11-07（晚）
 

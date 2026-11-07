@@ -1,6 +1,8 @@
 # Maintenance Log
 
-[中文](../MAINTENANCE.md) ## 2026-11-07 (night, verification)
+[中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
+
+## 2026-11-07 (night, verification)
 
 - **A real deployment verification ran on the VPS**, using only the throwaway namespace `g41-verify`; production
   `g41` was untouched (images still `:local`, restart counts on all 7 Pods unchanged)
@@ -19,8 +21,6 @@
     limited to read-only mounts** — writable directories hold both config and databases
     (`filebrowser.db`, `dump.rdb`), and including them would make the check ring every day; the cost is
     that writable config such as `blc`'\''s `config.ini` is out of scope
-
-## 2026-11-07 (evening)| English | [日本語](MAINTENANCE.ja.md) 
 
 ## 2026-11-07 (evening)
 
