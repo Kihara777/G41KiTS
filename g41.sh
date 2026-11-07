@@ -1729,6 +1729,65 @@ kits_selftest() {
   [ "$fails" -eq 0 ]
 }
 
+k8s_drift() {
+  # 「宿主内容变了，而 Pod 没重启」——这类不一致在 k8s 下不会自己报错：
+  # 文件是新的、进程是旧的，服务照常响应，只是行为还是旧的。
+  # 判据：Pod 的 startTime 之后，它挂载的 hostPath 里还有文件被改过 → 报 drift。
+  local kubectl="kubectl"
+  if ! command -v kubectl >/dev/null 2>&1; then
+    command -v k3s >/dev/null 2>&1 || { echo "ERROR: 找不到 kubectl 或 k3s —— 没能验到"; return 2; }
+    kubectl="k3s kubectl"
+  fi
+  local ns="${1:-g41}"
+  local raw; raw=$($kubectl get pods -n "$ns" -o json 2>/dev/null) || {
+    echo "ERROR: 读不到 namespace '$ns' 的 Pod —— 没能验到"; return 2; }
+
+  local count; count=$(echo "$raw" | jq -r '.items | length' 2>/dev/null)
+  [ -n "$count" ] && [ "$count" -gt 0 ] || { echo "ERROR: '$ns' 里没有 Pod —— 没能验到"; return 2; }
+
+  local drift=0 checked=0 line pod start paths p newest
+  while IFS=$'\t' read -r pod start paths; do
+    [ -n "$pod" ] || continue
+    [ "$start" != "null" ] || continue
+    [ -n "$paths" ] && [ "$paths" != "null" ] || continue
+    checked=$((checked+1))
+    local pod_drift=""
+    IFS=',' read -ra arr <<< "$paths"
+    for p in "${arr[@]}"; do
+      [ -e "$p" ] || continue
+      # -newermt 接受 ISO8601；只比文件，目录的 mtime 会因内容增减而变，噪声大。
+      newest=$(find "$p" -type f -newermt "$start" 2>/dev/null | head -3 || true)
+      [ -n "$newest" ] && pod_drift="$pod_drift $newest"
+    done
+    if [ -n "$pod_drift" ]; then
+      drift=$((drift+1))
+      echo "⚠ drift: $pod（startTime $start）— 之后被改过的宿主文件:"
+      for p in $pod_drift; do echo "    $p"; done
+    fi
+  done < <(echo "$raw" | jq -r '
+    .items[] |
+    # 判据只认**只读挂载**：Pod 改不了它，所以里面的变化只可能来自宿主供给
+    # （config、server.js、内容目录）。可写挂载里既有配置也有数据库/下载文件，
+    # 按文件名分不开——`filebrowser.db`、`dump.rdb` 会被误报成 drift，
+    # 而一条天天空响的判据会训练人忽略它。
+    # 代价说清楚：可写的配置文件（如 blc 的 config.ini）不在射程内。
+    ([ .spec.containers[]? as $c | $c.volumeMounts[]? |
+       select(.readOnly == true) | .name ] | unique) as $names |
+    {pod: .metadata.name, start: .status.startTime,
+     paths: [ .spec.volumes[]? | select(.hostPath) | select(.name as $n | $names | index($n)) | .hostPath.path ]} |
+    select((.paths|length) > 0) |
+    "\(.pod)\t\(.start)\t\(.paths|join(","))"
+  ' 2>/dev/null)
+
+  echo
+  if [ "$drift" -gt 0 ]; then
+    echo "$drift 个 Pod 的内容比进程新 —— 重启对应 Deployment 才会生效。"
+    return 1
+  fi
+  echo "$checked 个挂载 hostPath 的 Pod，内容都没有比进程新。"
+  return 0
+}
+
 main() {
   case "${1:-}" in
     init)
@@ -1762,7 +1821,9 @@ main() {
         conf) k8s_nginx_conf_apply;;
         build) shift 2; if [ -n "${1:-}" ]; then k8s_build "$1"; else for m in $(kits_installed_list); do [ -d "kits/$m/k8s" ] && k8s_build "$m"; done; fi;;
         status) k8s_status;;
-        ""|--help|-h) echo "Usage: $0 k8s [apply|stage|base|conf|build|status]  (stage = 分阶段部署，1GB 机推荐)";;
+        drift) shift 2; k8s_drift "$@";;
+        ""|--help|-h) echo "Usage: $0 k8s [apply|stage|base|conf|build|status]  (stage = 分阶段部署，1GB 机推荐)"
+        echo "        drift [ns]   报出「宿主文件比 Pod 新」的不一致（默认 ns=g41）";;
         *) echo "Unknown k8s command: $2";;
       esac
       ;;

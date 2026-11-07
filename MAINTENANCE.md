@@ -12,6 +12,11 @@
     目录里**确实出现** `..2026_11_07_13_11_25.…` 与 `..data` —— 实测证实 `server.js` 的 `..` 过滤是必需的，
     不是防御性猜测
   - 清理：`g41-verify` 已删除，无残留。本机 mihomo 按维护者要求先停后启，现为 active
+  - 新增 `g41.sh k8s drift`：比较 Pod 的 `startTime` 与它**只读挂载**的宿主内容 mtime，
+    报出「文件比进程新」。实测：篡改 `/opt/g41/.rd/server.js` 的 mtime → 报 redis Pod drift 并退出 1；
+    复原 mtime → 5 个 Pod 无 drift、退出 0。**射程刻意只含只读挂载**——可写目录里既有配置也有数据库
+    （`filebrowser.db`、`dump.rdb`），混进来会让判据天天响；代价是 `blc` 的 `config.ini` 这类
+    可写配置不在射程内
 
 ## 2026-11-07（晚）| [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 

@@ -13,6 +13,12 @@
     `server.js` is required by observation, not defensive guessing
   - Cleanup: `g41-verify` deleted, nothing left behind. The local mihomo was stopped then restarted per the
     maintainer and is active again
+  - Added `g41.sh k8s drift`: compares a Pod'\''s `startTime` against the mtime of what it mounts **read-only**
+    and reports "the file is newer than the process". Measured: touching `/opt/g41/.rd/server.js` → reports
+    the redis Pod and exits 1; restoring the mtime → 5 Pods clean, exit 0. **The scope is deliberately
+    limited to read-only mounts** — writable directories hold both config and databases
+    (`filebrowser.db`, `dump.rdb`), and including them would make the check ring every day; the cost is
+    that writable config such as `blc`'\''s `config.ini` is out of scope
 
 ## 2026-11-07 (evening)| English | [日本語](MAINTENANCE.ja.md) 
 
