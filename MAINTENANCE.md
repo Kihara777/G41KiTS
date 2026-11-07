@@ -2,6 +2,25 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-08（续）
+
+- **内容种子改为「聚合一张 ConfigMap」，并新增 `kits content`**——实测推翻了我先前的判断
+  - 三个内容包的 ConfigMap 依次 `kubectl apply` 后，`/seed` 里**只剩最后一个模块的键**：
+    同名 ConfigMap 的 apply 会按 last-applied 修剪掉别人加的键，**不是「按键合并、自然累积」**。
+    我原先把这句写进了代码注释与维护日志，是错的，已改
+  - 新增 `kits content`：扫全部模块生成一张 `g41-content`（63 键 / 38,473 字节）。
+    `kits export` 不再为内容模块产出 ConfigMap
+  - 补上 `app` / `link` / `data` 三类键（此前只覆盖 `tile` / `i18n`）
+  - **迁移期重复问题**：宿主目录与种子同时供同一批磁贴时 `data:tiles` 会出现重复卡片，
+    而 `data:tiles/<id>` 同键覆盖看不出来。`server.js` 按 id 去重；**变异验证**：
+    去掉去重 `data:tiles (13)`，带上去重 `(12)`
+  - 闸门 15 项（新增：内容键数 = 仓库内容文件数、内容种子 schema、内容种子逐字节还原）。
+    变异（漏掉 app 键 / 破坏块标量）各自退出 1
+  - VPS 临时命名空间实测（生产未动）：聚合种子单次 apply 后 12 tile / 36 i18n / 4 app /
+    6 link / home 五个 data 全部进 Redis，键数与仓库文件数一致
+  - 动的 VPS 前后各停/启了一次 mihomo；另注意：`kubeconform` 需要联网取 schema，
+    **停掉 mihomo 期间闸门会卡住**（实测）
+
 ## 2026-11-08
 
 - **tile / link / i18n 类内容改走单一 ConfigMap 内容种子**（`g41-content`），不再只依赖宿主硬链接

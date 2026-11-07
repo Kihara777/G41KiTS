@@ -2,6 +2,28 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-08 (cont.)
+
+- **The content seed is now one aggregated ConfigMap, with a new `kits content` command** — an experiment
+  overturned what I had written earlier
+  - After three content bundles were `kubectl apply`-ed in turn, `/seed` held **only the last module's keys**:
+    applying a ConfigMap with the same name prunes keys the previous applier added via last-applied. It is
+    **not "merged by key and accumulates"**. I had put that claim in code comments and in this log; it was
+    wrong and is corrected here
+  - New `kits content` scans every module and emits one `g41-content` (63 keys / 38,473 bytes).
+    `kits export` no longer emits a ConfigMap for content modules
+  - Added the `app` / `link` / `data` key kinds (previously only `tile` / `i18n`)
+  - **Duplicate risk during migration**: while the host tree and the seed both supply the same tiles, the
+    tile array shows duplicate cards, and `data:tiles/<id>` hides it via overwrite. `server.js` now dedupes
+    by id; **mutation-verified**: without it `data:tiles (13)`, with it `(12)`
+  - The gate now runs 15 checks (new: content key count == repository content file count, content seed
+    schema, content seed byte-exact round-trip). Mutations (dropping the `app` keys / breaking the block
+    scalar) each exit 1
+  - Measured in a throwaway VPS namespace (production untouched): one apply of the aggregate put 12 tiles /
+    36 i18n / 4 apps / 6 links / five `home` data files into Redis, with counts matching the repository
+  - The VPS work stopped and restarted mihomo around it; also measured: `kubeconform` needs the network for
+    schemas, so **the gate hangs while mihomo is stopped**
+
 ## 2026-11-08
 
 - **tile / link / i18n content now ships as one ConfigMap content seed** (`g41-content`), no longer only
