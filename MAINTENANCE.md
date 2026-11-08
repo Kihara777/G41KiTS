@@ -2,6 +2,21 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-08（过期键清理）
+
+- **修掉「删掉的模块一直留在 Redis 里」**：loader 只写不删，`data:tile_apps/hexo` 这类键会被前端读到
+  - 每次装载记录写过的键，装载后清理「目录型」过期键（`data:<dir>/<name>` 与 `data:i18n_*`）。
+    射程刻意收窄：`data:loading`/`data:loaded` 永不删，`data:links`/`data:tiles` 这类单键不在射程
+  - 判定抽成纯函数 `isStaleKey`，进自检 6 条；**变异验证**：放宽射程 → 「单键未写过也不删」失败；
+    不检查 written → 「本次写过的键不删」失败
+  - 真 Redis 验证：预置 2 个过期键 + 1 个单键，负载后 `prune stale: data:i18n_de,data:tile_apps/hexo`，
+    三者的 exists 为 0/0/1，正在用的四个键全为 1
+  - 生产部署后实测清出**四个**过期键：`data:tile_apps/hexo`、`data:tiles/tile_gh-proxy`、
+    `data:tiles/tile_homete`、旧格式的 `data:i18n/zh`。`tile_apps` 从 5 变 4；磁贴仍 12、
+    link 6、i18n 3，三项 URL 全 200
+  - **另一个坑**：`data:loaded` 存在时 api 启动**不装载**，所以「部署新 server.js + 重启」不会触发清理，
+    必须先 `DEL data:loaded` 再重启——否则看起来部署了、日志也干净，而新代码一次没跑
+
 ## 2026-11-08（合并与故障）
 
 - **分支合入 main，CD 已同步到生产**；合并当场暴露一个我判断错的机制，已修并加判据

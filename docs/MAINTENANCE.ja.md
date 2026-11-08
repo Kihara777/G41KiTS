@@ -2,6 +2,24 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-08（期限切れキーの掃除）
+
+- **「削除したモジュールが Redis に残り続ける」を修正**：loader は書くだけで消さず、
+  `data:tile_apps/hexo` のようなキーが配信され続けていた
+  - ロードのたびに書いたキーを記録し、後に「ディレクトリ型」の期限切れキー
+    （`data:<dir>/<name>` と `data:i18n_*`）を掃除する。射程は意図的に狭く、
+    `data:loading`/`data:loaded` は絶対に消さず、`data:links`/`data:tiles` のような単鍵も対象外
+  - 判定は純関数 `isStaleKey` に切り出し、自己テスト 6 件。**変異検証**：射程を広げると
+    「単鍵は書いていなくても消さない」が失敗、`written` を見ないと「今回書いたキーは消さない」が失敗
+  - 実 Redis 検証：期限切れ 2 件＋単鍵 1 件を仕込み、ロード後に
+    `prune stale: data:i18n_de,data:tile_apps/hexo`、exists は 0/0/1、使用中の 4 キーはすべて 1
+  - 本番投入後は**4 件**を掃除：`data:tile_apps/hexo`、`data:tiles/tile_gh-proxy`、
+    `data:tiles/tile_homete`、旧形式の `data:i18n/zh`。tile_apps は 5 → 4、タイルは 12 のまま、
+    link 6、i18n 3、三つの URL はすべて 200
+  - **もう一つの罠**：`data:loaded` があると api は起動時に**ロードしない**ため、
+    「新しい server.js を置いて再起動」では掃除が走らない。先に `DEL data:loaded` が必要。
+    そうしないと、デプロイ済みに見え、ログもきれいなまま、新しいコードは一度も動かない
+
 ## 2026-11-08（マージと故障）
 
 - **ブランチを main にマージし、CD が本番へ同期した**。マージ直後に、私が判断を誤っていた仕組みが露見。

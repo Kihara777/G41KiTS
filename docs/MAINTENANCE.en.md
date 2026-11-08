@@ -2,6 +2,26 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-08 (stale key pruning)
+
+- **Fixed "removed modules linger in Redis forever"**: the loader only wrote, never deleted, so keys like
+  `data:tile_apps/hexo` kept being served
+  - Every load now records the keys it wrote and afterwards prunes "directory-shaped" stale keys
+    (`data:<dir>/<name>` and `data:i18n_*`). The scope is deliberately narrow: `data:loading`/`data:loaded`
+    are never removed, and single keys such as `data:links`/`data:tiles` are out of scope
+  - The decision is a pure function `isStaleKey` with six self-test cases; **mutation-verified**: widening the
+    scope fails "single keys survive even when unwritten", and not checking `written` fails "keys written this
+    load are not deleted"
+  - Real-Redis check: seeded two stale keys plus one single key, the load logged
+    `prune stale: data:i18n_de,data:tile_apps/hexo`, the three exists values were 0/0/1, and the four live
+    keys all returned 1
+  - After deploying to production it pruned **four** stale keys: `data:tile_apps/hexo`,
+    `data:tiles/tile_gh-proxy`, `data:tiles/tile_homete`, and an old-format `data:i18n/zh`. tile_apps went
+    from 5 to 4; tiles stay 12, links 6, i18n 3; all three URLs return 200
+  - **Another trap**: when `data:loaded` exists the api **does not load at all** on startup, so "deploy the new
+    server.js and restart" does not trigger the prune; you must `DEL data:loaded` first. Otherwise it looks
+    deployed, the log is clean, and the new code never ran
+
 ## 2026-11-08 (merge and failure)
 
 - **The branch was merged into main and CD synced production**; the merge immediately exposed a mechanism I
