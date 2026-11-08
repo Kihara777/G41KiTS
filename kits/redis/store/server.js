@@ -96,6 +96,15 @@ if(process.env.G41_FS_SELFTEST){
     // 反证：若 readDir 不过滤 `..`，`..data` 会变成无法识别的键，unknown 不为 0。
     ok('种子还原的内容与源一致',
        fs.readFileSync(path.join(out,'tiles','foo.json'),'utf8')===fs.readFileSync(path.join(seedDir,'tile.foo.json'),'utf8'));
+
+    // --- 过期键判定（会删键，必须测）---
+    var w={'data:tiles/foo':1,'data:tile_apps/bar':1,'data:i18n_zh':1,'data:links':1,'data:tiles':1};
+    ok('本次写过的键不删', isStaleKey('data:tiles/foo',w)===false && isStaleKey('data:i18n_zh',w)===false);
+    ok('两个标志永不删', isStaleKey('data:loading',w)===false && isStaleKey('data:loaded',w)===false);
+    ok('单键不在射程（data:links / data:tiles）', isStaleKey('data:links',w)===false && isStaleKey('data:tiles',w)===false);
+    ok('没写过的目录型键判为过期', isStaleKey('data:tile_apps/hexo',w)===true);
+    ok('没写过的 i18n 键判为过期', isStaleKey('data:i18n_de',w)===true);
+    ok('单键形态即使没写过也不删', isStaleKey('data:something',w)===false);
   }catch(e){
     console.log('✘ 自检自身出错: '+e.message);fails++;
   }finally{
@@ -143,6 +152,17 @@ function mergeDir(confDir,dirName){
 //   i18n.<模块>.<语言>.json → i18n/<模块>/<语言>.json
 // 启动/重载时**还原成现有目录布局**，然后让 loader 多读一个根目录。
 // 好处是解析逻辑一行不改——键怎么映射是唯一的新知识，也正好是可以被自检覆盖的那部分。
+// 过期键判定（2026-11-08）。会删键，所以抽成纯函数、进自检。
+// 射程刻意收窄：只认「目录型」键（data:<dir>/<name> 与 data:i18n_*），
+// 且必须是本次装载没写过的。data:loading / data:loaded 两个标志永不删，
+// data:links / data:tiles 这些「单键」也不在射程——它们由 multi.set 写成，
+// 若因为拼写差异漏标，删掉就是整页空白。
+function isStaleKey(k,written){
+  if(written[k])return false;
+  if(k==='data:loading'||k==='data:loaded')return false;
+  return /^data:[A-Za-z_][A-Za-z0-9_-]*\//.test(k) || /^data:i18n_/.test(k);
+}
+
 function parseSeedKey(name){
   var m;
   if((m=String(name).match(/^tile\.([A-Za-z0-9_-]+)\.json$/))) return {kind:'tile',mod:m[1]};
@@ -197,6 +217,10 @@ function loadData(callback) {
 
     var confDir='/conf-data',perLang={},pending=0,tileList=[];
     var byId={};
+    // 本次装载实际写过的键。用完用来清理**过期键**：删掉的模块若不清，
+    // 它的条目会一直留在 Redis 里被前端读到（2026-11-08 实测 data:tile_apps/hexo
+    // 就是这样活了很久——宿主和仓库里都已经没有 hexo 了）。
+    var written={};
 
     // 内容种子里记的模块/语言，若键名不合规会在 materializeSeed 里被拒并计入 unknown。
     // 这里把统计打出来：静默跳过 = 页面上少东西而没人知道。
@@ -246,6 +270,7 @@ function loadData(callback) {
         tileList.push(td);
       }
         var id=f.replace('.json','');
+        written['data:tiles/'+id]=1;
         redisSet('data:tiles/'+id,JSON.stringify(td),function(){console.log('data:tiles/'+id);done();});
       });
     });
@@ -272,6 +297,7 @@ function loadData(callback) {
     var topFiles=readDir(confDir).filter(function(f){return f.endsWith('.json');});
     topFiles.forEach(function(f){
       var key=f.replace('.json',''),data=fs.readFileSync(path.join(confDir,f),'utf8');
+      written['data:'+key]=1;
       redisSet('data:'+key,data,function(){
         console.log('data:'+key);
         if(key==='links'){
@@ -294,6 +320,7 @@ function loadData(callback) {
       readDir(fp).forEach(function(df){
         if(!df.endsWith('.json'))return;
         var key=f+'/'+df.replace('.json','');
+        written['data:'+key]=1;
         var data=fs.readFileSync(path.join(fp,df),'utf8');
         if(key==='home/chars'){
           try{
@@ -313,17 +340,29 @@ function loadData(callback) {
       var linksDir=path.join(confDir,'links');
       if(fs.existsSync(linksDir)){
         var all=mergeDir(confDir,'links');
-        multi.set('data:links',JSON.stringify(all));
+        written["data:links"]=1;multi.set('data:links',JSON.stringify(all));
         console.log('data:links');
         for(var j=0;j<all.length;j++){multi.set('link:'+all[j].short,all[j].target);}
       }
       tileList.sort(function(a,b){return (a.id||'').localeCompare(b.id||'');});
-      if(tileList.length){multi.set('data:tiles',JSON.stringify(tileList));console.log('data:tiles ('+tileList.length+')');}
+      if(tileList.length){written["data:tiles"]=1;multi.set('data:tiles',JSON.stringify(tileList));console.log('data:tiles ('+tileList.length+')');}
       var lk=Object.keys(perLang);
-      for(var k=0;k<lk.length;k++){multi.set('data:i18n_'+lk[k],JSON.stringify(perLang[lk[k]]));console.log('data:i18n_'+lk[k]);}
+      for(var k=0;k<lk.length;k++){written["data:i18n_"+lk[k]]=1;multi.set('data:i18n_'+lk[k],JSON.stringify(perLang[lk[k]]));console.log('data:i18n_'+lk[k]);}
       multi.set('data:loaded','1');
       multi.del('data:loading');
       multi.exec().then(function(){
+        // 清理过期键（2026-11-08）：删掉的模块若不清，条目会一直留在 Redis 里被前端读到。
+        // 实测 `data:tile_apps/hexo` 在宿主与仓库里都不存在了，却活了很久。
+        // 射程刻意收窄：只清「目录型」键（data:<dir>/<name> 与 data:i18n_*），
+        // 且必须是本次装载没写过的；data:loading / data:loaded 两个标志永不删。
+        return redisClient.keys('data:*').then(function(keys){
+          var stale=keys.filter(function(k){return isStaleKey(k,written);});
+          if(stale.length){
+            console.log('prune stale: '+stale.join(','));
+            return redisClient.del(stale);
+          }
+        });
+      }).then(function(){
         console.log('Data load complete');
         callback(null);
       })['catch'](function(e){
