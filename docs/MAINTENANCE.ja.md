@@ -2,6 +2,24 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-09（単一来源 + update/rollback の閉ループ）
+
+- **コンテンツを単一来源に**：`redis` からホストの `/conf-data` マウントを外し、`/seed` だけにした
+  - 同じ内容に二つの生産元があると、ホスト側がシードの問題を隠す（ホストを直したのか、シードが効いていないのか、見分けられない）
+  - **CD が内容シードの生成と適用を担う**：`deploy.yml` が workloads の前に `kits content` を実行して apply。
+    これまで `g41-content` は私が手で apply しており、新規デプロイでは内容が入らなかった
+  - 代償はコメントに明記：`g41-content` が無いときは「タイルが数個足りない」ではなく「内容が全空」になる
+  - 本番実測：api コンテナのマウントは `/app/server.js` と `/seed` のみ。`data:loaded` を消して再起動すると
+    ログは `seed: tiles=12 i18n=36 unknown=0`、`data:tiles (12)`。タイル 12、tile_apps 4、tile_links 6、
+    i18n 3、home 5、三つの URL はすべて 200、Pod は 7 個 Running
+- **update / rollback の全経路を検証**（従来はコマンド単位のみ）：`kits export` が tag を
+  `g41k8s/redis:1.0.0` に固定 → `--dry-run=server` が API Server の受理後のオブジェクトを返し、
+  api コンテナの image は確かに 1.0.0 → `kits update --to 1.1.0` で 1.1.0 → `kits rollback` が
+  1.0.0 を選び 1.0.0 に戻る。**ビルド側も補完**：`g41-image-build.sh redis` が `:1.0.0` と `:local`
+  の二つの tag（同一 digest）を生成——これが無いとバージョン固定のバンドルは `ImagePullBackOff` になる
+- 既知の型を二つ再確認：mihomo 停止中はゲートの `kubeconform` が schema を取得できず**停止する**。
+  `pkill -f check-modules.sh` は**自分のシェルも殺した**（PID 指定に変更）
+
 ## 2026-11-08（期限切れキーの掃除）
 
 - **「削除したモジュールが Redis に残り続ける」を修正**：loader は書くだけで消さず、

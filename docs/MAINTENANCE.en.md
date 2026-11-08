@@ -2,6 +2,26 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-09 (single source + update/rollback closed loop)
+
+- **Content now has a single source**: the host `/conf-data` mount is gone from `redis`; only `/seed` remains
+  - When one batch of content has two producers, the host copy masks seed problems (a host edit, or a seed
+    that never took effect, both look identical)
+  - **CD now generates and applies the content seed**: `deploy.yml` runs `kits content` and applies it before
+    the workloads. Until now I had been applying `g41-content` by hand, so a fresh deploy would have no content
+  - The cost is in the comment: a missing `g41-content` no longer means "a few tiles missing" but "all content
+    empty"
+  - Measured in production: the api container now mounts only `/app/server.js` and `/seed`; after clearing
+    `data:loaded` and restarting, the log read `seed: tiles=12 i18n=36 unknown=0` and `data:tiles (12)`;
+    tiles 12, tile_apps 4, tile_links 6, i18n 3, home 5; all three URLs 200, 7 Pods Running
+- **The full update / rollback chain is verified** (previously only at the command level): `kits export` pins
+  the tag to `g41k8s/redis:1.0.0` → `--dry-run=server` returns the object the API server would accept, with
+  the api container image at 1.0.0 → after `kits update --to 1.1.0` it is 1.1.0 → `kits rollback` picks
+  1.0.0 and returns to 1.0.0. **The build side was completed too**: `g41-image-build.sh redis` produces both
+  `:1.0.0` and `:local` (same digest) — without it, a version-pinned bundle hits `ImagePullBackOff`
+- Two known shapes showed up again: with mihomo stopped the gate's `kubeconform` cannot fetch schemas and
+  **hangs**; and `pkill -f check-modules.sh` **killed my own shell** (switched to matching by PID)
+
 ## 2026-11-08 (stale key pruning)
 
 - **Fixed "removed modules linger in Redis forever"**: the loader only wrote, never deleted, so keys like

@@ -2,6 +2,24 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-09（单一来源 + update/rollback 闭环）
+
+- **内容改成单一来源**：去掉 `redis` 的宿主 `/conf-data` 挂载，只留 `/seed`
+  - 同一批内容有两个产地时，宿主那份会掩盖种子的问题（改了宿主、或种子没生效，都看不出来）
+  - **CD 负责生成并应用内容种子**：`deploy.yml` 在 apply workloads 之前跑 `kits content` 并 apply。
+    此前 `g41-content` 是我手工 apply 的，全新部署会没有内容
+  - 代价写进注释：`g41-content` 缺失时不再是「少几个磁贴」，而是内容全空
+  - 实测（生产）：api 容器的挂载只剩 `/app/server.js` 与 `/seed`；清 `data:loaded` 重启后
+    日志 `seed: tiles=12 i18n=36 unknown=0`、`data:tiles (12)`；磁贴 12、tile_apps 4、
+    tile_links 6、i18n 3、home 5；三项 URL 全 200、7 Pod Running
+- **update / rollback 的完整链路已验**（此前只有命令级）：
+  `kits export` 把 tag 钉成 `g41k8s/redis:1.0.0` → `--dry-run=server` 取回 API Server 接受后的
+  对象，api 容器 image 确为 1.0.0 → `kits update --to 1.1.0` 后为 1.1.0 → `kits rollback` 选中
+  1.0.0 并回到 1.0.0。**构建端补齐**：`g41-image-build.sh redis` 产出 `:1.0.0` 与 `:local`
+  两个 tag（同一 digest）——没有这一步，钉版本的包会 `ImagePullBackOff`
+- 顺带撞到两个已知形状：停着 mihomo 时闸门的 `kubeconform` 取不到 schema 会**卡住**；
+  `pkill -f check-modules.sh` **把自己的 shell 也杀了**（改用按 PID）
+
 ## 2026-11-08（过期键清理）
 
 - **修掉「删掉的模块一直留在 Redis 里」**：loader 只写不删，`data:tile_apps/hexo` 这类键会被前端读到
