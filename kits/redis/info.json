@@ -14,6 +14,7 @@
     {"dir": ".rd/data", "accepts": ["data"], "file": "data", "check": false}
   ],
   "selftest": "G41_FS_SELFTEST=1 node store/server.js",
+  "version": "1.0.0",
   "store": {
     "dir": ".rd",
     "items": {
