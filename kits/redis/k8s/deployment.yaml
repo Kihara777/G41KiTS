@@ -78,10 +78,13 @@ spec:
             - { containerPort: 8000 }
           volumeMounts:
             - { name: server-js, mountPath: /app/server.js, readOnly: true }
-            - { name: conf-data, mountPath: /conf-data, readOnly: true }
             # 内容种子（2026-11-08）：tile/i18n 类模块的内容由 ConfigMap 供给，
-            # 启动/重载时被还原成目录布局再读进 Redis。optional: true ——
-            # ConfigMap 不存在时是「少几个磁贴」，不是「API 起不来」。
+            # 启动/重载时被还原成目录布局再读进 Redis。
+            # 2026-11-09 起**不再挂宿主 /conf-data**：同一批内容有两个产地时，
+            # 宿主那份会掩盖种子的问题（改了宿主、或种子没生效，都看不出来）。
+            # 现在内容是单一来源，出问题只有一种解释。
+            # 代价写清楚：`g41-content` 缺失时不再是「少几个磁贴」，而是内容全空——
+            # 所以 CD 里在 apply workloads 之前先生成并应用它。
             - { name: seed, mountPath: /seed, readOnly: true }
           resources:
             limits: { memory: 256Mi, cpu: "1" }
@@ -98,7 +101,5 @@ spec:
           hostPath: { path: /opt/g41/.rd, type: DirectoryOrCreate }
         - name: server-js
           hostPath: { path: /opt/g41/.rd/server.js, type: FileOrCreate }
-        - name: conf-data
-          hostPath: { path: /opt/g41/.rd/data, type: DirectoryOrCreate }
         - name: seed
           configMap: { name: g41-content, optional: true }

@@ -37,4 +37,10 @@ jobs:
           script: |
             cd ${{ secrets.VPS_PATH }}
             ./g41.sh k8s conf
+            # 内容种子必须由仓库现生成再应用（2026-11-09）：
+            # `g41-content` 此前是我手工 apply 的，全新部署不会带上它，
+            # 而 tile/i18n 的内容解析已经只靠它。顺序在 workloads 之前——
+            # redis 的清单引用这张 ConfigMap，先有内容再有消费者。
+            ./g41.sh kits content
+            kubectl apply -f dist/g41-content.yaml
             ./g41.sh k8s apply --all
