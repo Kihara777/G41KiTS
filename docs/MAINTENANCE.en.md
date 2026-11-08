@@ -2,6 +2,22 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-09 (version tags rolled out)
+
+- **Manifests for self-built images now reference version tags, so the version actually governs production**
+  - Until now only exported bundles pinned a version; the repo manifests still said `:local`, and CD applies
+    the **manifests** — so production was really running `:local` and the version number was paperwork
+  - `aria2` / `bt` / `redis` manifests now reference `g41k8s/<m>:1.0.0`; `kits update` rewrites the manifest tag
+    too (bumping a version while the manifest lags means running the old image with nothing reporting it) and
+    reminds you to build the image first
+  - New gate criterion (#17): every `g41k8s/<m>:<tag>` in a manifest must equal that kit's `version` in
+    info.json. Mutation-verified: setting aria2 to 9.9.9 yields
+    `deployment.yaml:g41k8s/aria2:1.0.0(expected 9.9.9)`
+  - **Images were built before pushing** (bt was built in this window); otherwise CD apply means `ImagePullBackOff`
+  - Measured in production: the Deployments reference `g41k8s/aria2:1.0.0 g41k8s/bt:1.0.0` and
+    `g41k8s/redis:1.0.0`; both Pods restarted and are Running with **every container ready=true and no pull
+    failures**; tiles 12 and all three URLs 200
+
 ## 2026-11-09 (single source + update/rollback closed loop)
 
 - **Content now has a single source**: the host `/conf-data` mount is gone from `redis`; only `/seed` remains

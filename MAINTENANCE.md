@@ -2,6 +2,19 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-09（版本 tag 铺开）
+
+- **自建镜像的清单改引用版本 tag，版本开始真正治理生产**
+  - 此前只有导出包钉版本，仓库清单仍是 `:local`，而 CD apply 的是**清单**——
+    所以生产跑的其实一直是 `:local`，版本号只是纸面
+  - `aria2` / `bt` / `redis` 的清单改为 `g41k8s/<m>:1.0.0`；`kits update` 一并改写清单 tag
+    （升版本后清单不跟 = 跑旧镜像而无人报错），并提示先构建镜像
+  - 新增闸门判据（第 17 项）：清单里的 `g41k8s/<m>:<tag>` 必须等于 info.json 的 version。
+    变异验证：把 aria2 的 version 改成 9.9.9 → `deployment.yaml:g41k8s/aria2:1.0.0(期望 9.9.9)`
+  - **推之前先建镜像**（bt 是这个窗口里补建的），否则 CD 一 apply 就是 ImagePullBackOff
+  - 实测（生产）：Deployment 引用 `g41k8s/aria2:1.0.0 g41k8s/bt:1.0.0` 与 `g41k8s/redis:1.0.0`；
+    两个 Pod 重启后 Running，**全部容器 ready=true，无拉取失败**；磁贴 12、三项 URL 200
+
 ## 2026-11-09（单一来源 + update/rollback 闭环）
 
 - **内容改成单一来源**：去掉 `redis` 的宿主 `/conf-data` 挂载，只留 `/seed`
