@@ -282,6 +282,23 @@ else
   skip "ConfigMap 引用闭环（没有 ruby）"
 fi
 
+# ---------- 4d. 镜像 tag 与版本一致 ----------
+# 2026-11-09：自建镜像的清单开始引用版本 tag（g41k8s/<m>:<ver>）而不是 :local。
+# 一旦版本升级而清单没跟，apply 出去的就是旧 tag（或 :local），而两者都存在，
+# 没有任何东西会报错——只有「跑的不是你以为的那份镜像」。
+section "镜像 tag 与版本一致"
+bad_tag=""
+for f in kits/*/k8s/*.yaml; do
+  [ -f "$f" ] || continue
+  while read -r mod tag; do
+    [ -n "$mod" ] || continue
+    [ -f "kits/$mod/info.json" ] || { bad_tag="$bad_tag ${f##*/}:$mod(无此模块)"; continue; }
+    want=$(jq -r '.version // "local"' "kits/$mod/info.json" 2>/dev/null || echo "local")
+    [ "$tag" = "$want" ] || bad_tag="$bad_tag ${f##*/}:g41k8s/$mod:$tag(期望 $want)"
+  done < <(grep -oE 'g41k8s/[A-Za-z0-9_-]+:[A-Za-z0-9._+-]+' "$f" 2>/dev/null | sed 's|g41k8s/||' | tr ':' ' ' || true)
+done
+if [ -z "$bad_tag" ]; then pass "清单引用的自建镜像 tag 与 info.json 版本一致"; else fail "tag 与版本不一致:$bad_tag"; fi
+
 # ---------- 5. 集群类判据：只查存在性 ----------
 section "集群类判据（不连集群）"
 if grep -q '^k8s_drift()' g41.sh; then pass "k8s drift 已实现（这里不连集群，故不验它的行为）"; else fail "k8s drift 缺失"; fi

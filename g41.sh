@@ -1731,6 +1731,22 @@ kits_update() {
       # 写后读回：sed 没匹配上时会「成功」但什么都没改。
       [ "$now" = "$to" ] || { echo "ERROR: 写回后读到的是 '$now'，不是 '$to'——版本未生效"; return 1; }
       echo "版本: $cur → $to"
+
+      # 清单里的镜像 tag 必须跟着版本走（2026-11-09）。
+      # 不同步的话：info.json 说 1.1.0、清单还写着 1.0.0，apply 出去跑的是旧镜像，
+      # 而两个 tag 都存在、Pod 也健康——没有东西会报错。
+      local mf changed=0
+      for mf in "kits/$m/k8s"/*.yaml; do
+        [ -f "$mf" ] || continue
+        grep -q "g41k8s/$m:$cur" "$mf" 2>/dev/null || continue
+        sed -i "s|g41k8s/$m:$cur|g41k8s/$m:$to|g" "$mf"
+        changed=$((changed+1))
+      done
+      if [ "$changed" -gt 0 ]; then
+        echo "清单 tag 已同步: $changed 份（g41k8s/$m:$cur → $to）"
+        echo "  注意：新 tag 的镜像必须先构建出来，否则 apply 后是 ImagePullBackOff"
+        echo "  （在部署机上跑 /opt/g41/k8s/host/g41-image-build.sh $m）"
+      fi
     fi
   fi
 

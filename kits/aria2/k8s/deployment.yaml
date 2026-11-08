@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: aria2
-          image: g41k8s/aria2:local
+          image: g41k8s/aria2:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - { containerPort: 6800 }
@@ -37,7 +37,7 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 3
         - name: bt
-          image: g41k8s/bt:local
+          image: g41k8s/bt:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - { name: peer-tcp, containerPort: 51413, hostPort: 51413, protocol: TCP }
