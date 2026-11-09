@@ -183,7 +183,7 @@ kits_help() {
   echo "  kits reload       Hot-reload tile/i18n/link data into Redis (zero downtime)"
   echo "  kits pack [-L] [-S] [-A] [-D]  Build archive (-L .local, -S store, -A agents, -D docs)"
   echo "  kits export <mod> [-o <path>]  Bundle a module's k8s manifests into one file (可远程分发)"
-  echo "  kits update <mod> [--to <ver>] [--apply]   改版本号并重出包（默认不落集群）"
+  echo "  kits update <mod> [--to <ver>] [--build] [--apply]   改版本号、重出包、可选构建与落集群"
   echo "  kits rollback <mod> [--to <ver>] [--apply] 回滚到 dist/ 里现存的一个旧版本"
   echo "  kits selftest [mod]  跑模块自带的自检（info.json 的 selftest 字段）"
   echo "  kits remote <url> [--apply] [-n <ns>] [--sha256 <hex>]"
@@ -1762,11 +1762,12 @@ kits_remote() {
 }
 
 kits_update() {
-  local m="" to="" apply=""
+  local m="" to="" apply="" build=""
   while [ $# -gt 0 ]; do
     case "$1" in
       --to) to="$2"; shift;;
       --apply) apply="1";;
+      --build) build="1";;
       -*) echo "ERROR: unknown flag $1"; return 1;;
       *) m="$1";;
     esac
@@ -1813,6 +1814,20 @@ kits_update() {
   fi
 
   local ver; ver=$(kit_version "$m")
+
+  # --build：镜像必须先于清单存在，否则 apply 下去就是 ImagePullBackOff。
+  # 把这一步并进来，是为了不再依赖「人记得先建」（2026-11-09 我自己就差点漏）。
+  if [ -n "$build" ]; then
+    local bs="/opt/g41/k8s/host/g41-image-build.sh"
+    if [ -x "$bs" ]; then
+      echo "构建镜像（$m @ $ver）…"
+      "$bs" "$m" || { echo "ERROR: 镜像构建失败，未生成包"; return 1; }
+    else
+      echo "ERROR: 找不到 $bs —— 镜像构建只在部署机上能做（没能验到）"
+      return 2
+    fi
+  fi
+
   kits_export "$m" || return 1
 
   if [ -z "$apply" ]; then
