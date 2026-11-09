@@ -1463,6 +1463,68 @@ kits_content() {
   echo "内容种子: $out（$n 个键，$total 字节）"
 }
 
+# 生成 api 源码 ConfigMap（2026-11-09）。
+#
+# 为什么需要它：`server.js` 原先是宿主机单文件 /opt/g41/.rd/server.js，靠人手工 cp。
+# 手工搬运意味着「改仓库 ≠ 改运行的那份」，而且实测过两者 inode 不同源——
+# 改完仓库、重启、日志干净、站点正常，跑的却还是旧代码。
+# 现在改成 ConfigMap 供给，由 CD 生成并 apply，仓库是唯一来源。
+kits_api_src() {
+  local out="dist/g41-api-src.yaml" src="kits/redis/store/server.js"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -o|--out) out="$2"; shift;;
+      *) ;;
+    esac
+    shift
+  done
+  [ -f "$src" ] || { echo "ERROR: $src 不存在"; return 1; }
+  mkdir -p "$(dirname "$out")" 2>/dev/null
+  local tmp="${out}.tmp.$$"; rm -f "$tmp"
+  {
+    echo "# G41KiTS api 源码 —— 由 \`kits api-src\` 生成，勿手改"
+    echo "# generated: $(date -Is)"
+    echo "---"
+    echo "apiVersion: v1"
+    echo "kind: ConfigMap"
+    echo "metadata:"
+    echo "  name: g41-api-src"
+    echo "  namespace: g41"
+    echo "  labels:"
+    echo "    app.kubernetes.io/part-of: g41"
+    echo "    g41.api-src: \"1\""
+    echo "data:"
+    cm_emit "server.js" "$src"
+  } > "$tmp"
+  grep -q '^  server.js:' "$tmp" || { echo "ERROR: 生成的清单里没有 server.js 键"; rm -f "$tmp"; return 1; }
+  mv -f "$tmp" "$out"
+  echo "api 源码: $out（$(wc -c < "$src" | tr -d ' ') 字节）"
+}
+
+# 备份轮转（2026-11-09）：每次手工迁移都 `cp -a` 一份十几 G 的备份，
+# 攒几次就把盘吃掉，而没有任何东西会提醒。保留最近 N 份，其余删掉并打印删了什么。
+kits_backup() {
+  local root="${1:-/root}" keep=2 pattern="G41KiTS.bak." list n i=0
+  if [ "$(id -u)" != "0" ]; then
+    echo "ERROR: 备份轮转只在部署机上跑（需要读写 /root）——没能验到"; return 2
+  fi
+  list=$(ls -1dt "$root/$pattern"* 2>/dev/null || true)
+  n=$(echo "$list" | grep -c . || true)
+  echo "现有备份: $n 份"
+  [ "$n" -gt 0 ] || return 0
+  for d in $list; do
+    i=$((i+1))
+    local sz; sz=$(du -sh "$d" 2>/dev/null | cut -f1)
+    if [ "$i" -le "$keep" ]; then
+      printf '  保留 %s (%s)\n' "$(basename "$d")" "$sz"
+    else
+      printf '  删除 %s (%s)\n' "$(basename "$d")" "$sz"
+      rm -rf "$d"
+    fi
+  done
+  echo "轮转完成，保留最近 $keep 份"
+}
+
 kits_export() {
   local m="" out=""
   while [ $# -gt 0 ]; do
@@ -1918,6 +1980,8 @@ main() {
         pack) shift 2; kits_pack "$@";;
         export) shift 2; kits_export "$@";;
         content) shift 2; kits_content "$@";;
+        api-src) shift 2; kits_api_src "$@";;
+        backup) shift 2; kits_backup "$@";;
         update) shift 2; kits_update "$@";;
         rollback) shift 2; kits_rollback "$@";;
         selftest) shift 2; kits_selftest "$@";;

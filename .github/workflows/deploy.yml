@@ -43,4 +43,8 @@ jobs:
             # redis 的清单引用这张 ConfigMap，先有内容再有消费者。
             ./g41.sh kits content
             kubectl apply -f dist/g41-content.yaml
+            # api 源码同样由仓库现生成（2026-11-09）：它原先挂在宿主机单文件上，
+            # 靠人手工 cp——而实测两者 inode 不同源，改仓库不等于改运行的那份。
+            ./g41.sh kits api-src
+            kubectl apply -f dist/g41-api-src.yaml
             ./g41.sh k8s apply --all

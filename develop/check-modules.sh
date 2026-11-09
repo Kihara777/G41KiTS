@@ -188,6 +188,14 @@ else
   fail "kits content 失败：$(tail -2 /tmp/cm-content.log | tr '\n' ' ')"
 fi
 
+# api 源码也是生成物（2026-11-09）。在引用闭环判据之前生成，
+# 这样「redis 引用了 g41-api-src，有没有东西生产它」才能被回答。
+if "$ROOT/g41.sh" kits api-src >/tmp/cm-api.log 2>&1; then
+  pass "kits api-src：$(tail -1 /tmp/cm-api.log)"
+else
+  fail "kits api-src 失败：$(tail -2 /tmp/cm-api.log | tr '\n' ' ')"
+fi
+
 if [ -f dist/g41-content.yaml ]; then
   # 键数必须等于仓库里内容文件的总数——少了就是有模块被漏掉，
   # 而漏掉的表现在页面上是「某个磁贴不见了」，不是任何报错。
