@@ -2,6 +2,25 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-09（设施升级收尾）
+
+- **最后一处手工搬运收掉**：`server.js` 改由 ConfigMap `g41-api-src` 供给
+  - 新增 `kits api-src`（从仓库生成 ConfigMap）、CD 在 apply workloads 前生成并应用
+  - 此前它挂宿主机单文件 `/opt/g41/.rd/server.js`，实测与仓库**不是同一 inode**——
+    改仓库、重启、日志干净、站点正常，跑的却是旧代码
+  - 失效模式变响不是变静：ConfigMap 非 optional，缺失时 Pod 直接
+    `CreateContainerConfigError`
+  - 实测（生产）：`server-js` 卷已是 `configMap: g41-api-src`；容器内 `/app/server.js`
+    与 ConfigMap 内容 sha256 相同
+- **`kits update` 加 `--build`**：改版本 → 构建 → 出包 → 可选 apply，一条命令。
+  此前要人记得两步，我自己就差点漏掉构建导致 ImagePullBackOff
+- **新增 `kits backup`**：轮转 `/root/G41KiTS.bak.*`，保留最近 2 份并打印删除项。
+  实测生产 6 份 → 保留 2 份（13G + 21M），删掉 4 份旧备份
+- **真机验证升级与回退**（不再只是 dry-run）：
+  `redis 1.0.0 → 1.1.0` 构建镜像 → CD 部署 → Deployment 与 Pod 均为 `g41k8s/redis:1.1.0`；
+  再回退 `1.1.0 → 1.0.0` → CD 部署 → 两者均回到 `1.0.0`，7/7 Pod Running，三项 URL 200、磁贴 12
+- 闸门 18 项（新增 api-src 生成与引用闭环覆盖）
+
 ## 2026-11-09（版本 tag 铺开）
 
 - **自建镜像的清单改引用版本 tag，版本开始真正治理生产**

@@ -2,6 +2,26 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-09（設備アップグレードの締め）
+
+- **最後の手作業が消えた**：`server.js` は ConfigMap `g41-api-src` で供給される
+  - 新規 `kits api-src` がリポジトリから生成し、CD が workloads の前に生成・適用する
+  - 従来はホストの単一ファイル `/opt/g41/.rd/server.js` をマウントしていたが、実測でリポジトリの
+    ファイルとは**別の inode**。リポジトリを直し、再起動し、ログもきれいで、サイトも正常なのに、
+    動いているのは古いコードだった
+  - 故障の仕方は静かではなく**より騒がしく**なった：ConfigMap は非 optional なので、無いと Pod は
+    `CreateContainerConfigError` になる
+  - 本番実測：`server-js` ボリュームは `configMap: g41-api-src` になり、コンテナ内 `/app/server.js` の
+    sha256 は ConfigMap の内容と一致
+- **`kits update --build`**：バージョン変更 → ビルド → バンドル → 任意で適用、を一コマンドに。
+  従来は人が二段階を覚える必要があり、私自身がビルドを飛ばして ImagePullBackOff になりかけた
+- **新規 `kits backup`**：`/root/G41KiTS.bak.*` を輪転し、最新 2 件を残して削除内容を表示。
+  本番実測：6 件 → 2 件保持（13G + 21M）、4 件を削除
+- **実機でアップグレードとロールバックを検証**（もはや dry-run ではない）：`redis 1.1.0` をビルドし
+  CD が配備、Deployment と Pod の双方が `g41k8s/redis:1.1.0` を報告。次に `1.0.0` へ戻し、CD 配備後は
+  双方とも `1.0.0`。7/7 Pod が Running、三つの URL は 200、タイル 12
+- ゲートは 18 項目（api-src の生成と参照閉ループの被覆を追加）
+
 ## 2026-11-09（バージョン tag の展開）
 
 - **自前ビルドイメージのマニフェストがバージョン tag を参照するようになり、バージョンが実際に本番を統治**

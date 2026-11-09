@@ -2,6 +2,25 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-09 (facility upgrade wrapped up)
+
+- **The last manual hand-off is gone**: `server.js` now ships as the ConfigMap `g41-api-src`
+  - New `kits api-src` generates it from the repo; CD generates and applies it before the workloads
+  - It used to mount the host file `/opt/g41/.rd/server.js`, which measured as **a different inode** from the
+    repo file: edit the repo, restart, clean logs, healthy site — and the old code still runs
+  - The failure mode got louder, not quieter: the ConfigMap is not optional, so a missing one leaves the Pod
+    in `CreateContainerConfigError`
+  - Measured in production: the `server-js` volume is now `configMap: g41-api-src`, and `/app/server.js`
+    inside the container has the same sha256 as the ConfigMap content
+- **`kits update --build`**: bump version → build → bundle → optional apply, in one command. It used to be
+  two steps a human had to remember; I myself nearly skipped the build and would have hit ImagePullBackOff
+- **New `kits backup`**: rotates `/root/G41KiTS.bak.*`, keeps the newest 2 and prints what it deletes.
+  Measured in production: 6 backups → 2 kept (13G + 21M), 4 removed
+- **Real upgrade and rollback verified** (no longer dry-run only): built `redis 1.1.0`, CD deployed it, and
+  both the Deployment and the Pod reported `g41k8s/redis:1.1.0`; then rolled back to `1.0.0`, CD deployed it,
+  and both returned to `1.0.0` with 7/7 Pods Running, all three URLs 200 and 12 tiles
+- The gate runs 18 checks (api-src generation and its reference-closure coverage added)
+
 ## 2026-11-09 (version tags rolled out)
 
 - **Manifests for self-built images now reference version tags, so the version actually governs production**
