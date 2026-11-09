@@ -58,7 +58,7 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 3
         - name: api
-          image: g41k8s/redis:1.0.0
+          image: g41k8s/redis:1.1.0
           imagePullPolicy: IfNotPresent
           args: ["/app/entry.js"]
           env:
