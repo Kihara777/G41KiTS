@@ -2,6 +2,18 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-10（补齐清单里剩下的三件）
+
+- **`kits uninstall <mod> [--dry-run]`**：删 k8s 对象 + 重生成内容种子（`kits content --exclude`）。
+  三件必须一起说清：删对象、种子里去掉它的键（配合过期键清理，重载后 Redis 也掉）、
+  **仓库里它还在，下次 CD 会装回来**。dry-run 实测正确列出 `Deployment dns` + `Service dns`；
+  **真删除未演练**——生产上没有可牺牲的模块
+- **`kits remote --apply` 真机验证**（此前只到 dry-run）：从 raw.githubusercontent 取
+  `kits/aria2/k8s/service.yaml` → 算哈希 → 应用 → `service/aria2 unchanged`（幂等）
+- **`kits rollback --apply` 仍只到 dry-run**：真机上没有两个版本并存可练，未演练
+- **教训落文件**：`lessons/` 补三篇（optional 挂载遮蔽 / apply 会修剪别人的键 / set -e 无声杀脚本），
+  接进 MIND 形态 A / E / D。`check-mind` 213/213——顺带被它抓到形态 E 的篇数写少了一篇
+
 ## 2026-11-10（k8s 原生安装）
 
 - **新增 `kits install <mod> [--dry-run] [--no-build]`**：k8s 原生的「装一个模块」

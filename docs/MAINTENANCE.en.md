@@ -2,6 +2,20 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-10 (closing the last three items)
+
+- **`kits uninstall <mod> [--dry-run]`**: deletes the k8s objects and regenerates the content seed with
+  `kits content --exclude`. Three facts have to travel together: the objects are deleted, that module's keys
+  leave the seed (and with stale-key pruning, leave Redis after a reload too), and **the module is still in the
+  repo, so the next CD installs it again**. Dry-run correctly listed `Deployment dns` + `Service dns`;
+  **the real deletion was not exercised** — there is no expendable module in production
+- **`kits remote --apply` verified against the real cluster** (previously dry-run only): fetched
+  `kits/aria2/k8s/service.yaml` from raw.githubusercontent, hashed it, applied it → `service/aria2 unchanged`
+- **`kits rollback --apply` is still dry-run only**: there were no two coexisting versions to rehearse with
+- **Lessons landed as files**: three new entries under `lessons/` (optional mounts shadow, apply prunes other
+  keys, `set -e` exits silently), wired into MIND forms A / E / D. `check-mind` reports 213/213 — and it caught
+  that form E's count was one short
+
 ## 2026-11-10 (k8s-native install)
 
 - **New `kits install <mod> [--dry-run] [--no-build]`**: the k8s-native "install one module"

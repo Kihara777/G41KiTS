@@ -2,6 +2,19 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-10（残り三件を片付ける）
+
+- **`kits uninstall <mod> [--dry-run]`**：k8s オブジェクトを削除し、コンテンツシードを `kits content --exclude` で
+  再生成する。三つを必ず一緒に伝える：オブジェクト削除、シードからそのキーが消える（期限切れキー掃除により
+  再読込後は Redis からも消える）、そして**リポジトリには残るので次回の CD が再び入れてしまう**。
+  dry-run は `Deployment dns` + `Service dns` を正しく列挙。**実削除は未演習**——本番に犠牲にできるモジュールが無い
+- **`kits remote --apply` を実機で検証**（従来は dry-run のみ）：raw.githubusercontent から
+  `kits/aria2/k8s/service.yaml` を取得し、ハッシュを計算して適用 → `service/aria2 unchanged`（冪等）
+- **`kits rollback --apply` は依然 dry-run のみ**：実機に二つのバージョンが併存しておらず演習できず
+- **教訓をファイル化**：`lessons/` に三篇追加（optional マウントの遮蔽／apply は他人のキーを剪定する／
+  `set -e` は無言で終了する）。MIND の形態 A / E / D に接続。`check-mind` は 213/213——
+  その過程で形態 E の篇数が一つ足りないことも指摘された
+
 ## 2026-11-10（k8s ネイティブなインストール）
 
 - **`kits install <mod> [--dry-run] [--no-build]` を追加**：k8s ネイティブな「モジュールを一つ入れる」
