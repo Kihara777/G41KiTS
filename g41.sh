@@ -764,6 +764,17 @@ kits_add() {
   done
   [ -z "$m" ] && { echo "ERROR: module name required"; return 1; }
 
+  # 2026-11-10：k8s 后端下 `kits add` 只往宿主铺文件，而 tile/app/link/i18n 的内容
+  # 已改由 `g41-content` ConfigMap 供给（kits content）、api 源码由 `g41-api-src` 供给。
+  # 所以这里铺出去的那批文件**没有消费者**——装完看着正常，是因为生效的是另一条路。
+  # 不阻断（有人可能就是想取文件），但必须说出来。
+  if [ "$(backend_get)" = "k8s" ]; then
+    echo "⚠ backend=k8s：kits add 走的是宿主内容装配，而内容现在由 ConfigMap 供给。"
+    echo "  装模块请用：./g41.sh kits install $m"
+    echo "  （继续执行本命令只会往宿主铺一批没人读的文件）"
+    echo
+  fi
+
   # virtual module "all" — install all kits
   if [ "$m" = "all" ]; then
     local count=0
@@ -1531,6 +1542,77 @@ kits_backup() {
 # 清单指向哪个镜像、内容键是谁供的」的账。查这些要翻四个地方：
 # info.json、k8s 清单、kits content 的产物、集群里的 Deployment。
 # 这四条一旦不一致，**每一处单独看都是对的**。
+# k8s 原生的「装一个模块」（2026-11-10）。
+#
+# 为什么不是复用 `kits add`：那条路是**宿主内容装配**（往 .rd/data、.gx 铺硬链接），
+# 而内容已经改由 ConfigMap 供给——现在跑它只会往宿主铺一批没人读的文件。
+# 装了看起来没坏，页面也正常，**因为真正生效的是另一条路**。这种死路留着最危险。
+#
+# 这里只做四件事，每一步都能单独查：
+#   1. verify（已有的 L1–L4）
+#   2. 自建镜像先构建（否则 apply 下去就是 ImagePullBackOff）
+#   3. 刷新内容种子与 api 源码（仓库级生成物，幂等）
+#   4. 导出该模块的包并 apply（包里的镜像 tag 已钉版本）
+kits_install() {
+  local m="" dry="" nohandoff=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --dry-run) dry="1";;
+      --no-build) nohandoff="1";;
+      -*) echo "ERROR: unknown flag $1"; return 1;;
+      *) m="$1";;
+    esac
+    shift
+  done
+  [ -n "$m" ] || { echo "ERROR: module name required"; return 1; }
+  [ -f "kits/$m/info.json" ] || { echo "ERROR: 模块 '$m' 不存在"; return 1; }
+
+  local be; be=$(backend_get)
+  if [ "$be" != "k8s" ]; then
+    echo "ERROR: backend=$be —— kits install 只实现 k8s 路径；compose 请用 kits add（没能验到）"
+    return 2
+  fi
+
+  echo "=== 1/4 校验 $m ==="
+  kits_verify "$m" || return 1
+
+  local mode; mode=$(jq -r '.compose // "none"' "kits/$m/info.json" 2>/dev/null)
+  if [ "$mode" = "file" ] && [ -z "$nohandoff" ]; then
+    local bs="/opt/g41/k8s/host/g41-image-build.sh"
+    if [ -x "$bs" ]; then
+      echo "=== 2/4 构建镜像 ==="
+      "$bs" "$m" || { echo "ERROR: 镜像构建失败"; return 1; }
+    else
+      echo "=== 2/4 跳过构建：找不到 $bs（只在部署机上能建）==="
+      echo "    注意：包里的 tag 是版本化的，镜像不存在时 apply 后是 ImagePullBackOff"
+    fi
+  else
+    echo "=== 2/4 跳过构建（compose=$mode${nohandoff:+，--no-build}）==="
+  fi
+
+  echo "=== 3/4 刷新内容种子与 api 源码 ==="
+  kits_content >/dev/null || { echo "ERROR: 内容种子生成失败"; return 1; }
+  kits_api_src >/dev/null || { echo "ERROR: api 源码生成失败"; return 1; }
+  echo "    dist/g41-content.yaml + dist/g41-api-src.yaml"
+
+  echo "=== 4/4 导出并应用 $m 的包 ==="
+  kits_export "$m" || return 1
+  local ver; ver=$(kit_version "$m")
+  local bundle="dist/$m-$ver.yaml"
+
+  if [ -n "$dry" ]; then
+    echo "    未加 --apply：包已生成，**没有**发送到集群"
+    echo "    应用: kubectl apply -f $bundle"
+    return 0
+  fi
+  command -v kubectl >/dev/null 2>&1 || { echo "ERROR: 找不到 kubectl —— 没能验到"; return 2; }
+  kubectl apply -f dist/g41-content.yaml 2>&1 | tail -1
+  kubectl apply -f dist/g41-api-src.yaml 2>&1 | tail -1
+  kubectl apply -f "$bundle" 2>&1
+  echo
+  echo "装完。核对：./g41.sh kits status $m --cluster"
+}
+
 kits_status() {
   local only="" cluster=""
   while [ $# -gt 0 ]; do
@@ -2063,6 +2145,7 @@ main() {
         content) shift 2; kits_content "$@";;
         api-src) shift 2; kits_api_src "$@";;
         status) shift 2; kits_status "$@";;
+        install) shift 2; kits_install "$@";;
         backup) shift 2; kits_backup "$@";;
         update) shift 2; kits_update "$@";;
         rollback) shift 2; kits_rollback "$@";;
