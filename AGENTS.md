@@ -203,14 +203,24 @@ Store、data、webroot、persist 和 local 文件分别处理。
 
 ## 模块生命周期
 
-### 安装
+### 安装（k8s 后端，2026-11-10 起的主路径）
+```bash
+./g41.sh kits install <module>            # verify → 构建镜像 → 刷新内容种子/api 源码 → 出包 → apply
+./g41.sh kits install <module> --dry-run  # 只出包，不落集群
+./g41.sh kits install <module> --no-build # 跳过镜像构建（镜像已在时）
+```
+- backend 必须是 `k8s`；否则退出 2（**没能验到**，不是失败）
+- 装完用 `./g41.sh kits status <module> --cluster` 核对实际运行的东西
+
+### 安装（compose 后端，旧的宿主装配路径）
 ```bash
 ./g41.sh kits add <module> [-y] [-C]     # 自动安装依赖，执行验证
 ./g41.sh kits add -y all                  # 安装全部
 ```
-- 安装前执行 `kits verify`（L1-L4 验证）
-- `-C` 绕过"已安装"检查
-- `all` 安装 `kits/` 下的每个模块
+- **在 k8s 后端下这是死路**：它往 `.rd/data`、`.gx` 铺硬链接，而内容已改由
+  `g41-content` ConfigMap 供给（`kits content`）、api 源码由 `g41-api-src` 供给。
+  铺出去的文件**没有消费者**——装完页面正常，是因为生效的是另一条路。
+- `-C` 绕过"已安装"检查；`all` 安装 `kits/` 下的每个模块
 
 ### 卸载
 ```bash
@@ -270,8 +280,23 @@ rsync -av --delete \
 
 ### 重建特定模块
 ```bash
-ssh $HOST "cd $PATH && ./g41.sh kits add -C -y <module> && docker compose up -d <service>"
+ssh $HOST "cd $PATH && ./g41.sh kits install <module>"   # k8s 后端（主路径）
 ```
+> 旧的 `kits add -C -y <module> && docker compose up -d` 在 k8s 后端下不成立：
+> dockerd 是停用的，而内容已由 ConfigMap 供给，宿主装配那条路没有消费者。
+
+### 镜像重建（2026-11-10 加）
+自建镜像（`g41k8s/<模块>:<版本>`）**只存在于部署机的 containerd 里，没有 registry**。
+它们可以从仓库完整重建——这是恢复路径，不是猜测：
+
+```bash
+ssh $HOST "/opt/g41/k8s/host/g41-image-build.sh"      # 不带参数 = 所有已部署的自建模块
+ssh $HOST "/opt/g41/k8s/host/g41-image-build.sh redis" # 只重建一个
+./g41.sh kits images --verify                          # 在部署机上跑：清单引用的 tag 是否都在
+```
+- 构建脚本会同时打 `<版本>` 与 `:local` 两个 tag（同一 digest）
+- `kits images --verify` 退出 1 = 有 tag 缺失；apply 下去会变成
+  `ImagePullBackOff`，而 Deployment 看起来是好的——所以要在 apply **之前**查
 
 ### 配置数据变更后
 清除数据加载标志并重启 API：

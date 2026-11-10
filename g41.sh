@@ -1412,10 +1412,11 @@ cm_emit() {
 # 代价：内容更新是「整体一次」，不按模块粒度。内容很小、loader 也总是全量读，
 # 这个代价换「装 N 个模块得到 N 个模块的内容」是划算的。
 kits_content() {
-  local out="dist/g41-content.yaml"
+  local out="dist/g41-content.yaml" exclude=""
   while [ $# -gt 0 ]; do
     case "$1" in
       -o|--out) out="$2"; shift;;
+      --exclude) exclude="$2"; shift;;
       -*) echo "ERROR: unknown flag $1"; return 1;;
       *) ;;
     esac
@@ -1427,6 +1428,8 @@ kits_content() {
 
   # 先算体积：ConfigMap 上限 1MiB，超了在 apply 时才报，报错很难读。
   for d in kits/*/; do
+    # 被排除的模块不计入体积，否则报出来的数和实际产物对不上
+    if [ -n "$exclude" ] && [ "$exclude" = "$(basename "$d")" ]; then continue; fi
     for cf in "$d"tile.json "$d"app.json "$d"link.json "$d"i18n/*.json "$d"data/*.json; do
       [ -f "$cf" ] || continue
       sz=$(wc -c < "$cf" | tr -d ' '); total=$((total + sz))
@@ -1453,6 +1456,9 @@ kits_content() {
     for d in kits/*/; do
       m=$(basename "$d")
       [ -f "$d/info.json" ] || continue
+      # --exclude：卸载某模块时用它重生成，让该模块的键从种子里消失
+      # （配合 server.js 的过期键清理，重载后 Redis 里那份也会掉）。
+      if [ -n "$exclude" ] && [ "$exclude" = "$m" ]; then continue; fi
       [ -f "$d/tile.json" ] && { cm_emit "tile.$m.json" "$d/tile.json"; n=$((n+1)); }
       [ -f "$d/app.json" ]  && { cm_emit "app.$m.json"  "$d/app.json";  n=$((n+1)); }
       [ -f "$d/link.json" ] && { cm_emit "link.$m.json" "$d/link.json"; n=$((n+1)); }
@@ -1671,6 +1677,110 @@ kits_status() {
     $kc get deploy -n g41 -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.template.spec.containers[*].image}{"\n"}{end}' 2>/dev/null || {
       echo "  没能验到：读不到 Deployment"; return 2; }
   fi
+}
+
+# 镜像清单与存在性（2026-11-10）。
+#
+# 背景：自建镜像只活在部署机的 containerd 里，没有 registry。这一点曾被我当成
+# 「不可恢复」，其实不对——仓库在 git 里，`g41-image-build.sh` 无参就能把所有
+# 已部署的自建镜像重建一遍。所以真正缺的不是恢复能力，是两样：
+#   1. 一张「清单引用了哪些 tag」的账（`--verify` 会拿它去比 containerd）
+#   2. 写在文档里的恢复路径（见 AGENTS.md「镜像重建」）
+# 缺这两样时，镜像没了只会在 apply 之后以 ImagePullBackOff 的形式出现。
+kits_images() {
+  local verify=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --verify) verify="1";;
+      -*) echo "ERROR: unknown flag $1"; return 1;;
+      *) ;;
+    esac
+    shift
+  done
+
+  # 仓库侧：清单引用了哪些 tag
+  local refs; refs=$(grep -rhoE 'g41k8s/[A-Za-z0-9_-]+:[A-Za-z0-9._+-]+' kits/*/k8s/*.yaml 2>/dev/null | sort -u || true)
+  if [ -z "$refs" ]; then
+    echo "ERROR: 清单里没有任何 g41k8s/ 镜像引用 —— 没能验到"; return 2
+  fi
+
+  # 集群侧：本机 containerd 里有哪些
+  local ctr=""
+  if command -v k3s >/dev/null 2>&1; then ctr="k3s ctr"; fi
+  if [ -z "$ctr" ] && command -v ctr >/dev/null 2>&1; then ctr="ctr"; fi
+  if [ -z "$ctr" ]; then
+    echo "清单引用的镜像（仓库侧）："
+    echo "$refs" | sed 's/^/  /'
+    echo
+    echo "没能验到：本机没有 k3s ctr / ctr（镜像存在性只能在部署机上查）"
+    return 2
+  fi
+
+  local have; have=$($ctr -n k8s.io images ls 2>/dev/null | awk '{print $1}' | sed 's|^docker.io/||' | sort -u || true)
+  local missing="" m
+  for m in $refs; do
+    echo "$have" | grep -qx "$m" || missing="$missing $m"
+  done
+
+  if [ -z "$missing" ]; then
+    echo "清单引用的 $(echo "$refs" | wc -l | tr -d ' ') 个镜像 tag 都存在于本机 containerd。"
+    return 0
+  fi
+  echo "⚠ 清单引用了、但本机 containerd 里没有的镜像:"
+  for m in $missing; do echo "    $m"; done
+  echo
+  echo "补建：/opt/g41/k8s/host/g41-image-build.sh   （不带参数 = 全部已部署模块）"
+  echo "装出来会怎样：apply 之后 Pod 变 ImagePullBackOff，而 Deployment 看起来是好的。"
+  return 1
+}
+
+# 卸载（2026-11-10）：k8s 原生。
+#
+# 三件事必须一起说清楚，否则「删了」会是个错觉：
+#   1. 删 k8s 对象（按导出包 delete）
+#   2. 重生成内容种子并**排除**该模块 —— 配合 server.js 的过期键清理，
+#      重载后 Redis 里那份也会掉
+#   3. **仓库里该模块还在**：下一次 CD 会把它装回来。真要移除，得先删模块目录。
+kits_uninstall() {
+  local m="" dry=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --dry-run) dry="1";;
+      -*) echo "ERROR: unknown flag $1"; return 1;;
+      *) m="$1";;
+    esac
+    shift
+  done
+  [ -n "$m" ] || { echo "ERROR: module name required"; return 1; }
+  [ -f "kits/$m/info.json" ] || { echo "ERROR: 模块 '$m' 不存在"; return 1; }
+  [ "$(backend_get)" = "k8s" ] || { echo "ERROR: backend=$(backend_get) —— uninstall 只实现 k8s 路径（没能验到）"; return 2; }
+
+  local ver; ver=$(kit_version "$m")
+  if ! kits_export "$m" >/dev/null 2>&1; then
+    echo "ERROR: 导出包失败，未做任何删除"; return 1
+  fi
+  local bundle="dist/$m-$ver.yaml"
+  [ -f "$bundle" ] || { echo "ERROR: 找不到 $bundle"; return 1; }
+
+  echo "将要删除的对象（$bundle）："
+  grep -E '^kind:|^  name:' "$bundle" | paste - - 2>/dev/null | sed 's/^/  /' || true
+
+  if [ -n "$dry" ]; then
+    echo
+    echo "未执行：这是 --dry-run。真正执行会 kubectl delete 上面这些对象。"
+    return 0
+  fi
+
+  command -v kubectl >/dev/null 2>&1 || { echo "ERROR: 找不到 kubectl —— 没能验到"; return 2; }
+  kubectl delete -f "$bundle" --ignore-not-found 2>&1 | tail -4
+  echo
+  echo "=== 重生成内容种子（排除 $m）==="
+  kits_content --exclude "$m" || return 1
+  kubectl apply -f dist/g41-content.yaml 2>&1 | tail -1
+  echo
+  echo "⚠ 仓库里 $m 仍在：下一次 CD 的 k8s apply --all 会把它装回来。"
+  echo "  真要移除：删掉 kits/$m/ 并提交。"
+  echo "  要让 Redis 立刻掉键：DEL data:loaded 并重启 redis Pod（装载时会清理过期键）。"
 }
 
 kits_export() {
@@ -2146,6 +2256,8 @@ main() {
         api-src) shift 2; kits_api_src "$@";;
         status) shift 2; kits_status "$@";;
         install) shift 2; kits_install "$@";;
+        images) shift 2; kits_images "$@";;
+        uninstall) shift 2; kits_uninstall "$@";;
         backup) shift 2; kits_backup "$@";;
         update) shift 2; kits_update "$@";;
         rollback) shift 2; kits_rollback "$@";;
