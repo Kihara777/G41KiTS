@@ -2,6 +2,19 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-10（k8s ネイティブなインストール）
+
+- **`kits install <mod> [--dry-run] [--no-build]` を追加**：k8s ネイティブな「モジュールを一つ入れる」
+  - 四段階：verify（L1–L4）→ 自前イメージをビルド → `g41-content` と `g41-api-src` を更新 →
+    バンドルを出力して apply
+  - `backend` が `k8s` でない場合は終了 2（検証できなかった）。compose 対応を装わない
+  - **`kits add` の死路を明示**：k8s バックエンドでは依然ホスト側にハードリンクを敷くが、そのファイルを
+    読むものはもう無い（内容は ConfigMap 供給）。インストールが正常に見えるのは別経路が効いているからで、
+    この種の死路を残すのが最も危険。現在は `kits install` を指す目立つ案内を出すが、遮断はしない
+  - 本番実測：三つの失敗アーム（モジュール未指定 1 / 存在しない 1 / backend=compose 2）、
+    dry-run はクラスタに触れず完走、**redis の冪等再インストール**では content/api-src/3 Service/Deployment が
+    すべて unchanged、7/7 Pod はそのまま
+
 ## 2026-11-10（現状台帳）
 
 - **`kits status [mod] [--cluster]` を追加**：バージョン、Pod グループ、マニフェストのイメージ、

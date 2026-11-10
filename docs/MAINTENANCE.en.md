@@ -2,6 +2,20 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-10 (k8s-native install)
+
+- **New `kits install <mod> [--dry-run] [--no-build]`**: the k8s-native "install one module"
+  - Four steps: verify (L1–L4) → build the self-built image → refresh `g41-content` and `g41-api-src` →
+    export the bundle and apply it
+  - When `backend` is not `k8s` it exits 2 (could not verify) instead of pretending compose is supported
+  - **Flags `kits add` as a dead path**: under the k8s backend it still lays hardlinks into the host tree, and
+    nothing reads those files any more because content ships as ConfigMaps. The install looks fine because a
+    different path is doing the work — that kind of dead path is the most dangerous to leave around. It now
+    prints a prominent pointer to `kits install` without blocking
+  - Measured in production: three failure arms (missing module 1 / nonexistent 1 / backend=compose 2); the
+    dry run completes without touching the cluster; **idempotent reinstall of redis** reported
+    content/api-src/three Services/Deployment all unchanged and left 7/7 Pods untouched
+
 ## 2026-11-10 (status ledger)
 
 - **New `kits status [mod] [--cluster]`**: one ledger of module facts — version, Pod group, manifest image,

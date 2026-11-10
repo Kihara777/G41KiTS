@@ -2,6 +2,18 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-10（k8s 原生安装）
+
+- **新增 `kits install <mod> [--dry-run] [--no-build]`**：k8s 原生的「装一个模块」
+  - 四步：verify（L1–L4）→ 构建自建镜像 → 刷新 `g41-content` 与 `g41-api-src` → 导出包并 apply
+  - `backend` 不是 `k8s` 时退出 2（没能验到），不假装支持 compose
+  - **标出 `kits add` 的死路**：它在 k8s 后端下仍往宿主铺硬链接，而那批文件已无消费者
+    （内容走 ConfigMap）。装完页面正常，因为生效的是另一条路——这种死路留着最危险。
+    现在它会打印显眼提示指向 `kits install`，但不阻断
+  - 实测（生产）：三条失败臂（缺模块 1 / 不存在 1 / backend=compose 2）；
+    dry-run 走完不落集群；**幂等重装 redis** 时 content/api-src/3 Service/Deployment 全部 unchanged，
+    7/7 Pod 不动
+
 ## 2026-11-10（现状账）
 
 - **新增 `kits status [mod] [--cluster]`**：一张模块现状账——版本、Pod 组、清单镜像、内容键。
