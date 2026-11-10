@@ -2,6 +2,19 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-10 (`rollback --apply` rehearsed on the real cluster)
+
+- **The rollback `--apply` path now runs for real** (previously dry-run only)
+  - Rehearsal: bumped redis to `1.1.0` (cluster and repo both 1.1.0) → placed the `1.0.0` bundle into the deploy
+    host's `dist/` → `kits rollback redis --to 1.0.0 --apply` → both the Deployment and the Pod went back to
+    `g41k8s/redis:1.0.0`, 7/7 Pods Running
+  - **It also exposed a consequence that really bites**: the repo still said `1.1.0`. Rollback changes the cluster,
+    not the repo, so the next CD's `k8s apply --all` would put it back — **the rollback looks like it worked and then
+    quietly undoes itself**
+  - So after a successful rollback, if the repo version differs from the target, the command now prints a warning
+    and the command to make it stick. This run finished by setting the repo back to `1.0.0`, aligning Deployment,
+    Pod, and repo
+
 ## 2026-11-10 (closing the last three items)
 
 - **`kits uninstall <mod> [--dry-run]`**: deletes the k8s objects and regenerates the content seed with

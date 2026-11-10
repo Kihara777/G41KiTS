@@ -2,6 +2,16 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-10（rollback --apply 真机演练）
+
+- **回滚的 `--apply` 路径真机跑通了**（此前只有 dry-run）
+  - 演练：redis 升 `1.1.0`（集群与仓库都 1.1.0）→ 把 `1.0.0` 旧包放进部署机 `dist/`
+    → `kits rollback redis --to 1.0.0 --apply` → Deployment 与 Pod 都回到 `g41k8s/redis:1.0.0`，7/7 Pod Running
+  - **同时暴露一个真会咬人的后果**：仓库仍是 `1.1.0`。回滚只改集群、不改仓库，
+    下一次 CD 的 `k8s apply --all` 会按仓库把它改回去——**回滚看起来生效，然后自己失效**
+  - 因此 rollback 成功应用后，若仓库版本与目标不一致就直接打印警告并给出固化命令；
+    本次最后把仓库也改回 `1.0.0`，Deployment / Pod / 仓库三方对齐
+
 ## 2026-11-10（补齐清单里剩下的三件）
 
 - **`kits uninstall <mod> [--dry-run]`**：删 k8s 对象 + 重生成内容种子（`kits content --exclude`）。
