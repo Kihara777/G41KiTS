@@ -308,6 +308,15 @@ done
 if [ -z "$bad_tag" ]; then pass "清单引用的自建镜像 tag 与 info.json 版本一致"; else fail "tag 与版本不一致:$bad_tag"; fi
 
 # ---------- 5. 集群类判据：只查存在性 ----------
+section "现状账（kits status）"
+if "$ROOT/g41.sh" kits status >/tmp/cm-status.log 2>&1; then
+  rows=$(tail -n +3 /tmp/cm-status.log | grep -c . || true)
+  # 行数为 0 说明账是空的——命令成功但什么都没报，和「没有模块」长得一样。
+  if [ "$rows" -ge 10 ]; then pass "kits status：$rows 个模块入账"; else fail "kits status 只报出 $rows 行，账目可疑"; fi
+else
+  fail "kits status 失败：$(tail -2 /tmp/cm-status.log | tr '\n' ' ')"
+fi
+
 section "集群类判据（不连集群）"
 if grep -q '^k8s_drift()' g41.sh; then pass "k8s drift 已实现（这里不连集群，故不验它的行为）"; else fail "k8s drift 缺失"; fi
 

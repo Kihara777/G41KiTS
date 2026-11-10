@@ -1525,6 +1525,72 @@ kits_backup() {
   echo "轮转完成，保留最近 $keep 份"
 }
 
+# 模块现状账（2026-11-10）：仓库侧事实 + 可选集群侧事实。
+#
+# 为什么需要它：设施现在能建版本、能发、能回滚，但没有一张「现在装了什么、
+# 清单指向哪个镜像、内容键是谁供的」的账。查这些要翻四个地方：
+# info.json、k8s 清单、kits content 的产物、集群里的 Deployment。
+# 这四条一旦不一致，**每一处单独看都是对的**。
+kits_status() {
+  local only="" cluster=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --cluster) cluster="1";;
+      -*) echo "ERROR: unknown flag $1"; return 1;;
+      *) only="$1";;
+    esac
+    shift
+  done
+
+  printf '%-14s %-8s %-10s %-24s %s\n' MODULE VERSION POD IMAGES CONTENT
+  printf '%-14s %-8s %-10s %-24s %s\n' ------ ------- --- ------ -------
+  local m d ver pod img content
+  for d in kits/*/; do
+    m=$(basename "$d")
+    [ -f "$d/info.json" ] || continue
+    [ -n "$only" ] && [ "$only" != "$m" ] && continue
+    # 只报「有 k8s 清单」或「有内容」或「已部署」的模块，其余是纯宿主模块
+    [ -d "$d/k8s" ] || [ -f "$d/tile.json" ] || [ -f "$d/app.json" ] || \
+      [ -f "$d/link.json" ] || [ -d "$d/i18n" ] || [ -d "$d/data" ] || continue
+
+    ver=$(kit_version "$m")
+    pod=$(jq -r '.k8s.pod // ""' "$d/info.json" 2>/dev/null || true)
+    if [ -z "$pod" ] || [ "$pod" = "null" ]; then
+      # 没有显式组的模块自成一组（有清单才算）
+      if [ -d "$d/k8s" ]; then pod="$m"; else pod="-"; fi
+    fi
+
+    img="-"
+    # 镜像可能写在同组别的模块文件里（bt 的 tag 在 aria2 的 deployment 里），
+    # 所以按模块名在全部清单里找，而不是只看自己的目录。
+    if [ -d "$d/k8s" ] || [ "$pod" != "-" ]; then
+      img=$(grep -rhoE "g41k8s/$m:[A-Za-z0-9._+-]+" kits/*/k8s/*.yaml 2>/dev/null | sort -u | head -2 | tr '\n' ' ' || true)
+      img=${img% }
+      [ -n "$img" ] || img="-"
+    fi
+
+    content=""
+    [ -f "$d/tile.json" ] && content="${content}tile "
+    [ -f "$d/app.json" ] && content="${content}app "
+    [ -f "$d/link.json" ] && content="${content}link "
+    [ -d "$d/i18n" ] && content="${content}i18n($(ls "$d"i18n/*.json 2>/dev/null | wc -l | tr -d ' ')) "
+    [ -d "$d/data" ] && content="${content}data($(ls "$d"data/*.json 2>/dev/null | wc -l | tr -d ' ')) "
+    [ -n "$content" ] || content="-"
+
+    printf '%-14s %-8s %-10s %-22s %s\n' "$m" "$ver" "$pod" "$img" "$content"
+  done
+
+  if [ -n "$cluster" ]; then
+    echo
+    echo '=== 集群侧（实际跑着的镜像）==='
+    command -v kubectl >/dev/null 2>&1 || command -v k3s >/dev/null 2>&1 || {
+      echo "  没能验到：找不到 kubectl/k3s"; return 2; }
+    local kc="kubectl"; command -v kubectl >/dev/null 2>&1 || kc="k3s kubectl"
+    $kc get deploy -n g41 -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.template.spec.containers[*].image}{"\n"}{end}' 2>/dev/null || {
+      echo "  没能验到：读不到 Deployment"; return 2; }
+  fi
+}
+
 kits_export() {
   local m="" out=""
   while [ $# -gt 0 ]; do
@@ -1996,6 +2062,7 @@ main() {
         export) shift 2; kits_export "$@";;
         content) shift 2; kits_content "$@";;
         api-src) shift 2; kits_api_src "$@";;
+        status) shift 2; kits_status "$@";;
         backup) shift 2; kits_backup "$@";;
         update) shift 2; kits_update "$@";;
         rollback) shift 2; kits_rollback "$@";;
