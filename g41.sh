@@ -2144,7 +2144,17 @@ kits_rollback() {
     return 0
   fi
   command -v kubectl >/dev/null 2>&1 || { echo "ERROR: 找不到 kubectl —— 没能验到"; return 2; }
-  kubectl apply --validate=false -f "dist/$m-$target.yaml"
+  kubectl apply --validate=false -f "dist/$m-$target.yaml" || return 1
+  # 2026-11-10 实测：回滚只改集群，**不改仓库**。集群退回 1.0.0 而
+  # kits/<m>/info.json 仍是 1.1.0 时，下一次 CD 的 k8s apply --all 会按仓库
+  # 把它改回 1.1.0——回滚看起来生效了，然后自己悄悄失效。
+  local repo_ver; repo_ver=$(kit_version "$m")
+  if [ "$repo_ver" != "$target" ]; then
+    echo
+    echo "⚠ 集群已回到 $target，但仓库里是 $repo_ver。"
+    echo "  下一次 CD 会按仓库把集群改回 $repo_ver。要固化这次回滚："
+    echo "    ./g41.sh kits update $m --to $target --build   （然后在部署机上 build 并提交）"
+  fi
 }
 
 kits_selftest() {
