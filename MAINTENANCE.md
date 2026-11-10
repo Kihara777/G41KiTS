@@ -2,6 +2,18 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-10（现状账）
+
+- **新增 `kits status [mod] [--cluster]`**：一张模块现状账——版本、Pod 组、清单镜像、内容键。
+  此前要回答「现在装了什么、清单指向哪个镜像、内容是谁供的」，得翻四处：`info.json`、
+  `k8s/` 清单、`kits content` 的产物、集群里的 Deployment。**四条一旦不一致，每一处单独看都是对的**
+  - 镜像按模块名在全部清单里找（`bt` 的 tag 写在 `aria2` 的 deployment 里，只看自己目录会漏）
+  - 无显式 `k8s.pod` 且有清单的模块自成一组
+  - `--cluster` 追加集群侧实际运行的镜像；找不到 kubectl 时退出 2（没能验到）
+  - 闸门加第 19 项冒烟：status 必须报出 ≥10 行——行数为 0 时判失败，
+    因为「命令成功但什么都没报」和「没有模块」长得一样
+  - 实测：本地 25 个模块入账；VPS 上 `--cluster` 读出 7 个 Deployment 的实际镜像
+
 ## 2026-11-09（设施升级收尾）
 
 - **最后一处手工搬运收掉**：`server.js` 改由 ConfigMap `g41-api-src` 供给

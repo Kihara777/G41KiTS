@@ -2,6 +2,20 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-10 (status ledger)
+
+- **New `kits status [mod] [--cluster]`**: one ledger of module facts — version, Pod group, manifest image,
+  content keys. Answering "what is installed, which image does the manifest point at, who supplies the
+  content" used to mean reading four places: `info.json`, the `k8s/` manifests, the `kits content` output, and
+  the Deployments in the cluster. **When those four disagree, each one looks right on its own**
+  - Images are looked up by module name across all manifests (`bt`'s tag lives in `aria2`'s deployment, so
+    looking only in its own directory misses it)
+  - A module with manifests but no explicit `k8s.pod` forms its own group
+  - `--cluster` appends the images actually running; without kubectl it exits 2 (could not verify)
+  - Gate check #19 is a smoke test: `status` must report at least 10 rows — zero rows fails, because
+    "the command succeeded and reported nothing" looks exactly like "there are no modules"
+  - Measured: 25 modules locally; on the VPS `--cluster` returned the images of all 7 Deployments
+
 ## 2026-11-09 (facility upgrade wrapped up)
 
 - **The last manual hand-off is gone**: `server.js` now ships as the ConfigMap `g41-api-src`
