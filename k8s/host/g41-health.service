@@ -1,0 +1,11 @@
+[Unit]
+Description=G41KiTS 生产体检（kits health）
+Documentation=https://github.com/Kihara777/G41KiTS
+After=k3s.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/g41
+ExecStart=/opt/g41/k8s/host/g41-health.sh
+# 体检是只读的：不写仓库、不动集群，只读 containerd / kubectl / configmap
+Nice=10

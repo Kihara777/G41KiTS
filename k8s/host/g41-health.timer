@@ -1,0 +1,12 @@
+[Unit]
+Description=每 6 小时跑一次 G41KiTS 生产体检
+
+[Timer]
+# 刻意不是每 15 分钟：体检要读集群与 63 个内容键，而问题不会在 15 分钟里出现又消失。
+# 首次错开 7 分钟，避免和 cert-reload/state-backup 撞在同一秒。
+OnBootSec=7min
+OnUnitActiveSec=6h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -23,15 +23,22 @@ cp -a "$HOST_DIR/k3s-state-backup.timer" /etc/systemd/system/
 mkdir -p /etc/systemd/system/k3s.service.d
 cp -a "$HOST_DIR/k3s.service.d-backup.conf" /etc/systemd/system/k3s.service.d/backup.conf
 
-echo "== 4b. 运维定时任务（证书轮换分发 / 每周镜像更新）=="
+echo "== 4b. 运维定时任务（证书轮换分发 / 每周镜像更新 / 每 6 小时生产体检）=="
 # 脚本运行在 /opt/g41/k8s/host/（单元内硬编码路径）
 install -d -m 755 /opt/g41/k8s/host
-install -m 755 "$HOST_DIR/g41-cert-reload.sh"  /opt/g41/k8s/host/
-install -m 755 "$HOST_DIR/g41-image-update.sh" /opt/g41/k8s/host/
-install -m 755 "$HOST_DIR/g41-image-build.sh"  /opt/g41/k8s/host/
-install -m 755 "$HOST_DIR/g41-notify.py"       /opt/g41/k8s/host/
+# 2026-11-12 修：/opt/g41 是**指向仓库的符号链接**，所以「装到 /opt/g41/k8s/host」
+# 常常就是「这个文件本身」。`install` 遇到源和目标是同一文件会报错并中断整个脚本
+# （`set -e`），而它本该只是确保权限正确。
+for _s in g41-cert-reload.sh g41-image-update.sh g41-image-build.sh g41-notify.py g41-health.sh; do
+  if [ "$(realpath "$HOST_DIR/$_s" 2>/dev/null)" = "$(realpath "/opt/g41/k8s/host/$_s" 2>/dev/null)" ]; then
+    chmod 755 "/opt/g41/k8s/host/$_s"
+  else
+    install -m 755 "$HOST_DIR/$_s" /opt/g41/k8s/host/
+  fi
+done
 cp -a "$HOST_DIR/g41-cert-reload.service" "$HOST_DIR/g41-cert-reload.timer" /etc/systemd/system/
 cp -a "$HOST_DIR/g41-image-update.service" "$HOST_DIR/g41-image-update.timer" /etc/systemd/system/
+cp -a "$HOST_DIR/g41-health.service" "$HOST_DIR/g41-health.timer" /etc/systemd/system/
 install -d -m 755 /var/lib/g41
 
 echo "== 4c. containerd 原生镜像构建（nerdctl + BuildKit，无需 dockerd）=="
@@ -54,7 +61,7 @@ fi
 
 systemctl daemon-reload
 systemctl enable k3s-state-prep.service k3s-state-backup.timer k3s-standalone.service
-systemctl enable --now g41-cert-reload.timer g41-image-update.timer
+systemctl enable --now g41-cert-reload.timer g41-image-update.timer g41-health.timer
 
 echo "== 5. 校验 =="
 systemd-analyze verify k3s-state-prep.service k3s-state-backup.service k3s-state-backup.timer k3s-standalone.service 2>&1 | head -3 || true
