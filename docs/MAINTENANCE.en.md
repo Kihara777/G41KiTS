@@ -2,6 +2,22 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-12 (automatic inspection)
+
+- **New `g41-health.timer`: runs `kits health` every six hours** (`k8s/host/g41-health.{sh,service,timer}`)
+  - Motivation: the check can find four classes of mismatch, but **if nobody runs it, it does not exist**
+  - **Notifies only on a state change** — a "still red" mail every six hours turns red into background noise;
+    it also mails when it returns to green, because "it fixed itself" is worth knowing too. A failing
+    notification never changes the exit code
+  - State file `/var/lib/g41/health-last` with four states: green / red / unverified / error
+  - Wired into `install-1gb.sh` step 4b, following the existing `g41-cert-reload` / `g41-image-update` pattern
+  - Measured in production: the timer is enabled/active; starting the service by hand → success and state green;
+    tampering with a content key → red recorded in the state file; restoring it → green
+- **Fixed a latent bug in `install-1gb.sh`**: `/opt/g41` is a **symlink to the repository**, so
+  `install -m 755 <repo>/g41-x.sh /opt/g41/k8s/host/` is usually "the same file"; `install` errors and, under
+  `set -e`, aborts the whole script. It now compares `realpath` first and only `chmod`s when they match
+  (hit during this install: the script landed as 644 and systemd reported 203/EXEC)
+
 ## 2026-11-11 (production health check: kits health)
 
 - **New `kits health`**: folds four manual checks into one — image existence / drift / content seed matching

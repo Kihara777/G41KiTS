@@ -2,6 +2,21 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-12（自動点検）
+
+- **`g41-health.timer` を追加：6 時間ごとに `kits health` を実行**（`k8s/host/g41-health.{sh,service,timer}`）
+  - 動機：点検は四種類の不一致を見つけられるが、**誰も実行しなければ存在しないのと同じ**
+  - **状態が変わったときだけ通知**——6 時間ごとに「まだ赤です」を送ると赤が背景雑音になる。
+    緑に戻ったときも送る（「ひとりでに直った」も知る価値がある）。通知の失敗は終了コードを変えない
+  - 状態ファイル `/var/lib/g41/health-last`、四状態：green / red / unverified / error
+  - 既存の `g41-cert-reload` / `g41-image-update` の型に合わせて `install-1gb.sh` の 4b に接続
+  - 本番実測：timer は enabled/active。手動で service 起動 → success かつ状態 green。
+    コンテンツキーを改ざん → red を状態ファイルに記録。復元 → green
+- **`install-1gb.sh` の潜在バグを修正**：`/opt/g41` は**リポジトリへのシンボリックリンク**のため、
+  `install -m 755 <repo>/g41-x.sh /opt/g41/k8s/host/` は多くの場合「同一ファイル」になり、
+  `install` が失敗して `set -e` でスクリプト全体が中断する。先に `realpath` を比較し、同一なら `chmod` のみに変更
+  （今回の導入で実際に踏んだ：スクリプトが 644 で配置され systemd が 203/EXEC を報告）
+
 ## 2026-11-11（本番ヘルスチェック：kits health）
 
 - **`kits health` を追加**：四つの手動チェックを一本化——イメージの存在 / drift /

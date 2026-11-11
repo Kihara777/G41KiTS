@@ -2,6 +2,21 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-12（自动巡检）
+
+- **新增 `g41-health.timer`：每 6 小时自动跑一次 `kits health`**（`k8s/host/g41-health.{sh,service,timer}`）
+  - 动机：体检能查出四类不一致，但**没人跑它就等于没有**
+  - **只在状态变化时通知**——每 6 小时发一封「还是红的」会把红变成背景噪音；
+    恢复成绿时也发一封，因为「它自己好了」同样值得知道。通知失败不影响退出码
+  - 状态文件 `/var/lib/g41/health-last`，四态：green / red / unverified / error
+  - 按既有 `g41-cert-reload` / `g41-image-update` 模式接进 `install-1gb.sh` 第 4b 步
+  - 实测（生产）：timer enabled/active；手动启动 service → success、状态 green；
+    篡改内容键 → red 并记入状态文件；恢复 → green
+- **修 `install-1gb.sh` 的潜在 bug**：`/opt/g41` 是指向仓库的符号链接，
+  `install -m 755 <仓库>/g41-x.sh /opt/g41/k8s/host/` 常是「同一文件」，
+  `install` 报错并在 `set -e` 下中断整个脚本。改成先比 `realpath`，同文件时只 `chmod`
+  （本次安装时就踩到了：脚本 644 落地，systemd 报 203/EXEC）
+
 ## 2026-11-11（生产体检 kits health）
 
 - **新增 `kits health`**：把四处手工检查收成一条——镜像存在性 / drift / 内容种子与仓库逐键一致 /
