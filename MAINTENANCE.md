@@ -2,6 +2,19 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-11（迁移收尾：清残骸）
+
+- **把迁移后没人读的宿主残骸归档**：`.rd/data`（332K：home/i18n/tile_apps/tile_links/tiles）与
+  `blc` 模板的宿主副本（52K）移到 `/opt/g41/.attic/migrated-content-20261111/`
+  - 先确认无消费者：清单里已无 `/conf-data` 挂载、`g41.sh` 只在注释里提到它、
+    reload 走 HTTP `/admin/reload` → `loadData` 只读 `/seed`
+  - 归档后触发真重载：`seed: tiles=12 i18n=36 unknown=0`、`data:tiles (12)`、7/7 Pod Running
+- **踩到一个新耦合**：移走 `blc` 模板的宿主目录后，模板页 404。ConfigMap 还在（3 个键），
+  但 Pod 里那个挂载点 `No such file`——**kubelet 的 ConfigMap 挂载点落在 hostPath 挂载的子路径上**，
+  宿主目录没了，挂载点也没了。`mkdir` 一个空目录再重启 Pod 即恢复（三项 URL 全 200）
+  - 已写进 `kits/blc/k8s/deployment.yaml` 的注释：**这条 ConfigMap 挂载依赖一个空的宿主目录**，
+    清理时要留壳。不写下来的话，它看起来只是「删了几个没用的文件」
+
 ## 2026-11-10（rollback --apply 真机演练）
 
 - **回滚的 `--apply` 路径真机跑通了**（此前只有 dry-run）

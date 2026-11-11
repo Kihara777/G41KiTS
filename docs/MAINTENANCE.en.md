@@ -2,6 +2,21 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-11 (migration cleanup: archiving leftovers)
+
+- **Archived the host leftovers nothing reads any more**: `.rd/data` (332K: home/i18n/tile_apps/tile_links/tiles)
+  and the host copy of the `blc` template (52K) moved to `/opt/g41/.attic/migrated-content-20261111/`
+  - Consumers were checked first: no `/conf-data` mount remains in any manifest, `g41.sh` mentions it only in a
+    comment, and reload goes over HTTP `/admin/reload` where `loadData` reads only `/seed`
+  - After archiving, a real reload ran: `seed: tiles=12 i18n=36 unknown=0`, `data:tiles (12)`, 7/7 Pods Running
+- **Hit a new coupling**: moving the host directory for the `blc` template made the template page 404. The
+  ConfigMap was still there (3 keys) but the mount point inside the Pod reported `No such file` — **the
+  kubelet mount point for that ConfigMap sits on a sub-path of a hostPath mount**, so removing the host
+  directory removes the mount point. Recreating an empty directory and restarting the Pod restored it (all
+  three URLs 200)
+  - Recorded in `kits/blc/k8s/deployment.yaml`: **this ConfigMap mount depends on an empty host directory**, so
+    cleanup has to leave the shell behind. Without that note it just looks like "deleted a few unused files"
+
 ## 2026-11-10 (`rollback --apply` rehearsed on the real cluster)
 
 - **The rollback `--apply` path now runs for real** (previously dry-run only)

@@ -2,6 +2,20 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-11（移行の後始末：残骸のアーカイブ）
+
+- **もう誰も読まないホスト側の残骸をアーカイブ**：`.rd/data`（332K：home/i18n/tile_apps/tile_links/tiles）と
+  `blc` テンプレートのホスト側コピー（52K）を `/opt/g41/.attic/migrated-content-20261111/` へ移動
+  - 先に消費者が無いことを確認：マニフェストから `/conf-data` マウントは消えており、`g41.sh` はコメントで
+    触れるだけ、reload は HTTP `/admin/reload` 経由で `loadData` は `/seed` のみ読む
+  - アーカイブ後に実際に再読み込み：`seed: tiles=12 i18n=36 unknown=0`、`data:tiles (12)`、7/7 Pod Running
+- **新しい結合を踏んだ**：`blc` テンプレートのホスト側ディレクトリを移すとテンプレートページが 404。
+  ConfigMap は存在する（3 キー）のに、Pod 内のマウントポイントが `No such file`——
+  **kubelet の ConfigMap マウントポイントは hostPath マウントのサブパス上にある**ため、
+  ホスト側ディレクトリが無くなるとマウントポイントも消える。空ディレクトリを作り Pod を再起動すると復旧（三つの URL すべて 200）
+  - `kits/blc/k8s/deployment.yaml` に明記：**この ConfigMap マウントは空のホストディレクトリに依存する**ため、
+    掃除のときは「殻」を残す必要がある。書いておかないと「使っていないファイルを数個消した」に見える
+
 ## 2026-11-10（`rollback --apply` を実機で演習）
 
 - **ロールバックの `--apply` 経路が実機で動いた**（従来は dry-run のみ）
