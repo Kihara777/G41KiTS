@@ -1783,6 +1783,122 @@ kits_uninstall() {
   echo "  要让 Redis 立刻掉键：DEL data:loaded 并重启 redis Pod（装载时会清理过期键）。"
 }
 
+# 生产体检（2026-11-11）。
+#
+# 这些检查以前分散在四个地方、全靠人记得跑：镜像在不在、Pod 有没有比内容旧、
+# 内容种子与仓库是否逐键一致、api 源码是不是仓库那份。
+# 每一条单独都能「看起来没事」——比如内容种子少了一个键，页面只是少一块。
+#
+# 三种结果不合并：0 = 全绿；1 = 有失败；2 = 有「没能验到」且无失败（失败优先）。
+# 内容种子的键名 → 仓库源文件。抽出来是为了能被自检（2026-11-11：
+# 第一版没先剥 `.json` 就切，把 `i18n.tile_mail.zh.json` 的模块名取成了
+# `tile_mail.zh`，于是所有 i18n 键都报「没有对应的源文件」——判据当场错了，
+# 而它错的表现是「满屏警告」，看起来反而像系统坏了）。
+seed_key_src() {
+  local key="$1" rest mod lang rest2 mod2 nm
+  case "$key" in
+    tile.*.json) rest="${key#tile.}"; echo "kits/${rest%.json}/tile.json";;
+    app.*.json)  rest="${key#app.}";  echo "kits/${rest%.json}/app.json";;
+    link.*.json) rest="${key#link.}"; echo "kits/${rest%.json}/link.json";;
+    i18n.*.json) rest="${key#i18n.}"; rest="${rest%.json}"
+                 mod="${rest%.*}"; lang="${rest##*.}"
+                 echo "kits/$mod/i18n/$lang.json";;
+    data.*.json) rest2="${key#data.}"; rest2="${rest2%.json}"
+                 mod2="${rest2%%.*}"; nm="${rest2#*.}"
+                 echo "kits/$mod2/data/$nm.json";;
+    *) return 1;;
+  esac
+}
+
+kits_health() {
+  local failed=0 unverified=0
+  if [ "${1:-}" = "--self-test" ]; then
+    local n=0 bad=0 got want
+    while IFS='|' read -r key want; do
+      [ -n "$key" ] || continue
+      n=$((n+1)); got=$(seed_key_src "$key" 2>/dev/null || echo "-")
+      [ "$got" = "$want" ] || { echo "  ✘ $key → $got（期望 $want）"; bad=$((bad+1)); }
+    done <<'MAP'
+tile.dns.json|kits/dns/tile.json
+app.aria2.json|kits/aria2/app.json
+link.link_vscode.json|kits/link_vscode/link.json
+i18n.tile_mail.zh.json|kits/tile_mail/i18n/zh.json
+data.home.colors.json|kits/home/data/colors.json
+MAP
+    local u; u=$(seed_key_src "nonsense" 2>/dev/null || true)
+    [ -z "$u" ] || { echo "  ✘ 无法映射的键本应返回空：$u"; bad=$((bad+1)); }
+    n=$((n+1))
+    if [ "$bad" -eq 0 ]; then echo "键名映射 $n 项通过"; return 0; fi
+    echo "键名映射失败 $bad 项"; return 1
+  fi
+  echo "=== 1/4 镜像存在性 ==="
+  kits_images --verify
+  case $? in 0) ;; 2) unverified=$((unverified+1));; *) failed=$((failed+1));; esac
+
+  echo
+  echo "=== 2/4 内容比进程新（drift）==="
+  k8s_drift
+  case $? in 0) ;; 2) unverified=$((unverified+1));; *) failed=$((failed+1));; esac
+
+  echo
+  echo "=== 3/4 内容种子与仓库逐键一致 ==="
+  if ! command -v kubectl >/dev/null 2>&1; then
+    echo "  没能验到：找不到 kubectl"; unverified=$((unverified+1))
+  else
+    local cmjson; cmjson=$(kubectl get cm g41-content -n g41 -o json 2>/dev/null) || cmjson=""
+    if [ -z "$cmjson" ]; then
+      echo "  没能验到：读不到 g41-content"; unverified=$((unverified+1))
+    else
+      local bad=0 checked=0 key b64 src want got
+      while IFS=' ' read -r key b64; do
+        [ -n "$key" ] || continue
+        # 键名 → 仓库源文件：单一来源在 seed_key_src（它有自检）
+        if ! src=$(seed_key_src "$key"); then
+          echo "  ⚠ 无法映射的键: $key"; bad=$((bad+1)); continue
+        fi
+        [ -f "$src" ] || { echo "  ⚠ 键 $key 没有对应的源文件（$src）"; bad=$((bad+1)); continue; }
+        want=$(sha256sum "$src" | awk '{print $1}')
+        got=$(printf '%s' "$b64" | base64 -d 2>/dev/null | sha256sum | awk '{print $1}')
+        checked=$((checked+1))
+        [ "$want" = "$got" ] || { echo "  ⚠ $key 与 $src 内容不同"; bad=$((bad+1)); }
+      done < <(echo "$cmjson" | jq -r '.data | to_entries[] | "\(.key) \(.value|@base64)"' 2>/dev/null)
+      if [ "$bad" -eq 0 ]; then
+        echo "  $checked 个键与仓库逐字节一致"
+      else
+        failed=$((failed+1))
+      fi
+    fi
+  fi
+
+  echo
+  echo "=== 4/4 api 源码与仓库一致 ==="
+  if command -v kubectl >/dev/null 2>&1 && [ -f kits/redis/store/server.js ]; then
+    local cm_sha local_sha
+    cm_sha=$(kubectl get cm g41-api-src -n g41 -o jsonpath='{.data.server\.js}' 2>/dev/null | sha256sum | awk '{print $1}')
+    local_sha=$(sha256sum kits/redis/store/server.js | awk '{print $1}')
+    if [ "$cm_sha" = "$local_sha" ]; then
+      echo "  server.js 与仓库一致"
+    else
+      echo "  ⚠ 集群里的 server.js 与仓库不同（集群 ${cm_sha:0:12} / 仓库 ${local_sha:0:12}）"
+      failed=$((failed+1))
+    fi
+  else
+    echo "  没能验到：缺 kubectl 或源文件"; unverified=$((unverified+1))
+  fi
+
+  echo
+  if [ "$failed" -gt 0 ]; then
+    echo "体检：**失败 $failed 项**（其中没能验到 $unverified 项）"
+    return 1
+  fi
+  if [ "$unverified" -gt 0 ]; then
+    echo "体检：没有失败，但 **$unverified 项没能验到** —— 这不是通过"
+    return 2
+  fi
+  echo "体检：四项全部通过"
+  return 0
+}
+
 kits_export() {
   local m="" out=""
   while [ $# -gt 0 ]; do
@@ -2268,6 +2384,7 @@ main() {
         install) shift 2; kits_install "$@";;
         images) shift 2; kits_images "$@";;
         uninstall) shift 2; kits_uninstall "$@";;
+        health) shift 2; kits_health "$@";;
         backup) shift 2; kits_backup "$@";;
         update) shift 2; kits_update "$@";;
         rollback) shift 2; kits_rollback "$@";;

@@ -308,6 +308,15 @@ done
 if [ -z "$bad_tag" ]; then pass "清单引用的自建镜像 tag 与 info.json 版本一致"; else fail "tag 与版本不一致:$bad_tag"; fi
 
 # ---------- 5. 集群类判据：只查存在性 ----------
+section "体检键名映射（kits health --self-test）"
+# 内容种子的键名 → 源文件映射曾出过一次 bug（没先剥 .json），
+# 表现是满屏「没有对应的源文件」——判据自己错的时候，看起来像系统坏了。
+if "$ROOT/g41.sh" kits health --self-test >/tmp/cm-health.log 2>&1; then
+  pass "$(tail -1 /tmp/cm-health.log)"
+else
+  fail "键名映射自检失败：$(tail -2 /tmp/cm-health.log | tr '\n' ' ')"
+fi
+
 section "现状账（kits status）"
 if "$ROOT/g41.sh" kits status >/tmp/cm-status.log 2>&1; then
   rows=$(tail -n +3 /tmp/cm-status.log | grep -c . || true)
