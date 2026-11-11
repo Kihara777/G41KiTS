@@ -2,6 +2,21 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-11 (production health check: kits health)
+
+- **New `kits health`**: folds four manual checks into one — image existence / drift / content seed matching
+  the repo key by key / api-src matching the repo. Three outcomes are never merged (0 all green / 1 failure /
+  2 "could not verify" with no failures)
+  - Motivation: these checks were scattered and relied on someone remembering to run them, and **each one
+    looks fine on its own** (a content seed missing one key just means one tile is missing)
+  - Two of my own mistakes surfaced while building it: (1) the key mapping did not strip `.json` first, so
+    every i18n key was reported as "no source file" — **when the criterion itself is wrong, it looks like the
+    system is broken**; (2) after fixing it the mapping became `seed_key_src` with a `--self-test` (6 cases),
+    and a mutation reproduces exactly that bug and exits 1
+  - The self-test is wired into the gate (check #20); the gate now runs 20 checks and passes
+  - Measured in production: all four pass (63 keys byte-identical); tampering with one key produces exactly
+    `tile.dns.json 与 kits/dns/tile.json 内容不同` and fails; restoring it turns everything green again
+
 ## 2026-11-11 (migration cleanup: archiving leftovers)
 
 - **Archived the host leftovers nothing reads any more**: `.rd/data` (332K: home/i18n/tile_apps/tile_links/tiles)
