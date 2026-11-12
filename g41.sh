@@ -2027,6 +2027,8 @@ MAP
       local bad=0 checked=0 key b64 src want got
       while IFS=' ' read -r key b64; do
         [ -n "$key" ] || continue
+        # _map.json 是映射本身，不是内容 —— 跳过而不是「无法映射」
+        [ "$key" = "_map.json" ] && continue
         # 键名 → 仓库源文件：单一来源在 seed_key_src（它有自检）
         if ! src=$(seed_key_src "$key"); then
           echo "  ⚠ 无法映射的键: $key"; bad=$((bad+1)); continue
@@ -2073,7 +2075,11 @@ MAP
     echo "  没能验到：找不到 curl"; unverified=$((unverified+1))
   else
     local p code urls_ok=0 urls_bad=0
-    for p in "/" "/data/tiles"; do
+    # 端点必须覆盖**前端真正会请求的那些**（2026-11-12 事故）：
+    # 那天 `/` 与 `/data/tiles` 都是 200，但 `/data/home/status` 是 404 的 HTML，
+    # 前端 JSON.parse 直接报错、整页打不开。体检当时报绿——因为查的位置不对。
+    # 这份清单来自 `/js/G41.js` 里的实际请求。
+    for p in "/" "/data/tiles" "/data/i18n_zh" "/data/home/status" "/data/home/chars"; do
       # curl 失败时自己就会输出 000，不能再 `|| echo 000` —— 那会拼成 000000。
       code=$(curl -s -k -o /dev/null -w '%{http_code}' --max-time 10 "https://$dom$p" 2>/dev/null || true)
       [ -n "$code" ] || code="000"
