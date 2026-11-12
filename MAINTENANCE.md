@@ -2,6 +2,20 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-12（CI 积压与两处加固）
+
+- **CI 停摆四小时**：四个 run 卡在 `queued`、`jobs: []`（连 job 都没创建）。期间 CD 不跑，
+  生产靠手动验证维持，恢复后正常
+  - 期间发现一个真风险：排队积压里可能有针对**旧提交**的 run，一旦按序执行就会 checkout 旧树 +
+    `rsync --delete`，**把生产拉回旧版本**，而看起来像一次正常部署
+  - **deploy.yml 加守卫**：checkout 后比对 `HEAD` 与 `origin/main`，不一致就报错退出，不 rsync 不 apply。
+    宁可红——红是可见的，倒退是安静的。实测打印 `本次 run: 339c3be… / origin/main: 339c3be…` 并放行
+- **`kits health` 加第五项：站点可访问性**。前四项查的都是「仓库与集群是否一致」，
+  它们全绿而站点挂掉完全可能（nginx 挂了 / 证书过期 / upstream 没起）。现在真的发请求：
+  从 `.env` 取域名，检查 `/` 与 `/data/tiles` 是否 200；缺域名或缺 curl 记为「没能验到」
+  - 实测：五项全过；域名改成 `invalid.test` → 两条都报 `→ 000（期望 200）` 并退出 1
+  - 顺带修一个小 bug：curl 失败时自己就输出 `000`，原来又接了 `|| echo 000`，拼成 `000000`
+
 ## 2026-11-12（自动巡检）
 
 - **新增 `g41-health.timer`：每 6 小时自动跑一次 `kits health`**（`k8s/host/g41-health.{sh,service,timer}`）

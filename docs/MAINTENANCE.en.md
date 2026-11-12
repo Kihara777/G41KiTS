@@ -2,6 +2,24 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-12 (CI backlog and two hardening changes)
+
+- **CI was stalled for four hours**: four runs sat in `queued` with `jobs: []` (no job created at all). CD did
+  not run during that window and production stayed up on manual verification only; it recovered afterwards
+  - A real risk surfaced while it was stuck: the backlog could contain a run for an **older commit**, and once
+    executed in order it would checkout the old tree and `rsync --delete` — **pulling production back to an
+    older version** while looking like a normal deploy
+  - **`deploy.yml` now guards against it**: after checkout it compares `HEAD` with `origin/main` and refuses to
+    rsync or apply when they differ. Red is acceptable — red is visible, a rollback is silent. Measured: a
+    normal deploy printed `本次 run: 339c3be… / origin/main: 339c3be…` and proceeded
+- **`kits health` gained a fifth check: site reachability.** The first four compare the repo against the
+  cluster, and they can all be green while the site is down (nginx crashed, certificate expired, upstream not
+  running). It now issues real requests: reads the domain from `.env` and requires 200 for `/` and
+  `/data/tiles`; a missing domain or missing curl counts as "could not verify"
+  - Measured: all five pass; setting the domain to `invalid.test` makes both report `-> 000 (expected 200)` and
+    the check exits 1
+  - Also fixed a small bug: curl already prints `000` on failure, and the extra fallback produced `000000`
+
 ## 2026-11-12 (automatic inspection)
 
 - **New `g41-health.timer`: runs `kits health` every six hours** (`k8s/host/g41-health.{sh,service,timer}`)
