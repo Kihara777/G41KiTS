@@ -2075,23 +2075,62 @@ MAP
     echo "  没能验到：找不到 curl"; unverified=$((unverified+1))
   else
     local p code urls_ok=0 urls_bad=0
-    # 端点必须覆盖**前端真正会请求的那些**（2026-11-12 事故）：
-    # 那天 `/` 与 `/data/tiles` 都是 200，但 `/data/home/status` 是 404 的 HTML，
-    # 前端 JSON.parse 直接报错、整页打不开。体检当时报绿——因为查的位置不对。
-    # 这份清单来自 `/js/G41.js` 里的实际请求。
-    for p in "/" "/data/tiles" "/data/i18n_zh" "/data/home/status" "/data/home/chars"; do
-      # curl 失败时自己就会输出 000，不能再 `|| echo 000` —— 那会拼成 000000。
+    # 路径清单**从代码里长出来**（2026-11-12 第二次修）。
+    #
+    # 上一次我把端点手写进这里，而手写漏掉了 `/data/home/status` —— 那天首页整页打不开，
+    # 体检却是绿的。**手写的清单必然漏**，所以改成：取首页 → 取它引用的每个脚本 →
+    # 从脚本里抽所有 `/data/…` 字面量。前端加接口时这里自动跟上。
+    local html paths="" js sub
+    html=$(curl -s -k --max-time 10 "https://$dom/" 2>/dev/null || true)
+    if [ -z "$html" ]; then
+      echo "  没能验到：首页取不到"; unverified=$((unverified+1))
+    else
+      for js in $(printf '%s' "$html" | grep -oE 'src="[^"]+\.js"' | sed 's/src="//;s/"$//' | sort -u); do
+        # 注意 `|| true`：tiles.js 里一条 /data/ 路径都没有，grep 会返回 1，
+        # 而这是 `set -e` 下的赋值语句——不加就是**整个体检无声退出**（本次实测）。
+        sub=$(curl -s -k --max-time 10 "https://$dom$js" 2>/dev/null || true)
+        paths="$paths $(printf '%s' "$sub" | grep -oE '/data/[A-Za-z0-9_/.?=-]+' | sort -u | tr '\n' ' ' || true)"
+      done
+      paths=$(printf '%s\n' $paths | sort -u)
+      local npaths; npaths=$(printf '%s\n' "$paths" | grep -c . || true)
+      if [ "$npaths" -eq 0 ]; then
+        # 抽不出来 = 没能验到，不是通过。脚本改了结构、或首页脚本没加载，都会走到这里。
+        echo "  没能验到：从首页脚本里抽不出任何 /data/ 路径"; unverified=$((unverified+1))
+      else
+        for p in $paths; do
+          # curl 失败时自己就会输出 000，不能再 `|| echo 000` —— 那会拼成 000000。
+          code=$(curl -s -k -o /tmp/g41-hc.body -w '%{http_code}' --max-time 10 "https://$dom$p" 2>/dev/null || true)
+          [ -n "$code" ] || code="000"
+          if [ "$code" = "200" ]; then
+            # 200 还不够：前端要的是 JSON。返回 200 的 HTML 一样会让 JSON.parse 炸。
+            local first; first=$(head -c 1 /tmp/g41-hc.body 2>/dev/null || true)
+            case "$first" in
+              "{"|"[") urls_ok=$((urls_ok+1));;
+              *) echo "  ⚠ https://$dom$p → 200 但不是 JSON（首字节 '$first'）"; urls_bad=$((urls_bad+1));;
+            esac
+          else
+            echo "  ⚠ https://$dom$p → $code（期望 200）"
+            urls_bad=$((urls_bad+1))
+          fi
+        done
+      fi
+    fi
+
+    # 固定路径：期望的**不是** 200。一律要求 200 是偷懒的判据——
+    # /dns-query 不带参数时返回 400 才是对的，返 200 反而说明它坏了。
+    for pair in "/dns-query:400" "/:200"; do
+      p=${pair%:*}; local want=${pair##*:}
       code=$(curl -s -k -o /dev/null -w '%{http_code}' --max-time 10 "https://$dom$p" 2>/dev/null || true)
       [ -n "$code" ] || code="000"
-      if [ "$code" = "200" ]; then
+      if [ "$code" = "$want" ]; then
         urls_ok=$((urls_ok+1))
       else
-        echo "  ⚠ https://$dom$p → $code（期望 200）"
-        urls_bad=$((urls_bad+1))
+        echo "  ⚠ https://$dom$p → $code（期望 $want）"; urls_bad=$((urls_bad+1))
       fi
     done
+
     if [ "$urls_bad" -eq 0 ]; then
-      echo "  $urls_ok 个端点返回 200"
+      echo "  $urls_ok 条用户路径符合预期（$npaths 条从脚本里抽出）"
     else
       failed=$((failed+1))
     fi
