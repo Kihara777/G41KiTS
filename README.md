@@ -11,8 +11,26 @@ git clone https://github.com/Kihara777/G41KiTS.git
 cd G41KiTS
 cp .env.example .env
 # 编辑 .env 填入域名与 Cloudflare 凭证
-./g41.sh kits add -y all
+./g41.sh init k8s        # 首次初始化（k3s + 主机调优 + 分阶段部署）
+./g41.sh kits install <模块>   # 之后装单个模块
 ```
+
+> **2026-11-12 更正**：这里原来写的是 `./g41.sh kits add -y all`。在 k8s 后端下
+> `kits add` 走的是**宿主内容装配**，而内容已改由 `g41-content` ConfigMap 供给
+> （`kits content`）、api 源码由 `g41-api-src` 供给——铺出去的文件**没有消费者**。
+> 装模块请用 `kits install`；`kits add` 现在会打印提示但不阻断。
+
+**日常运维**（在部署机上跑）：
+
+```bash
+./g41.sh kits status --cluster   # 现状账：版本 / Pod 组 / 清单镜像 / 内容键 + 集群实际镜像
+./g41.sh kits health             # 体检：镜像存在性 / drift / 内容种子 / api 源码 / 站点可访问
+./g41.sh kits update <模块> --to <版本> --build   # 改版本 + 构建 + 出包
+./g41.sh kits rollback <模块>    # 回滚到 dist/ 里现存的旧版本
+./g41.sh kits images --verify    # 清单引用的镜像 tag 是否都在本机 containerd
+```
+
+`kits health` 另有每 6 小时的 systemd 定时任务（`g41-health.timer`），**只在状态变化时通知**。
 
 **Kubernetes (k3s) 模式**：`./g41.sh init k8s`（详见 [docs/zh/k8s-migration.md](docs/zh/k8s-migration.md)）。
 

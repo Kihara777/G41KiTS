@@ -11,8 +11,26 @@ git clone https://github.com/Kihara777/G41KiTS.git
 cd G41KiTS
 cp .env.example .env
 # .env にドメインと Cloudflare 認証情報を記入
-./g41.sh kits add -y all
+./g41.sh init k8s        # 初回初期化（k3s + ホスト調整 + 段階的デプロイ）
+./g41.sh kits install <モジュール>   # その後はモジュール単位で導入
 ```
+
+> **2026-11-12 訂正**：ここは以前 `./g41.sh kits add -y all` と書かれていた。k8s バックエンドでは
+> `kits add` は**ホスト側のコンテンツ組み立て**を行うが、内容は `g41-content` ConfigMap
+> （`kits content`）、api ソースは `g41-api-src` で供給されるようになった——**敷かれたファイルを読むものは無い**。
+> モジュールの導入には `kits install` を使う。`kits add` は現在、案内を表示するが遮断はしない。
+
+**日常運用**（デプロイ機で実行）：
+
+```bash
+./g41.sh kits status --cluster   # 台帳：バージョン / Pod グループ / マニフェストのイメージ / コンテンツキー + 実イメージ
+./g41.sh kits health             # 点検：イメージの存在 / drift / コンテンツシード / api ソース / サイト到達性
+./g41.sh kits update <モジュール> --to <バージョン> --build   # バージョン変更 + ビルド + バンドル
+./g41.sh kits rollback <モジュール>  # dist/ に残る旧バンドルへ戻す
+./g41.sh kits images --verify    # マニフェストが参照するイメージタグが containerd にあるか
+```
+
+`kits health` は `g41-health.timer` により 6 時間ごとにも実行され、**状態が変化したときだけ通知**する。
 
 **Kubernetes (k3s) モード**: `./g41.sh init k8s`（[docs/zh/k8s-migration.md](docs/zh/k8s-migration.md) 参照）。
 

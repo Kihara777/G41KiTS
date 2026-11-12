@@ -11,8 +11,26 @@ git clone https://github.com/Kihara777/G41KiTS.git
 cd G41KiTS
 cp .env.example .env
 # Edit .env with your domain and Cloudflare credentials
-./g41.sh kits add -y all
+./g41.sh init k8s        # first-time init (k3s + host tuning + staged deploy)
+./g41.sh kits install <module>   # install one module afterwards
 ```
+
+> **Corrected 2026-11-12**: this used to say `./g41.sh kits add -y all`. Under the k8s backend
+> `kits add` performs **host content assembly**, but content is now supplied by the `g41-content`
+> ConfigMap (`kits content`) and the api source by `g41-api-src` — **nothing reads the files it lays
+> down**. Use `kits install` to install a module; `kits add` now prints a notice but does not block.
+
+**Day-to-day operations** (run on the deploy host):
+
+```bash
+./g41.sh kits status --cluster   # ledger: version / pod group / manifest image / content keys + live images
+./g41.sh kits health             # health: image presence / drift / content seed / api source / site reachability
+./g41.sh kits update <module> --to <version> --build   # bump version + build + bundle
+./g41.sh kits rollback <module>  # roll back to an older bundle present in dist/
+./g41.sh kits images --verify    # are the image tags referenced by manifests present in containerd
+```
+
+`kits health` also runs every six hours via `g41-health.timer`, and **notifies only on a state change**.
 
 **Kubernetes (k3s) mode**: `./g41.sh init k8s` (see [docs/zh/k8s-migration.md](docs/zh/k8s-migration.md)).
 

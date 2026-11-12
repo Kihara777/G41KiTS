@@ -308,6 +308,17 @@ done
 if [ -z "$bad_tag" ]; then pass "清单引用的自建镜像 tag 与 info.json 版本一致"; else fail "tag 与版本不一致:$bad_tag"; fi
 
 # ---------- 5. 集群类判据：只查存在性 ----------
+section "README 三语一致"
+# 2026-11-12：README 三个版本原先都写着 `kits add -y all` 作为安装命令，而那是死路。
+# 判据：三份 README 都必须出现 `kits install`（安装入口）与 `kits health`（体检）。
+readme_bad=""
+for f in README.md docs/README.en.md docs/README.ja.md; do
+  [ -f "$f" ] || { readme_bad="$readme_bad $f(缺失)"; continue; }
+  grep -q 'kits install' "$f" || readme_bad="$readme_bad ${f##*/}(无 kits install)"
+  grep -q 'kits health'  "$f" || readme_bad="$readme_bad ${f##*/}(无 kits health)"
+done
+if [ -z "$readme_bad" ]; then pass "三份 README 都写了 install 与 health"; else fail "README 过时:$readme_bad"; fi
+
 section "体检键名映射（kits health --self-test）"
 # 内容种子的键名 → 源文件映射曾出过一次 bug（没先剥 .json），
 # 表现是满屏「没有对应的源文件」——判据自己错的时候，看起来像系统坏了。
