@@ -752,27 +752,41 @@ kit_provides_ext() {
 }
 
 kits_add() {
-  local m="" skip="" dry="" core=""
+  local m="" skip="" dry="" core="" nb=""
   while [ $# -gt 0 ]; do
     case "$1" in
       -y) skip="-y";;
       -C|--core) core="1";;
       --dry-run) dry="1";;
+      --no-build) nb="1";;   # k8s 转发给 install 时会用到
       *) m="$1";;
     esac
     shift
   done
   [ -z "$m" ] && { echo "ERROR: module name required"; return 1; }
 
-  # 2026-11-10：k8s 后端下 `kits add` 只往宿主铺文件，而 tile/app/link/i18n 的内容
-  # 已改由 `g41-content` ConfigMap 供给（kits content）、api 源码由 `g41-api-src` 供给。
-  # 所以这里铺出去的那批文件**没有消费者**——装完看着正常，是因为生效的是另一条路。
-  # 不阻断（有人可能就是想取文件），但必须说出来。
+  # 2026-11-12：k8s 后端下 `kits add` **直接转给 kits install**，不再走宿主装配。
+  # 之前它只打印提示然后继续铺文件——那批文件没有消费者（内容走 g41-content ConfigMap、
+  # api 源码走 g41-api-src），铺出去只会让人以为装好了。
   if [ "$(backend_get)" = "k8s" ]; then
-    echo "⚠ backend=k8s：kits add 走的是宿主内容装配，而内容现在由 ConfigMap 供给。"
-    echo "  装模块请用：./g41.sh kits install $m"
-    echo "  （继续执行本命令只会往宿主铺一批没人读的文件）"
-    echo
+    echo "（backend=k8s：kits add 转给 kits install）"
+    if [ "$m" = "all" ]; then
+      # 共享生成物（内容种子 / api 源码）与装哪个模块无关，批量时只做一次。
+      # 否则 25 个模块各生成一次 63 键的 ConfigMap，实测一轮要几分钟。
+      kits_content >/dev/null 2>&1 || true
+      kits_api_src >/dev/null 2>&1 || true
+      export KITS_INSTALL_SKIP_SHARED=1 KITS_INSTALL_SKIP_DEPS=1
+      local cnt=0 n
+      for d in kits/*/; do
+        n=$(basename "$d"); [ -f "$d/info.json" ] || continue
+        kits_install "$n" ${dry:+--dry-run} ${nb:+--no-build} >/dev/null && cnt=$((cnt+1))
+      done
+      unset KITS_INSTALL_SKIP_SHARED KITS_INSTALL_SKIP_DEPS
+      echo "All: $cnt 个模块已应用"
+      return 0
+    fi
+    kits_install "$m" ${dry:+--dry-run} ${nb:+--no-build}
+    return $?
   fi
 
   # virtual module "all" — install all kits
@@ -1054,6 +1068,18 @@ kits_del() {
     shift
   done
   [ -z "$m" ] && { echo "ERROR: module name required"; return 1; }
+
+  # k8s 后端下 `kits del` 走的是宿主装配的删除，而内容/源码已由 ConfigMap 供给——
+  # 删宿主文件删不掉线上任何东西（2026-11-12）。直接转给 uninstall。
+  if [ "$(backend_get)" = "k8s" ]; then
+    echo "（backend=k8s：kits del 转给 kits uninstall）"
+    if [ "$m" = "all" ]; then
+      echo "ERROR: k8s 后端下不支持 del all —— 那会把整站删空。请逐个指名。"
+      return 2
+    fi
+    kits_uninstall "$m" ${core:+--force}
+    return $?
+  fi
 
   # virtual module "all" — cascading uninstall all
   if [ "$m" = "all" ]; then
@@ -1579,6 +1605,35 @@ kits_install() {
     return 2
   fi
 
+  # 依赖先装（2026-11-12）。这是 `kits add` 原本的语义，install 之前漏了。
+  # 放在校验之前：依赖装不上时，装本体没有意义。
+  # 深度上限防止 A depends B、B depends A 这种环把脚本拖死——环本身应该在校验里报，
+  # 但那是「理想」，这里是「别挂」。
+  local depth="${KITS_INSTALL_DEPTH:-0}"
+  if [ "${KITS_INSTALL_SKIP_DEPS:-0}" = "1" ]; then
+    echo "（批量模式：跳过依赖递归——本次会把所有模块都装一遍）"
+  elif [ "$depth" -lt 5 ]; then
+    local dep kc
+    kc=$(kit_core 2>/dev/null || echo "core")
+    for dep in $(jq -r '.depends[]?' "kits/$m/info.json" 2>/dev/null || true); do
+      [ "$dep" = "$m" ] && continue
+      # `core` 是虚拟依赖（.env 的 G41_CORE），不是 kits/ 下的目录——原 kits_add 也跳过它
+      [ "$dep" = "$kc" ] && continue
+      [ "$dep" = "core" ] && continue
+      [ -d "kits/$dep" ] || { echo "ERROR: 依赖 '$dep' 不在仓库里（kits/$dep）"; return 1; }
+      # 只装「有东西可装」的依赖：有 k8s 清单或有内容种子的
+      if [ -d "kits/$dep/k8s" ] || [ -f "kits/$dep/tile.json" ] || [ -f "kits/$dep/app.json" ] \
+         || [ -f "kits/$dep/link.json" ] || [ -d "kits/$dep/i18n" ] || [ -d "kits/$dep/data" ]; then
+        echo "→ 依赖 $dep"
+        KITS_INSTALL_DEPTH=$((depth+1)) kits_install "$dep" \
+          ${dry:+--dry-run} ${nohandoff:+--no-build} >/dev/null || {
+          echo "ERROR: 依赖 '$dep' 安装失败，停止"; return 1; }
+      fi
+    done
+  else
+    echo "WARN: 依赖递归超过 5 层（可能有环），跳过继续装本体"
+  fi
+
   echo "=== 1/4 校验 $m ==="
   kits_verify "$m" || return 1
 
@@ -1597,9 +1652,16 @@ kits_install() {
   fi
 
   echo "=== 3/4 刷新内容种子与 api 源码 ==="
-  kits_content >/dev/null || { echo "ERROR: 内容种子生成失败"; return 1; }
-  kits_api_src >/dev/null || { echo "ERROR: api 源码生成失败"; return 1; }
-  echo "    dist/g41-content.yaml + dist/g41-api-src.yaml"
+  # 这两份是**仓库级生成物**，与具体装哪个模块无关。批量装（kits add all / install all）时
+  # 每个模块都重生成一次 = 25 倍冗余，实测一轮要好几分钟。
+  # 批量的调用方负责先做一次，然后设 KITS_INSTALL_SKIP_SHARED=1 跳过。
+  if [ "${KITS_INSTALL_SKIP_SHARED:-0}" = "1" ]; then
+    echo "    跳过（批量模式：调用方已生成）"
+  else
+    kits_content >/dev/null || { echo "ERROR: 内容种子生成失败"; return 1; }
+    kits_api_src >/dev/null || { echo "ERROR: api 源码生成失败"; return 1; }
+    echo "    dist/g41-content.yaml + dist/g41-api-src.yaml"
+  fi
 
   echo "=== 4/4 导出并应用 $m 的包 ==="
   kits_export "$m" || return 1
@@ -1742,10 +1804,11 @@ kits_images() {
 #      重载后 Redis 里那份也会掉
 #   3. **仓库里该模块还在**：下一次 CD 会把它装回来。真要移除，得先删模块目录。
 kits_uninstall() {
-  local m="" dry=""
+  local m="" dry="" force=""
   while [ $# -gt 0 ]; do
     case "$1" in
       --dry-run) dry="1";;
+      --force) force="1";;
       -*) echo "ERROR: unknown flag $1"; return 1;;
       *) m="$1";;
     esac
@@ -1754,6 +1817,23 @@ kits_uninstall() {
   [ -n "$m" ] || { echo "ERROR: module name required"; return 1; }
   [ -f "kits/$m/info.json" ] || { echo "ERROR: 模块 '$m' 不存在"; return 1; }
   [ "$(backend_get)" = "k8s" ] || { echo "ERROR: backend=$(backend_get) —— uninstall 只实现 k8s 路径（没能验到）"; return 2; }
+
+  # 反向依赖检查（2026-11-12）：删掉一个别人依赖的模块，坏的不是这台机器，
+  # 是依赖它的那些服务——而它们的 Pod 会继续 Running，直到下一次启动/重连才发现。
+  local rd="" d
+  for d in kits/*/; do
+    local other; other=$(basename "$d")
+    [ "$other" = "$m" ] && continue
+    [ -f "$d/info.json" ] || continue
+    jq -r '.depends[]?' "$d/info.json" 2>/dev/null | grep -qx "$m" && rd="$rd $other"
+  done
+  if [ -n "$rd" ] && [ -z "$force" ]; then
+    echo "ERROR: 这些模块依赖 '$m':$rd"
+    echo "       删掉它会破坏它们，而它们的 Pod 现在仍然显示 Running。"
+    echo "       确认要删请加 --force。"
+    return 1
+  fi
+  [ -n "$rd" ] && echo "⚠ 强制卸载：$rd 依赖此模块，它们会受影响"
 
   local ver; ver=$(kit_version "$m")
   if ! kits_export "$m" >/dev/null 2>&1; then
