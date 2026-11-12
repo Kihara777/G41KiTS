@@ -2,6 +2,25 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-12（短链接：迁移后断掉，现已修好并加判据）
+
+查 `/vscode` 为什么 404，挖出三件事：
+
+- **功能在迁移到 ConfigMap 后就断了**：产生 `link:*` 键的逻辑只读宿主 `links/` 目录，
+  而宿主内容早已不供给 → 键不再生成 → `/link/<code>` 全部 404。现在从
+  `tile_links/<id>.json` 的 short + target 生成
+  - 更正中途判断：先说「这个功能一直是坏的」是错的。带前导斜杠的 short 与 API 的
+    `u.slice(5)` 本来就是配的；我第一版剥了斜杠，反而配错。现在**原样存**
+- **外部路径不是 `/link/vscode`**：nginx 的 `999-shortlinks.conf` 把 `/(vscode)` 转给
+  `api/link/$1`，用户访问的是 `/vscode`
+- **体检加一条**：`/<short>` 期望 **302**；loader 自检加两条（键保留前导斜杠 /
+  不与 API 取法错位），变异（改成剥斜杠）→ 两条红
+
+顺带两个操作层教训：`cat > 文件` 传输在 98304 字节处被截断（改用 rsync）；
+`... | head -1` 让上游吃 SIGPIPE，配合 `pipefail` 使体检以 141 退出（改 `sed -n '1p'`）。
+
+实测：`/vscode` `/7z` 均 302 到目标；体检 9 条用户路径全过；定时服务 green。
+
 ## 2026-11-12（用户路径判据：清单从代码里长出来）
 
 上午那次事故的根因是**我自己手写端点清单**，漏了 `/data/home/status`，于是首页打不开而体检报绿。

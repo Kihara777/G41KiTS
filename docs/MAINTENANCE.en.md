@@ -2,6 +2,29 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-12 (short links: broken since the migration, now fixed and covered)
+
+Chasing why `/vscode` returned 404 turned up three things:
+
+- **The feature broke when content moved into a ConfigMap**: the code that produced `link:*` keys only
+  read the host `links/` directory, which no longer supplies anything, so the keys stopped being written and
+  every `/link/<code>` returned 404. They are now derived from the short + target in
+  `tile_links/<id>.json`
+  - Correction to my own mid-way judgement: saying "this was always broken" was wrong. A short with a leading
+    slash and the API's `u.slice(5)` were consistent; my first version stripped the slash and broke the
+    pairing. It is stored **as-is** now
+- **The public path is not `/link/vscode`**: nginx's `999-shortlinks.conf` maps `/(vscode)` to
+  `api/link/$1`, so users hit `/vscode`
+- **A new health check**: `/<short>` expects **302**; two loader self-tests assert the key keeps the leading
+  slash and does not drift from the API's slicing, and a mutation (stripping the slash) turns both red
+
+Two operational lessons along the way: a `cat > file` transfer was cut at 98304 bytes (switched to rsync),
+and `... | head -1` gives the upstream SIGPIPE, which under `pipefail` exits the health check with 141
+(now `sed -n '1p'`).
+
+Measured: `/vscode` and `/7z` both 302 to their targets; the health check passes nine user paths; the timer
+service reports green.
+
 ## 2026-11-12 (user-path checks: the list grows out of the code)
 
 This morning's incident came from **me hand-writing the endpoint list**, missing `/data/home/status`, so the
