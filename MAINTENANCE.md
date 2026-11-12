@@ -2,6 +2,17 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-12（维护日志三语差额清零）
+
+三语维护日志长期存在条目差额，此前每轮报告都写一句「历史差额、未消」——**提一句不等于处理**。
+
+实际差额（按日期序列比对）：zh 独有 `2026-08-24` / `2026-06-24` / `2026-06-22`，
+en 与 ja 独有 `2026-07-14`。四条全部补齐翻译，三份现为 **34 条且日期序列逐条一致**。
+
+- 闸门新增第 23 项「维护日志三语条目对齐」：三份的条目日期序列必须逐条相同（数量与顺序都要一致）。
+  变异（日文删一条）→ 精确报 `29d28 < 2026-06-22`
+- 这样一来，差额不再靠人记得看，而是每次 push 都会被比较
+
 ## 2026-11-12（架构总览：三语 + 一张图）
 
 - **新增 `docs/{zh,en,ja}/architecture.md`**：模块从声明到线上的**四条管道**（内容种子 / api 源码 /
@@ -616,6 +627,19 @@ provider 改 `dir` 代码不跟，且「有 `tile.json` 但不依赖 home」的�
 - autoheal/dsock/acme 三模块在 k8s 下退役（原生探针/cert-manager 替代）
 - 新增 docs/zh/k8s-migration.md 迁移 runbook 与 k8s/README.md 架构说明
 - 发现并记录：VPS 上 G41_KITS 曾遗漏 attic 记账；内存 1GB 需先升级才能迁移
+
+## 2026-07-14
+
+- blc 模块新增 `blc_template` provides 类型：依赖方可通过 `blc_template/` 目录分发 blivechat 自定义模板
+- blc compose.yaml 新增 `custom_public/templates` 卷挂载（容器路径 `/mnt/data/data/custom_public/templates`）
+- g41.sh 补全 blc_template 类型的处理：安装、卸载、检查（kits_add / kits_del / kits_check）
+- blc 三语文档补充模板分发用法（ja/en/zh）
+- 新增 blct_tts 模块：blivechat 的 TTS 语音播报自定义模板
+  - 混合模式：默认样式视觉渲染 + Web Speech API 语音
+  - 语言自适应：假名 → ja-JP，中文引擎兜底
+  - 双队列：普通顺序队列 + 礼物/上舰优先队列
+  - 中断弹幕回放、右键设置面板（localStorage）
+  - 修复 blc server.conf：为 custom_public 位置补 proxy_pass
 
 ## 2026-06-24
 

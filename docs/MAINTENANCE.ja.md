@@ -2,6 +2,18 @@
 
 [中文](../MAINTENANCE.md) | [English](MAINTENANCE.en.md) | 日本語 
 
+## 2026-11-12（保守ログの三言語差を解消）
+
+三言語の保守ログには長く条目数の差があり、毎回の報告では「歴史的な差、未解消」と一行書くだけだった——
+**書くことは処理することではない。**
+
+実際の差（日付列で比較）：zh のみに `2026-08-24` / `2026-06-24` / `2026-06-22`、
+en と ja のみに `2026-07-14`。四つとも翻訳を補い、現在は三つとも **34 条で日付列が逐条一致**。
+
+- ゲート第 23 項「保守ログの三言語条目一致」：三つの日付列が逐条同じであること（件数も順序も）。
+  変異（日本語版から一条削除）で `29d28 < 2026-06-22` と正確に報告
+- これで差は「誰かが気づく」に依存せず、push のたびに比較される
+
 ## 2026-11-12（アーキテクチャ概観：三言語と一枚の図）
 
 - **`docs/{zh,en,ja}/architecture.md` を追加**：モジュールが宣言から本番へ流れる**四つのパイプライン**
@@ -700,6 +712,16 @@
 - i18n 全量監査通過；home 説明を k3s に更新、tile_flake を現行 NixKits に同期
 - 根本原因修正：journald フリーズ、k3s.service ユニット、bittorrent-tracker ESM、REDIS_HOST ハードコード等
 
+## 2026-08-24
+
+- k8s/k3s 配備層を追加：12 のコンテナモジュールに Deployment/Service マニフェスト（kits/*/k8s/）
+- g41.sh が二つのバックエンドに対応：`backend compose|k8s` と `k8s apply|build|status` サブコマンド
+- compose include を生成方式へ変更（compose_include_regenerate）、sed による行編集を廃止
+- 証明書：acme.sh のタグフック → cert-manager（Cloudflare DNS01）+ Reloader
+- autoheal / dsock / acme は k8s 下で退役（ネイティブ探針と cert-manager が代替）
+- docs/zh/k8s-migration.md の runbook と k8s/README.md のアーキテクチャ説明を追加
+- 判明・記録：VPS の G41_KITS で attic の計上が漏れていた。メモリ 1GB は移行前に増設が必要
+
 ## 2026-07-14
 
 - blc モジュールに `blc_template` provides タイプを追加: 依存モジュールが `blc_template/` ディレクトリ経由で blivechat カスタムテンプレートを配布可能に
@@ -712,6 +734,28 @@
   - ダブルキュー（通常コメント順次 + ギフト/メンバーシップ割り込み独立キュー）
   - 中断コメント自動リプレイ、右クリック設定パネル（localStorage 保存）
   - blc server.conf 修正: custom_public ロケーションに proxy_pass 追加
+
+## 2026-06-24
+
+- tile_mail / tile_kihara777 の三言語ドキュメントを補完（zh/en/ja、計 6 篇）
+- README の三言語ショーケースに mail と kihara777 を追加
+- MAINTENANCE.md を整理：要約ブロックをタイムラインへ統合
+- AGENTS.md にアクセス制御、初回起動監査、クラウド配備の規約を追加
+
+## 2026-06-22
+
+- attic モジュールを追加：セルフホストの Nix バイナリキャッシュサーバ（atticd）
+- tile_attic タイルを追加：Attic の使い方（三言語 i18n と鍵生成の説明）
+- tile_attic を全面ローカライズ：コードブロックを i18n キーへ（attic_pre1 / attic_pre2 / attic_note）
+- attic / tile_attic の三言語ドキュメントを追加（zh/en/ja、計 6 篇）
+- README を三言語で同期：サービス表とショーケースに attic を追加
+- tile_mail / tile_homete / tile_kihara777 タイルを追加（GitHub プロジェクトとホームページの紹介、三言語 i18n）
+- Redis API にホットリロード端点 POST /admin/reload を追加（RELOAD_SECRET 認証、無停止）
+- `g41.sh kits reload` を追加：タイル/i18n/リンクのデータを一括更新（コンテナ内 Node.js からの HTTP 要求）
+- tile_attic のハードコードされた中国語リンク文言を修正 → i18n キー attic_link
+- 新しいタイルの題名形式を統一：小文字・絵文字なし（attic / homete / kihara777 / mail）
+- tile_homete を home モジュールへ統合：home が homete タイルを直接提供し、重複モジュールを削除
+- Redis API のタイル一覧を id のアルファベット順に並べ替え
 
 ## 2026-06-20
 

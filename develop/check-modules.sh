@@ -331,6 +331,29 @@ done
 if [ -z "$bad_tag" ]; then pass "清单引用的自建镜像 tag 与 info.json 版本一致"; else fail "tag 与版本不一致:$bad_tag"; fi
 
 # ---------- 5. 集群类判据：只查存在性 ----------
+section "维护日志三语条目对齐"
+# 2026-11-12：三语维护日志长期存在差额（zh 34 / en 31 / ja 31 那阵子），
+# 每次只在报告里说一句「历史差额、未消」——提一句不等于处理。这条把它变成判据：
+# 三份的**条目日期序列必须逐条相同**（不只是数量相等，顺序也要一致）。
+mt_bad=""
+mt_ref=""
+for f in MAINTENANCE.md docs/MAINTENANCE.en.md docs/MAINTENANCE.ja.md; do
+  [ -f "$f" ] || { mt_bad="$mt_bad $f(缺失)"; continue; }
+  seq=$(grep '^## ' "$f" | sed 's/^## //' | cut -c1-10)
+  if [ -z "$mt_ref" ]; then
+    mt_ref="$seq"; mt_ref_f="$f"
+  elif [ "$seq" != "$mt_ref" ]; then
+    # 指出第一处不同，方便直接定位
+    first=$(diff <(printf '%s\n' "$mt_ref") <(printf '%s\n' "$seq") | head -2 | tr '\n' ' ')
+    mt_bad="$mt_bad ${f##*/}($first)"
+  fi
+done
+if [ -z "$mt_bad" ]; then
+  pass "三份维护日志条目序列一致（$(printf '%s\n' "$mt_ref" | wc -l | tr -d ' ') 条）"
+else
+  fail "维护日志不一致:$mt_bad"
+fi
+
 section "架构文档三语一致"
 # 架构图最容易「中文改了，另两份没动」——而没人会发现，因为三份各自读起来都是通的。
 arch_bad=""

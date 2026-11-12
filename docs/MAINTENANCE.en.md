@@ -2,6 +2,20 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-12 (trilingual maintenance log gap closed)
+
+The three maintenance logs had differed in entry count for a long time, and every status report just said
+"historical gap, not closed" — **saying it is not handling it.**
+
+The actual gap, compared as date sequences: zh had `2026-08-24` / `2026-06-24` / `2026-06-22` on its own, while
+en and ja had `2026-07-14`. All four are now translated and the three files hold **34 entries each with an
+identical date sequence**.
+
+- Gate check #23 "maintenance log entries aligned across languages": the date sequences must match entry by
+  entry (same count and same order). A mutation (delete one entry from the Japanese file) reports exactly
+  `29d28 < 2026-06-22`
+- The gap no longer depends on someone remembering to look — every push compares it
+
 ## 2026-11-12 (architecture overview: three languages and one picture)
 
 - **New `docs/{zh,en,ja}/architecture.md`**: the **four pipelines** a module travels from declaration to
@@ -727,6 +741,16 @@ module with a `tile.json` that does not depend on `home` was still collected int
 - i18n full audit passed; home desc updated to k3s, tile_flake synced to current NixKits
 - Root causes fixed: journald freeze, k3s.service unit, bittorrent-tracker ESM, REDIS_HOST hardcode, redis auth mismatch
 
+## 2026-08-24
+
+- Added the k8s/k3s deployment layer: Deployment/Service manifests for 12 container modules (kits/*/k8s/)
+- g41.sh now supports two backends: `backend compose|k8s` plus the `k8s apply|build|status` subcommands
+- compose include is generated rather than rewritten (compose_include_regenerate), dropping sed line editing
+- Certificate strategy: acme.sh tag hook → cert-manager (Cloudflare DNS01) + Reloader
+- autoheal / dsock / acme retired under k8s (replaced by native probes and cert-manager)
+- Added the docs/zh/k8s-migration.md runbook and k8s/README.md architecture notes
+- Found and recorded: G41_KITS had missed attic accounting on the VPS, and 1GB of memory must be upgraded before migrating
+
 ## 2026-07-14
 
 - Added `blc_template` provides type to blc module: dependent modules can distribute blivechat custom templates via `blc_template/` directory
@@ -739,6 +763,28 @@ module with a `tile.json` that does not depend on `home` was still collected int
   - Dual queue: sequential normal + priority queue for gifts/members
   - Interrupted danmaku replay, right-click settings panel (localStorage)
   - Fixed blc server.conf: added proxy_pass to custom_public location
+
+## 2026-06-24
+
+- Completed trilingual docs for tile_mail / tile_kihara777 (zh/en/ja, six files)
+- README showcase section gained the mail and kihara777 entries in all three languages
+- Reorganised MAINTENANCE.md: merged summary blocks into the timeline
+- AGENTS.md gained access control, first-start audit, and cloud deployment rules
+
+## 2026-06-22
+
+- Added the attic module: a self-hosted Nix binary cache server (atticd)
+- Added the tile_attic tile: an Attic usage guide (trilingual i18n plus key generation notes)
+- Fully localised tile_attic: code blocks moved into i18n keys (attic_pre1 / attic_pre2 / attic_note)
+- Added trilingual docs for attic / tile_attic (zh/en/ja, six files)
+- README synced across three languages: services table and showcase entries for attic
+- Added the tile_mail / tile_homete / tile_kihara777 tiles (GitHub project and homepage showcases, trilingual i18n)
+- Added a Redis API hot-reload endpoint POST /admin/reload (RELOAD_SECRET auth, zero downtime)
+- Added `g41.sh kits reload`: refreshes tile/i18n/link data in one shot (Node.js HTTP request from inside the container)
+- Fixed hardcoded Chinese link text in tile_attic → i18n key attic_link
+- Fixed the new tile title format: unified to lowercase without emoji (attic / homete / kihara777 / mail)
+- Merged tile_homete into the home module: home now provides the homete tile and the redundant module is gone
+- Redis API tile list now sorted by id
 
 ## 2026-06-20
 
