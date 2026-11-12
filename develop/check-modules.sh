@@ -219,22 +219,45 @@ if [ -f dist/g41-content.yaml ]; then
 
   if command -v ruby >/dev/null 2>&1; then
     if ruby -e '
-      require "yaml"
+      require "yaml"; require "json"
       cm = YAML.load_stream(File.read(ARGV[0])).compact.find { |d| d["kind"] == "ConfigMap" }
       exit 1 if cm.nil?
-      bad = cm["data"].any? do |k, c|
-        src = case k
-              when /^tile\.(.+)\.json$/ then "kits/#{$1}/tile.json"
-              when /^app\.(.+)\.json$/  then "kits/#{$1}/app.json"
-              when /^link\.(.+)\.json$/ then "kits/#{$1}/link.json"
-              when /^i18n\.(.+)\.([a-z]{2,3})\.json$/ then "kits/#{$1}/i18n/#{$2}.json"
-              when /^data\.(.+)\.([A-Za-z0-9_-]+)\.json$/ then "kits/#{$1}/data/#{$2}.json"
-              end
-        src.nil? || !File.exist?(src) || File.binread(src) != c.b
+      data = cm["data"]
+
+      # 映射本身必须可解析，且每个内容键的类型都在映射里（2026-11-12：
+      # 「类型 → 目录」改由 provides 驱动后，映射与产物不一致会静默变成 unknown 键）
+      map = begin
+              JSON.parse(data["_map.json"].to_s)
+            rescue StandardError
+              nil
+            end
+      exit 1 if map.nil? || (!map.is_a?(Hash)) || map.empty?
+
+      bad = false
+      data.each do |k, c|
+        next if k == "_map.json"     # 映射本身不是内容
+        type = k.split(".").first
+        spec = map[type]
+        if spec.nil?
+          warn "键 #{k} 的类型 #{type} 不在 _map 里"
+          bad = true
+          next
+        end
+        # 源文件也按映射推：shape=file → kits/<mod>/<file>；shape=dir → kits/<mod>/<file>/<extra>.json
+        rest = k.sub(/\A#{Regexp.escape(type)}\./, "").sub(/\.json\z/, "")
+        if spec["shape"] == "file"
+          mod = rest
+          src = "kits/#{mod}/#{spec["file"]}"
+        else
+          mod, extra = rest.split(".", 2)
+          src = "kits/#{mod}/#{spec["file"]}/#{extra}.json"
+        end
+        bad = true if extra.nil? && spec["shape"] == "dir"
+        bad = true if src.nil? || !File.exist?(src) || File.binread(src) != c.b
       end
       exit(bad ? 1 : 0)
     ' dist/g41-content.yaml; then
-      pass "内容种子逐字节还原"
+      pass "内容种子逐字节还原（按 _map 推源文件）"
     else
       fail "内容种子还原不一致"
     fi

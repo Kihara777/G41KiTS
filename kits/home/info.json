@@ -10,13 +10,13 @@
   "provides": [
     {
       "dir": "i18n",
-      "accepts": ["i18n"],
+      "accepts": ["i18n"], "content": true,
       "file": "i18n",
       "ext": "json"
     },
     {
       "dir": "tiles",
-      "accepts": ["tile"],
+      "accepts": ["tile"], "content": true,
       "file": "tile.json",
       "ext": "json"
     },

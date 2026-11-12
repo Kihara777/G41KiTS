@@ -1450,20 +1450,88 @@ kits_content() {
   done
   mkdir -p "$(dirname "$out")" 2>/dev/null
   local tmp="${out}.tmp.$$"; rm -f "$tmp"
-  local n=0 m d cf total=0 sz
+  local n=0 m d cf total=0 sz dep t f e dir src
 
-  # 先算体积：ConfigMap 上限 1MiB，超了在 apply 时才报，报错很难读。
+  # 类型判定改回**依赖驱动**（2026-11-12）：
+  #   旧做法看文件名（有 tile.json 就是 tile），于是「有 tile.json 但没依赖 home」的模块
+  #   照样会被收进种子——按文件名装，而不是按声明的依赖装。
+  #   现在遍历 m 的直接依赖 p，取 p 的 provides[].accepts/file/ext/dir：
+  #     kits/<m>/<provides.file> 是目录 → shape=dir（i18n、data 这种）
+  #     kits/<m>/<provides.file> 是文件 → shape=file（tile、app、link）
+  #     两者都不是 → 这个模块不是该类型的消费者
+  # 这一步完全来自数据，不含推断。
+  local plan mapent; plan=$(mktemp); mapent=$(mktemp)
+  : > "$plan"; : > "$mapent"
   for d in kits/*/; do
-    # 被排除的模块不计入体积，否则报出来的数和实际产物对不上
-    if [ -n "$exclude" ] && [ "$exclude" = "$(basename "$d")" ]; then continue; fi
-    for cf in "$d"tile.json "$d"app.json "$d"link.json "$d"i18n/*.json "$d"data/*.json; do
-      [ -f "$cf" ] || continue
-      sz=$(wc -c < "$cf" | tr -d ' '); total=$((total + sz))
+    m=$(basename "$d")
+    [ -f "$d/info.json" ] || continue
+    if [ -n "$exclude" ] && [ "$exclude" = "$m" ]; then continue; fi
+    # 依赖 + 自己：provider 往往就是内容的**生产者本人的依赖**（home 自己有 tile.json 和
+    # i18n/，而它不会依赖自己）。只扫 depends 会把 home 自己的 tile 弄丢——实测 12 个 tile
+    # 变成 11 个，少的那一个正是首页自己的。
+    for dep in $(jq -r '.depends[]?' "$d/info.json" 2>/dev/null || true) "$m"; do
+      [ -f "kits/$dep/info.json" ] || continue
+      while IFS=$'\t' read -r t dir f e; do
+        [ -n "$t" ] || continue
+        src="kits/$m/$f"
+        # shape 的判据只有一条：provides.file **含点就是文件名，不含点就是目录名**。
+        # 早先这里按「该模块下有没有这个目录/文件」来推，而 seed_map_json 用含点规则——
+        # 同一个事实两个来源。现在统一成含点规则，存在性只用来判断「这是不是消费者」。
+        case "$f" in
+          *.*) shape="file";;
+          *)   shape="dir";;
+        esac
+        printf '%s\t%s\t%s\t%s\t%s\n' "$t" "$dir" "$f" "$e" "$shape" >> "$mapent"
+        if [ "$shape" = "file" ]; then
+          [ -f "$src" ] || continue
+          printf '%s\t%s\t%s\n' "$t.$m.$e" "$src" "$m" >> "$plan"
+        else
+          [ -d "$src" ] || continue
+          for cf in "$src"/*."$e"; do
+            [ -f "$cf" ] || continue
+            printf '%s\t%s\t%s\n' "$t.$m.$(basename "${cf%.$e}").$e" "$cf" "$m" >> "$plan"
+          done
+        fi
+      # 只有标了 content:true 的类型走内容种子。别的类型各有各的供给路径：
+      #   site（nginx conf）走自己的 ConfigMap、webroot 走 hostPath、
+      #   blc_template 走 inject —— 它们也曾被这条通用扫描误纳（实测 blc_template 混进来过）。
+      # 标记写在 provider 的 info.json 上，所以「哪些类型进种子」也是数据，不是代码。
+      done < <(jq -r '.provides[]? | select(.accepts != null and .content == true) | "\(.accepts[0])\t\(.dir // "")\t\(.file // "")\t\(.ext // "json")"' "kits/$dep/info.json" 2>/dev/null)
     done
   done
+
+  if [ ! -s "$plan" ]; then
+    echo "ERROR: 没有解析出任何内容键 —— 检查 provides 与 depends 是否对得上"; rm -f "$plan" "$mapent"; return 1
+  fi
+
+  # 同一个类型可能被多个 provider 以**不同目录**声明，那才是真冲突；取第一个并提示。
+  # 注意顺序：先按整行去重，再找重复的 type —— 否则每个消费模块都会往 mapent 里加一行，
+  # 一上来就满屏「重复」（第一版就是这么误报的，把 app/i18n/link/tile 全报了）。
+  sort -u "$mapent" -o "$mapent"
+  local dup; dup=$(cut -f1 "$mapent" | uniq -d | tr '\n' ' ')
+  if [ -n "$dup" ]; then
+    echo "WARN: 这些类型被多个 provider 声明，取第一个: $dup"
+  fi
+  awk -F'\t' '!seen[$1]++' "$mapent" > "$mapent.first" && mv "$mapent.first" "$mapent"
+
+  local mapfile; mapfile=$(mktemp)
+  jq -R -s '
+    split("\n") | map(select(length > 0)) | map(split("\t"))
+    | map({type: .[0], dir: .[1], file: .[2], ext: .[3], shape: .[4]})
+    | group_by(.type) | map(.[0])
+    | map({key: .type, value: {dir: .dir, file: .file, ext: .ext, shape: .shape}})
+    | from_entries
+  ' < "$mapent" > "$mapfile" 2>/dev/null || { echo "ERROR: 生成 _map.json 失败"; rm -f "$plan" "$mapent" "$mapfile"; return 1; }
+
+  # 体积按实际要发的键算（不是按文件名扫）
+  while IFS=$'\t' read -r t cf _; do
+    [ -f "$cf" ] || continue
+    sz=$(wc -c < "$cf" | tr -d ' '); total=$((total + sz))
+  done < "$plan"
+  sz=$(wc -c < "$mapfile" | tr -d ' '); total=$((total + sz))
   if [ "$total" -gt 900000 ]; then
     echo "ERROR: 内容共 $total 字节，超过 ConfigMap 安全上限 900000 —— 该走镜像而不是 ConfigMap"
-    return 1
+    rm -f "$plan" "$mapent" "$mapfile"; return 1
   fi
 
   {
@@ -1479,29 +1547,21 @@ kits_content() {
     echo "    app.kubernetes.io/part-of: g41"
     echo "    g41.content: \"seed\""
     echo "data:"
-    for d in kits/*/; do
-      m=$(basename "$d")
-      [ -f "$d/info.json" ] || continue
-      # --exclude：卸载某模块时用它重生成，让该模块的键从种子里消失
-      # （配合 server.js 的过期键清理，重载后 Redis 里那份也会掉）。
-      if [ -n "$exclude" ] && [ "$exclude" = "$m" ]; then continue; fi
-      [ -f "$d/tile.json" ] && { cm_emit "tile.$m.json" "$d/tile.json"; n=$((n+1)); }
-      [ -f "$d/app.json" ]  && { cm_emit "app.$m.json"  "$d/app.json";  n=$((n+1)); }
-      [ -f "$d/link.json" ] && { cm_emit "link.$m.json" "$d/link.json"; n=$((n+1)); }
-      for cf in "$d"i18n/*.json; do
-        [ -f "$cf" ] || continue
-        cm_emit "i18n.$m.$(basename "${cf%.json}").json" "$cf"; n=$((n+1))
-      done
-      for cf in "$d"data/*.json; do
-        [ -f "$cf" ] || continue
-        cm_emit "data.$m.$(basename "${cf%.json}").json" "$cf"; n=$((n+1))
-      done
-    done
+    # 映射本身也作为数据发下去：容器里的 loader 看不到仓库的 provides，
+    # 没有它就只能把「类型 → 目录」硬编码在 loader 里（那正是之前丢掉动态性的一步）。
+    cm_emit "_map.json" "$mapfile"; n=$((n+1))
+    # 内容键按 plan（依赖驱动解析出来的）逐条发
+    while IFS=$'\t' read -r key cf _; do
+      [ -f "$cf" ] || continue
+      cm_emit "$key" "$cf"; n=$((n+1))
+    done < <(sort -t$'\t' -k3,3 -k1,1 "$plan")
   } > "$tmp"
 
-  if [ "$n" -le 0 ]; then
-    echo "ERROR: 一个内容键都没生成 —— 没有可种的内容"; rm -f "$tmp"; return 1
+  if [ "$n" -le 1 ]; then
+    echo "ERROR: 除了映射以外一个内容键都没生成 —— 没有可种的内容"
+    rm -f "$plan" "$mapent" "$mapfile" "$tmp"; return 1
   fi
+  rm -f "$plan" "$mapent" "$mapfile"
   mv -f "$tmp" "$out"
   echo "内容种子: $out（$n 个键，$total 字节）"
 }
@@ -1874,20 +1934,53 @@ kits_uninstall() {
 # 第一版没先剥 `.json` 就切，把 `i18n.tile_mail.zh.json` 的模块名取成了
 # `tile_mail.zh`，于是所有 i18n 键都报「没有对应的源文件」——判据当场错了，
 # 而它错的表现是「满屏警告」，看起来反而像系统坏了）。
+# 从各 provider 的 provides 生成映射 JSON（与 kits content 发给容器的 `_map.json` 同源）。
+# 缓存到文件，因为体检要按 60 多个键逐条查，每条跑一次 jq 太浪费。
+seed_map_json() {
+  local cache="${TMPDIR:-/tmp}/g41-seedmap.$$"
+  if [ -f "$cache" ]; then cat "$cache"; return 0; fi
+  local ent; ent=$(mktemp)
+  : > "$ent"
+  local d dep t dir f e
+  for d in kits/*/; do
+    [ -f "$d/info.json" ] || continue
+    for dep in $(jq -r '.depends[]?' "$d/info.json" 2>/dev/null || true) "$(basename "$d")"; do
+      [ -f "kits/$dep/info.json" ] || continue
+      jq -r '.provides[]? | select(.accepts != null and .content == true) | "\(.accepts[0])\t\(.dir // "")\t\(.file // "")\t\(.ext // "json")\t\(if (.file // "" | test("\\.")) then "file" else "dir" end)"' \
+        "kits/$dep/info.json" 2>/dev/null >> "$ent"
+    done
+  done
+  sort -u "$ent" | awk -F'\t' '!seen[$1]++' | jq -R -s '
+    split("\n") | map(select(length > 0)) | map(split("\t"))
+    | map({type:.[0], dir:(if .[1] == ".rd/data" then "" else .[1] end), file:.[2], ext:.[3], shape:.[4]})
+    | map({key:.type, value:{dir:.dir, file:.file, ext:.ext, shape:.shape}}) | from_entries
+  ' > "$cache" 2>/dev/null
+  rm -f "$ent"
+  cat "$cache"
+}
+
+# 内容种子的键名 → 仓库源文件。**走同一份映射**（2026-11-12）：
+# 之前这里另存了一套硬编码 case，映射变了它不跟——而且它自己写错过一次
+# （没先剥 .json，把所有 i18n 键判成「没有源文件」）。
 seed_key_src() {
-  local key="$1" rest mod lang rest2 mod2 nm
-  case "$key" in
-    tile.*.json) rest="${key#tile.}"; echo "kits/${rest%.json}/tile.json";;
-    app.*.json)  rest="${key#app.}";  echo "kits/${rest%.json}/app.json";;
-    link.*.json) rest="${key#link.}"; echo "kits/${rest%.json}/link.json";;
-    i18n.*.json) rest="${key#i18n.}"; rest="${rest%.json}"
-                 mod="${rest%.*}"; lang="${rest##*.}"
-                 echo "kits/$mod/i18n/$lang.json";;
-    data.*.json) rest2="${key#data.}"; rest2="${rest2%.json}"
-                 mod2="${rest2%%.*}"; nm="${rest2#*.}"
-                 echo "kits/$mod2/data/$nm.json";;
-    *) return 1;;
-  esac
+  local key="$1"
+  [ "$key" = "_map.json" ] && return 1
+  local map type rest shape file mod extra
+  map=$(seed_map_json) || return 1
+  type="${key%%.*}"; rest="${key#*.}"; rest="${rest%.json}"
+  shape=$(printf '%s' "$map" | jq -r --arg t "$type" '.[$t].shape // empty' 2>/dev/null)
+  file=$(printf '%s' "$map" | jq -r --arg t "$type" '.[$t].file // empty' 2>/dev/null)
+  [ -n "$shape" ] || return 1
+  [ -n "$file" ] || return 1
+  if [ "$shape" = "file" ]; then
+    # 文件形状：键里不该再有额外段
+    case "$rest" in *.*) return 1;; esac
+    echo "kits/$rest/$file"
+  else
+    mod="${rest%%.*}"; extra="${rest#*.}"
+    [ "$mod" != "$extra" ] || return 1
+    echo "kits/$mod/$file/$extra.json"
+  fi
 }
 
 kits_health() {

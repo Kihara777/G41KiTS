@@ -10,7 +10,7 @@
   "provides": [
     {
       "dir": "tile_apps",
-      "accepts": ["app"],
+      "accepts": ["app"], "content": true,
       "file": "app.json",
       "ext": "json"
     }

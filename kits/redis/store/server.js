@@ -69,11 +69,23 @@ if(process.env.G41_FS_SELFTEST){
 
     // --- 内容种子 ---
     var k1=parseSeedKey('tile.foo.json');
-    ok('种子键 tile.foo.json', k1 && k1.kind==='tile' && k1.mod==='foo');
+    ok('种子键 tile.foo.json', k1 && k1.type==='tile' && k1.mod==='foo');
     var k2=parseSeedKey('i18n.foo.zh.json');
-    ok('种子键 i18n.foo.zh.json', k2 && k2.kind==='i18n' && k2.mod==='foo' && k2.lang==='zh');
+    ok('种子键 i18n.foo.zh.json', k2 && k2.type==='i18n' && k2.mod==='foo' && k2.extra==='zh');
     ok('种子键拒绝 index.html', parseSeedKey('index.html')===null);
     ok('种子键拒绝带点的模块名', parseSeedKey('tile.a.b.json')===null);
+    ok('_map.json 本身不是内容', parseSeedKey('_map.json')===null);
+
+    // --- 映射驱动（2026-11-12）：provider 改 dir，落点要跟着变 ---
+    // 这条是这次改动的**目的**，必须能失败：把下面的 promo_dir 改成 tiles，
+    // 或者在代码里退回硬编码映射，它就红。
+    var customMap={promo:{dir:'promo_dir',file:'promo.json',ext:'json',shape:'file'},
+                   note:{dir:'notes',file:'note',ext:'json',shape:'dir'}};
+    var pk=parseSeedKey('promo.foo.json',customMap);
+    ok('映射里的新类型认得', pk && pk.type==='promo' && pk.spec.dir==='promo_dir');
+    ok('映射里没有的类型被拒', parseSeedKey('tile.foo.json',customMap)===null);
+    ok('文件形状不接受额外段', parseSeedKey('promo.foo.bar.json',customMap)===null);
+    ok('目录形状必须有额外段', parseSeedKey('note.foo.json',customMap)===null);
 
     var seedDir=path.join(tmp,'seed');fs.mkdirSync(seedDir);
     fs.writeFileSync(path.join(seedDir,'tile.foo.json'),'{"id":"foo"}');
@@ -163,20 +175,60 @@ function isStaleKey(k,written){
   return /^data:[A-Za-z_][A-Za-z0-9_-]*\//.test(k) || /^data:i18n_/.test(k);
 }
 
-function parseSeedKey(name){
+// 内容种子的映射（2026-11-12）：类型 → 目标目录/文件名/扩展名/形状。
+// 由 `kits content` 从各 provider 的 provides 生成，作为 `_map.json` 一起发下来。
+// 有它，「装到哪」就由 provider 声明决定；没有它，只能把映射硬编码在这里——
+// 那正是之前丢掉动态性的那一步（provider 改 dir，代码不跟）。
+function legacySeedMap(){
+  return {
+  tile: {dir:'tiles',      file:'tile.json', ext:'json', shape:'file'},
+  app:  {dir:'tile_apps',  file:'app.json',  ext:'json', shape:'file'},
+  link: {dir:'tile_links', file:'link.json', ext:'json', shape:'file'},
+  i18n: {dir:'i18n',       file:'i18n',      ext:'json', shape:'dir'},
+  data: {dir:'',           file:'data',      ext:'json', shape:'dir'}
+  };
+}
+
+function loadSeedMap(seedDir){
+  try{
+    var p=path.join(seedDir,'_map.json');
+    if(!fs.existsSync(p))return null;
+    var m=JSON.parse(fs.readFileSync(p,'utf8'));
+    if(!m||typeof m!=='object')return null;
+    return m;
+  }catch(e){ console.error('seed: _map.json 解析失败，回退到内置映射 '+e.message); return null; }
+}
+
+function parseSeedKey(name, map){
+  var s=String(name);
+  if(s==='_map.json')return null;           // 映射本身不是内容
   var m;
-  if((m=String(name).match(/^tile\.([A-Za-z0-9_-]+)\.json$/))) return {kind:'tile',mod:m[1]};
-  if((m=String(name).match(/^app\.([A-Za-z0-9_-]+)\.json$/)))  return {kind:'app',mod:m[1]};
-  if((m=String(name).match(/^link\.([A-Za-z0-9_-]+)\.json$/))) return {kind:'link',mod:m[1]};
-  if((m=String(name).match(/^i18n\.([A-Za-z0-9_-]+)\.([a-z]{2,3})\.json$/))) return {kind:'i18n',mod:m[1],lang:m[2]};
-  if((m=String(name).match(/^data\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.json$/))) return {kind:'data',mod:m[1],name:m[2]};
+  if((m=s.match(/^([a-z][a-z0-9_]*)\.([A-Za-z0-9_-]+)\.json$/))) {
+    var type=m[1], mod=m[2];
+    // 映射存在时它就是权威：类型不在映射里 → 拒绝。
+    // 只有映射缺席（旧 ConfigMap）才回退内置映射。
+    // 如果「映射里没有就回退」，那张映射与产物之间的不一致会被悄悄掩盖。
+    var spec=map?(map[type]||null):legacySeedMap()[type];
+    if(!spec)return null;
+    if(spec.shape!=='file')return null;      // 目录形状必须带额外段
+    return {type:type,mod:mod,extra:null,spec:spec};
+  }
+  if((m=s.match(/^([a-z][a-z0-9_]*)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.json$/))) {
+    var type2=m[1], mod2=m[2], extra=m[3];
+    var spec2=map?(map[type2]||null):legacySeedMap()[type2];
+    if(!spec2)return null;
+    if(spec2.shape!=='dir')return null;      // 文件形状不该有额外段
+    return {type:type2,mod:mod2,extra:extra,spec:spec2};
+  }
   return null;
 }
 
 function materializeSeed(seedDir,outDir){
-  var res={tiles:0,app:0,link:0,i18n:0,data:0,unknown:0,dir:null};
+  var res={tiles:0,app:0,link:0,i18n:0,data:0,unknown:0,dir:null,map:false};
   try{ if(!fs.existsSync(seedDir))return res; }catch(e){ return res; }
-  var names=readDir(seedDir).filter(function(f){return /\.json$/.test(f);});
+  var map=loadSeedMap(seedDir);
+  res.map=!!map;
+  var names=readDir(seedDir).filter(function(f){return /\.json$/.test(f)&&f!=='_map.json';});
   if(names.length===0)return res;
 
   try{fs.rmSync(outDir,{recursive:true,force:true});}catch(e){}
@@ -185,24 +237,26 @@ function materializeSeed(seedDir,outDir){
   });
 
   names.forEach(function(f){
-    var p=parseSeedKey(f);
+    var p=parseSeedKey(f,map);
     if(!p){res.unknown++;console.error('seed: 无法识别的键 '+f);return;}
     try{
       var src=path.join(seedDir,f);
-      if(p.kind==='tile'){fs.copyFileSync(src,path.join(outDir,'tiles',p.mod+'.json'));res.tiles++;}
-      else if(p.kind==='app'){fs.copyFileSync(src,path.join(outDir,'tile_apps',p.mod+'.json'));res.app++;}
-      else if(p.kind==='link'){fs.copyFileSync(src,path.join(outDir,'tile_links',p.mod+'.json'));res.link++;}
-      else if(p.kind==='i18n'){
-        var d=path.join(outDir,'i18n',p.mod);
-        fs.mkdirSync(d,{recursive:true});
-        fs.copyFileSync(src,path.join(d,p.lang+'.json'));res.i18n++;
+      var dir=path.join(outDir,p.spec.dir);
+      var dst;
+      if(p.spec.shape==='file'){
+        fs.mkdirSync(dir,{recursive:true});
+        dst=path.join(dir,p.mod+'.'+p.spec.ext);
       }else{
-        // data 型：落到 <模块>/<名字>.json，与宿主上 .rd/data/<模块>/ 的形状一致，
-        // 这样「静态数据子目录」那段循环不用为种子单独写一遍。
-        var dd=path.join(outDir,p.mod);
-        fs.mkdirSync(dd,{recursive:true});
-        fs.copyFileSync(src,path.join(dd,p.name+'.json'));res.data++;
+        var d=path.join(dir,p.mod);
+        fs.mkdirSync(d,{recursive:true});
+        dst=path.join(d,p.extra+'.'+p.spec.ext);
       }
+      fs.copyFileSync(src,dst);
+      if(p.type==='tile')res.tiles++;
+      else if(p.type==='app')res.app++;
+      else if(p.type==='link')res.link++;
+      else if(p.type==='i18n')res.i18n++;
+      else if(p.type==='data')res.data++;
     }catch(e){res.unknown++;console.error('seed: 写入失败 '+f+' '+e.message);}
   });
   res.dir=outDir;

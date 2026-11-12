@@ -8,7 +8,7 @@
   "provides": [
     {
       "dir": "tile_links",
-      "accepts": ["link"],
+      "accepts": ["link"], "content": true,
       "file": "link.json",
       "ext": "json"
     }
