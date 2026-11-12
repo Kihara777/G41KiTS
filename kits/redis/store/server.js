@@ -84,6 +84,19 @@ if(process.env.G41_FS_SELFTEST){
     var pk=parseSeedKey('promo.foo.json',customMap);
     ok('映射里的新类型认得', pk && pk.type==='promo' && pk.spec.dir==='promo_dir');
     ok('映射里没有的类型被拒', parseSeedKey('tile.foo.json',customMap)===null);
+
+    // 落点由映射决定（这条是「provider 驱动目标位置」的最小证明）：
+    // 同一个 type=tile 的键，映射里 dir 写 promo_dir 就必须落到 promo_dir。
+    // 变异：把 materializeSeed 里的 path.join(outDir,p.spec.dir) 改回写死 'tiles'，它就红。
+    var mapSeed=path.join(tmp,'mapseed');fs.mkdirSync(mapSeed,{recursive:true});
+    fs.writeFileSync(path.join(mapSeed,'_map.json'),JSON.stringify({
+      tile:{dir:'promo_dir',file:'tile.json',ext:'json',shape:'file'}}));
+    fs.writeFileSync(path.join(mapSeed,'tile.foo.json'),'{"id":"foo"}');
+    var mapOut=path.join(tmp,'mapout');
+    var mapRes=materializeSeed(mapSeed,mapOut);
+    ok('映射存在时被识别', mapRes.map===true);
+    ok('落点跟随映射的 dir', fs.existsSync(path.join(mapOut,'promo_dir','foo.json')));
+    ok('不再落到写死的 tiles', fs.existsSync(path.join(mapOut,'tiles','foo.json'))===false);
     ok('文件形状不接受额外段', parseSeedKey('promo.foo.bar.json',customMap)===null);
     ok('目录形状必须有额外段', parseSeedKey('note.foo.json',customMap)===null);
 
@@ -189,6 +202,9 @@ function legacySeedMap(){
   };
 }
 
+// 读侧用的映射：种子里的 _map 优先；没有就用内置的（旧 ConfigMap 兼容）
+function mapFromLegacy(){ return legacySeedMap(); }
+
 function loadSeedMap(seedDir){
   try{
     var p=path.join(seedDir,'_map.json');
@@ -284,12 +300,18 @@ function loadData(callback) {
     }
     var roots=seed.dir?[confDir,seed.dir]:[confDir];
 
+    // 读侧也走映射（2026-11-12）。只改写侧是半条命：provider 改了 dir，
+    // 文件按新目录落地，而这里还去读老的 `tiles`/`i18n`，结果是「落地成功但读不到」。
+    // 映射缺席时退回内置的名字（旧 ConfigMap 仍可用）。
+    var readMap=(function(){ try{ return loadSeedMap(seed.dir||'/seed') || mapFromLegacy(); }catch(e){ return mapFromLegacy(); } })();
+    function dirOf(type,fallback){ var s=readMap[type]; return (s && typeof s.dir==='string' && s.dir!=='') ? s.dir : fallback; }
+
     function done(){if(--pending<=0)finish();}
 
     /* Load tiles（两个根目录：宿主直供 + 内容种子还原出来的那份） */
     var tileSeen=0;
     roots.forEach(function(root){
-      var tileDir=path.join(root,'tiles');
+      var tileDir=path.join(root,dirOf('tile','tiles'));
       if(!fs.existsSync(tileDir))return;
       readDir(tileDir).forEach(function(f){
         if(!f.endsWith('.json'))return;
@@ -332,7 +354,7 @@ function loadData(callback) {
 
     /* Load global i18n（同样两个根目录） */
     roots.forEach(function(root){
-      var i18nDir=path.join(root,'i18n');
+      var i18nDir=path.join(root,dirOf('i18n','i18n'));
       if(!fs.existsSync(i18nDir))return;
       try{
         var mods=readDir(i18nDir).filter(function(d){return fs.statSync(path.join(i18nDir,d)).isDirectory();});
@@ -370,7 +392,8 @@ function loadData(callback) {
       readDir(root).forEach(function(f){
         var fp=path.join(root,f);
         try{if(!fs.statSync(fp).isDirectory())return;}catch(e){return;}
-        if(f==='tiles'||f==='i18n'||f==='apps'||f==='links')return;
+        // 跳过「已经单独处理过的目录」，名字同样来自映射，不是写死的
+        if(f===dirOf('tile','tiles')||f===dirOf('i18n','i18n')||f==='apps'||f==='links')return;
       readDir(fp).forEach(function(df){
         if(!df.endsWith('.json'))return;
         var key=f+'/'+df.replace('.json','');
