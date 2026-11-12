@@ -2,6 +2,25 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-12 (user-path checks: the list grows out of the code)
+
+This morning's incident came from **me hand-writing the endpoint list**, missing `/data/home/status`, so the
+homepage broke while the health check stayed green.
+
+- `kits health` check 5 now fetches the homepage, fetches every script it references, extracts every `/data/…`
+  literal from those scripts and checks each one. When the frontend gains an endpoint the check follows; when
+  no path can be extracted it reports **"could not verify" (exit 2)** rather than passing
+- Two stricter criteria:
+  - **200 is not enough** — the frontend needs JSON, and a 200 HTML page still makes `JSON.parse` throw, so
+    the first byte must be `{` or `[`
+  - **The expected status is not always 200** — `/dns-query` should answer 400 without parameters; demanding
+    200 everywhere is a lazy criterion
+- Measured: six paths extracted from the scripts plus `/` and `/dns-query`, eight in total, five checks pass
+- Mutations: mixing `/` into the JSON list → `200 但不是 JSON（首字节 '<'）`, exit 1; breaking the extraction
+  regex → `没能验到`, exit 2
+- Known gap: the short-link routing is unconfirmed (`/vscode` returns 404), so it is **not** in the checks —
+  I am not guessing
+
 ## 2026-11-12 (trilingual maintenance log gap closed)
 
 The three maintenance logs had differed in entry count for a long time, and every status report just said
