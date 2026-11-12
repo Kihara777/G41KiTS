@@ -2,6 +2,26 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-12（模块类型与目标位置改回 provider 驱动）
+
+早期设计里，模块类型由**父模块的 provides 动态定义**，安装时按声明把子模块内容放到目标位置。
+改成 ConfigMap 供给后，这段被压扁成「按文件名判类型 + loader 里硬编码落点」，于是
+provider 改 `dir` 代码不跟，且「有 `tile.json` 但不依赖 home」的模块照样被收进种子。
+
+- **类型判定改回依赖驱动**：遍历模块的直接依赖 ∪ 自身，取 provider 的 `provides[].accepts/file/ext/dir`；
+  `kits/<m>/<file>` 存在即是消费者（自身也算——`home` 有自己的 tile/i18n，只扫依赖会把它弄丢，实测 12→11）
+- **`content: true` 标记**：只有标了的类型走内容种子；`site` / `webroot` / `blc_template`
+  各有各的供给路径，之前会被通用扫描误纳（实测 `blc_template` 混进来过）
+- **`_map.json` 随种子下发**：容器里的 loader 看不到仓库的 provides，把「类型 → 目录/文件名/扩展名/形状」
+  作为数据一起发。**读侧也走映射**——只改写侧是半条命（文件落到新目录、读侧还找老名字 = 落地成功但读不到）
+- **shape 判据只有一条**：`provides.file` 含点即文件名、不含点即目录名。此前写侧按存在性推、
+  另一处按含点推，同一个事实两个来源，已统一
+- 判据：loader 自检新增 8 条映射断言（新类型认得 / 无映射类型被拒 / 文件形状拒额外段 /
+  目录形状必须有额外段 / 落点跟随映射 dir / 不再落到写死的 tiles / i18n 目录名可指定）。
+  变异（让 `parseSeedKey` 忽略 map、把落点改回写死 `tiles`）分别红 2 条与 4 条
+- 闸门：63 个内容键逐字节比对仓库文件，源文件路径**按 `_map` 推**；`_map` 必须可解析且覆盖每个键的类型
+- 实测（生产）：`seed: tiles=12 i18n=36 unknown=0`、`Data load complete`、三 URL 200、12 磁贴
+
 ## 2026-11-12（CI 积压与两处加固）
 
 - **CI 停摆四小时**：四个 run 卡在 `queued`、`jobs: []`（连 job 都没创建）。期间 CD 不跑，

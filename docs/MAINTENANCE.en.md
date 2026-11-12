@@ -2,6 +2,35 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-12 (module type and target location driven by the provider again)
+
+In the original design a module's type was **defined dynamically by its parent's `provides`**, and install
+placed the child's content into the declared target. Moving content into a ConfigMap flattened that into
+"type by filename + hardcoded destination in the loader", so a provider changing `dir` changed nothing, and a
+module with a `tile.json` that does not depend on `home` was still collected into the seed.
+
+- **Type detection is dependency-driven again**: walk the module's direct dependencies plus the module itself
+  and use each provider's `provides[].accepts/file/ext/dir`; the module is a consumer when `kits/<m>/<file>`
+  exists (the module itself counts too — `home` has its own tile/i18n, and scanning only dependencies lost it:
+  measured 12 → 11)
+- **`content: true` marker**: only marked types travel through the content seed; `site` / `webroot` /
+  `blc_template` each have their own supply path and were previously swept in by the generic scan
+  (`blc_template` did actually leak in)
+- **`_map.json` ships with the seed**: the loader inside the container cannot see the repo's `provides`, so the
+  mapping (type → dir/file/ext/shape) goes down as data. **The read side follows it too** — changing only the
+  write side is half a fix (files land in the new directory while the reader still looks in the old one:
+  materialization succeeds, reading fails)
+- **One shape rule**: `provides.file` containing a dot means a file name, otherwise a directory name.
+  Previously the write path derived it from existence and another place from the dot, so the same fact had two
+  sources; now unified
+- Criteria: the loader self-test gained eight mapping assertions (new type recognised, unlisted type rejected,
+  file shape rejects an extra segment, dir shape requires one, destination follows the map's dir, no longer
+  landing in a hardcoded `tiles`, i18n directory name overridable). Mutations (ignore the map in
+  `parseSeedKey`, hardcode the destination back to `tiles`) turn 2 and 4 of them red respectively
+- Gate: all 63 content keys are compared byte for byte with repo files, and the source path is derived **from
+  `_map`**; the map itself must parse and cover every key's type
+- Measured in production: `seed: tiles=12 i18n=36 unknown=0`, `Data load complete`, three URLs 200, 12 tiles
+
 ## 2026-11-12 (CI backlog and two hardening changes)
 
 - **CI was stalled for four hours**: four runs sat in `queued` with `jobs: []` (no job created at all). CD did
