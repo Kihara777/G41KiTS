@@ -23,14 +23,18 @@ function tileModuleName(fileName){
 }
 
 function i18nDirOf(confDir,modName){
-  return path.join(confDir,'i18n',modName);
+  // 目录名同样来自映射（2026-11-12）。这里原先写死 'i18n'，而写侧已经按 provides 的 dir
+  // 落地——两侧一旦不同，表现是**磁贴的多语言标签静默丢失**，且没有任何报错。
+  // 不传 dirName 时退回 'i18n'（旧 ConfigMap 兼容）。
+  var d = (typeof arguments[2] === 'string' && arguments[2]) ? arguments[2] : 'i18n';
+  return path.join(confDir,d,modName);
 }
 
 // 单一来源：loadData 与文件末尾的自检都调这里。
 // 之前自检只测了 tileModuleName/i18nDirOf 两个零件，把 loadData 换回 realpath 反查
 // 照样全绿——**测了零件，没测接线**，那是装样子的判据。
-function resolveTileI18nDir(confDir,fileName){
-  return i18nDirOf(confDir,tileModuleName(fileName));
+function resolveTileI18nDir(confDir,fileName,dirName){
+  return i18nDirOf(confDir,tileModuleName(fileName),dirName);
 }
 
 if(process.env.G41_FS_SELFTEST){
@@ -61,6 +65,10 @@ if(process.env.G41_FS_SELFTEST){
     fs.writeFileSync(path.join(i18n,'tile_friends','zh.json'),'{"a":"b"}');
     ok('磁贴 i18n 由 resolveTileI18nDir 定位（loadData 走的就是它）',
        resolveTileI18nDir(tmp,'tile_friends.json')===path.join(tmp,'i18n','tile_friends') && fs.existsSync(resolveTileI18nDir(tmp,'tile_friends.json')));
+    // i18n 目录名也要能由映射指定（写侧改了 dir，读侧必须跟着找）
+    ok('i18n 目录名可由外部指定',
+       i18nDirOf(tmp,'m','i18n2')===path.join(tmp,'i18n2','m') &&
+       resolveTileI18nDir(tmp,'m.json','i18n2')===path.join(tmp,'i18n2','m'));
 
     // 反证：旧的 realpath 反查在 ConfigMap 形态下会落进 ..2026_xx/，那里没有 i18n，
     // 于是磁贴的多语言标签静默丢失。这一条必须为真，否则反证本身不成立。
@@ -320,7 +328,7 @@ function loadData(callback) {
         try{
           // 模块名取自文件名，不再用 realpath 反查源目录（理由见文件顶部的注释）。
           var modName=tileModuleName(f);
-          var modI18n=resolveTileI18nDir(root,f);
+          var modI18n=resolveTileI18nDir(root,f,dirOf('i18n','i18n'));
           if(fs.existsSync(modI18n)){
             readDir(modI18n).forEach(function(lf){
               var m=lf.match(/^(\w+)\.json$/);if(!m)return;
