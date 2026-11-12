@@ -18,6 +18,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 2026-11-12 加：只在「这次 run 的提交就是当前 main」时部署。
+      #
+      # 起因：Actions 排队四个多小时，期间积压了多个 run。队列恢复后如果按顺序执行，
+      # 一个针对**旧提交**的 run 会 checkout 旧树再 rsync --delete —— **把生产拉回旧版本**，
+      # 而且看起来像一次正常的部署。
+      #
+      # 宁可红，也不要把线上改回旧代码：红是可见的，倒退是安静的。
+      - name: 只部署最新的 main
+        run: |
+          git fetch --depth=1 origin main
+          LOCAL=$(git rev-parse HEAD)
+          REMOTE=$(git rev-parse origin/main)
+          echo "本次 run: $LOCAL"
+          echo "origin/main: $REMOTE"
+          if [ "$LOCAL" != "$REMOTE" ]; then
+            echo "::error::这个 run 针对 $LOCAL，而 origin/main 已是 $REMOTE —— 跳过部署，避免把生产拉回旧版本"
+            exit 1
+          fi
+
       - name: Sync public content over SSH (rsync)
         uses: easingthemes/ssh-deploy@v6
         with:
