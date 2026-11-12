@@ -4,6 +4,9 @@
 
 模块化自托管 Kubernetes (k3s) 技术栈 — Metro/WP8.1 风格首页、Redis 配置 API、多语言 i18n、KITS 模块系统。
 
+**先看这里**：[架构总览](docs/zh/architecture.md) —— 一张图看懂模块怎样从声明走到线上，
+四条管道各自的单一来源，以及判据落在哪里。
+
 ## 部署
 
 ```bash

@@ -331,6 +331,19 @@ done
 if [ -z "$bad_tag" ]; then pass "清单引用的自建镜像 tag 与 info.json 版本一致"; else fail "tag 与版本不一致:$bad_tag"; fi
 
 # ---------- 5. 集群类判据：只查存在性 ----------
+section "架构文档三语一致"
+# 架构图最容易「中文改了，另两份没动」——而没人会发现，因为三份各自读起来都是通的。
+arch_bad=""
+arch_n=""
+for f in docs/zh/architecture.md docs/en/architecture.md docs/ja/architecture.md; do
+  if [ ! -f "$f" ]; then arch_bad="$arch_bad $f(缺失)"; continue; fi
+  n=$(grep -c '^## ' "$f" || true)
+  if [ -z "$arch_n" ]; then arch_n="$n"; elif [ "$n" != "$arch_n" ]; then
+    arch_bad="$arch_bad ${f##*/}(章节 $n≠$arch_n)"
+  fi
+done
+if [ -z "$arch_bad" ]; then pass "三份架构文档章节数一致（$arch_n 节）"; else fail "架构文档不一致:$arch_bad"; fi
+
 section "README 三语一致"
 # 2026-11-12：README 三个版本原先都写着 `kits add -y all` 作为安装命令，而那是死路。
 # 判据：三份 README 都必须出现 `kits install`（安装入口）与 `kits health`（体检）。

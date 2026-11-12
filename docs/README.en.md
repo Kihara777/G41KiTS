@@ -4,6 +4,9 @@
 
 Modular self-hosted Kubernetes (k3s) stack — Metro/WP8.1 style homepage, Redis-backed config API, multi-language i18n, KITS module system.
 
+**Start here**: [Architecture overview](architecture.md) — one picture of how a module travels from
+declaration to production, the single source behind each of the four pipelines, and where the checks live.
+
 ## Deploy
 
 ```bash

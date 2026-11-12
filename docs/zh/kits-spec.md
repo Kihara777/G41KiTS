@@ -3,6 +3,9 @@
 
 定义 G41KiTS 的模块系统约定、`info.json` 字段 schema 及目录结构。
 
+> **先读 [architecture.md](architecture.md)**：那张图说明声明如何变成线上的东西、四条管道各自的单一来源、
+> 判据落在哪里。本文只管字段。
+
 ## info.json 字段
 
 | 字段 | 类型 | 必需 | 说明 |
@@ -12,11 +15,25 @@
 | `depends` | string[] | ✅ | 依赖模块，解析时全树遍历 |
 | `compose` | enum | ✅ | `none` / `hub` / `file` |
 | `docker` | object | compose≠none | `service`（服务名）和 `container`（2 字母缩写） |
-| `provides` | object | 基础设施 | 向依赖方公开的目录和文件类型 |
+| `version` | string | 有镜像时 | 版本号；清单里的镜像 tag 必须与它一致（闸门会查） |
+| `provides` | object | 基础设施 | 向依赖方公开的目录和文件类型；`content: true` 表示该类型走内容种子 |
+| `k8s` | object | 有清单时 | `pod`：与谁共用一个 Deployment（缺省则自成一组） |
+| `inject` | object | 个别模块 | 把文件直接注入容器路径（如 `blc_template`），不走 `provides` |
 | `store` | object | 持久化配置 | 从 `store/` hardlink 的文件 |
 | `webroot` | object | web 资源 | `target`（目标 provider）和 `method`（`hardlink`） |
 | `persist` | object | 持久化状态 | `dir` 和可选 `survive` 标志 |
 | `local` | object[] | 部署文件 | 从 `.local/` hardlink 到 persist 目录 |
+| `selftest` | string | 可选 | 模块自带的自检命令；闸门会跑 |
+
+### provides 的形状
+
+```json
+{"dir": "tiles", "accepts": ["tile"], "file": "tile.json", "ext": "json", "content": true}
+```
+
+- `kits/<模块>/<file>` 是文件还是目录，决定落地的形状（`file` 含点=文件名，否则目录名）
+- `content: true` 的类型才会进 `g41-content` 种子；`site` / `webroot` / `blc_template` 没标，各有各的路
+- 类型由**依赖**决定：模块依赖的 provider 声明接收什么，它才算那种类型的消费者
 
 ## 模块类型
 
