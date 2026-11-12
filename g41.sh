@@ -2118,7 +2118,18 @@ MAP
 
     # 固定路径：期望的**不是** 200。一律要求 200 是偷懒的判据——
     # /dns-query 不带参数时返回 400 才是对的，返 200 反而说明它坏了。
-    for pair in "/dns-query:400" "/:200"; do
+    # 短链接（2026-11-12）。两个坑都写在这：
+    #   1. 外部路径是 `/<short>`（nginx 的 999-shortlinks.conf 把 `/(vscode)` 转给 `api/link/$1`），
+    #      不是 `/link/vscode` —— 后者是**内部**路径
+    #   2. 期望 **302**：写成 200 会把重定向判成失败，不判就永远不知道它坏了
+    local slink add_pair=""
+    # 注意用 sed -n '1p' 而不是 `| head -1`：head 读完第一行就关管道，
+    # 上游 jq 收到 SIGPIPE，配合 `set -o pipefail` 会让整个体检以 141 退出（本次实测）。
+    slink=$(for f in kits/link_*/link.json; do jq -r '.short // empty' "$f" 2>/dev/null; done | sed -n '1p')
+    if [ -n "$slink" ]; then
+      add_pair="${slink}:302"      # slink 自带前导斜杠，正好是外部路径
+    fi
+    for pair in "/dns-query:400" "/:200" $add_pair; do
       p=${pair%:*}; local want=${pair##*:}
       code=$(curl -s -k -o /dev/null -w '%{http_code}' --max-time 10 "https://$dom$p" 2>/dev/null || true)
       [ -n "$code" ] || code="000"

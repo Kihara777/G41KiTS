@@ -83,6 +83,10 @@ if(process.env.G41_FS_SELFTEST){
     ok('种子键拒绝 index.html', parseSeedKey('index.html')===null);
     ok('种子键拒绝带点的模块名', parseSeedKey('tile.a.b.json')===null);
     ok('_map.json 本身不是内容', parseSeedKey('_map.json')===null);
+    // 短链接键名必须保留 short 的前导斜杠（API 用 slice(5) 取，期望 "/vscode"）。
+    // 变异：把 linkKeyOf 改成剥斜杠 → 这条红，而且真实环境里短链接会 404。
+    ok('短链接键保留前导斜杠', linkKeyOf('/vscode')==='link:/vscode');
+    ok('短链接键不与 API 取法错位', '/link/vscode'.slice(5)==='/vscode' && linkKeyOf('/vscode')==='link:'+'/vscode');
 
     // --- 映射驱动（2026-11-12）：provider 改 dir，落点要跟着变 ---
     // 这条是这次改动的**目的**，必须能失败：把下面的 promo_dir 改成 tiles，
@@ -200,6 +204,12 @@ function isStaleKey(k,written){
 // 由 `kits content` 从各 provider 的 provides 生成，作为 `_map.json` 一起发下来。
 // 有它，「装到哪」就由 provider 声明决定；没有它，只能把映射硬编码在这里——
 // 那正是之前丢掉动态性的那一步（provider 改 dir，代码不跟）。
+// 短链接的键名： + link.json 里的 short **原样**（short 自带前导斜杠）。
+// 必须与 API 的取法一致：路由  用 ，对 "/link/vscode"
+// 得到 "/vscode"。剥掉斜杠就变成存 "link:vscode"、取 "link:/vscode"，两边永远对不上
+// （2026-11-12 我先这么写了，短链接照样 404）。
+function linkKeyOf(short){ return 'link:'+String(short||''); }
+
 function legacySeedMap(){
   return {
   tile: {dir:'tiles',      file:'tile.json', ext:'json', shape:'file'},
@@ -407,6 +417,23 @@ function loadData(callback) {
         var key=f+'/'+df.replace('.json','');
         written['data:'+key]=1;
         var data=fs.readFileSync(path.join(fp,df),'utf8');
+
+        // 短链接（2026-11-12 修）：`tile_links/<id>.json` 里有 short + target。
+        // 迁移到 ConfigMap 之后，产生 `link:*` 键的那段逻辑只读宿主目录，于是键不再生成，
+        // `/link/<code>` 全部 404 —— 功能是**那时**断的。
+        //
+        // 键名必须与 API 的取法一致：路由是 `/link/<code>`，处理里用 `u.slice(5)`，
+        // 对 `/link/vscode` 得到**带前导斜杠**的 `/vscode`。而 link.json 里的 short 正好是
+        // `/vscode`——两边本来就是配的。所以**原样存，不要剥斜杠**。
+        // （我第一版剥了，于是存 `link:vscode` 而取 `link:/vscode`，照样 404。）
+        if(f==='tile_links'){
+          try{
+            var lj=JSON.parse(data);
+            if(lj&&typeof lj.short==='string'&&typeof lj.target==='string'&&lj.short){
+              var lk=linkKeyOf(lj.short); written[lk]=1; redisSet(lk,lj.target,function(){});
+            }
+          }catch(e){ console.error('link:',df,e.message); }
+        }
         if(key==='home/chars'){
           try{
             var obj=JSON.parse(data);
