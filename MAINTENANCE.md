@@ -2,6 +2,17 @@
 
 中文 | [English](docs/MAINTENANCE.en.md) | [日本語](docs/MAINTENANCE.ja.md) 
 
+## 2026-11-12（架构总览：三语 + 一张图）
+
+- **新增 `docs/{zh,en,ja}/architecture.md`**：模块从声明到线上的**四条管道**（内容种子 / api 源码 /
+  镜像 / 集群清单）、每条的单源、provider 驱动的类型与目标位置、命令面、
+  **判据落在哪里**（闸门 22 项 / loader 32 项 / 生产体检 5 项）、四条已知边界
+  - 图用 ASCII（本地与 GitHub 都能看，不依赖 mermaid）
+  - 三份 README 挂上入口链接
+  - 闸门新增第 22 项「架构文档三语一致」：三份必须都在且章节数相同；变异（日文删一节）→ `7≠8`
+- **修 `kits-spec.md` 的漂移**：字段表缺 `version` / `k8s` / `inject` / `selftest` 与
+  `provides.content`；补上，并加一节说明 provides 的形状（含点即文件名、`content:true` 才进种子）
+
 ## 2026-11-12（模块类型与目标位置改回 provider 驱动）
 
 早期设计里，模块类型由**父模块的 provides 动态定义**，安装时按声明把子模块内容放到目标位置。

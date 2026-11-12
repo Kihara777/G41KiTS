@@ -2,6 +2,20 @@
 
 [中文](../MAINTENANCE.md) | English | [日本語](MAINTENANCE.ja.md) 
 
+## 2026-11-12 (architecture overview: three languages and one picture)
+
+- **New `docs/{zh,en,ja}/architecture.md`**: the **four pipelines** a module travels from declaration to
+  production (content seed / api source / images / cluster manifests), the single source behind each, the
+  provider-driven type and destination, the command surface, **where the checks live** (22 gate checks /
+  32 loader self-tests / 5 production checks), and the four known limits
+  - The diagram is ASCII so it reads the same locally and on GitHub without relying on mermaid
+  - All three READMEs link to it
+  - Gate check #22 "architecture docs agree across languages": all three must exist and have the same number
+    of sections; a mutation (delete one section from the Japanese version) reports `7≠8`
+- **Fixed drift in `kits-spec.md`**: the field table was missing `version` / `k8s` / `inject` / `selftest` and
+  `provides.content`; added, plus a section on the shape of `provides` (a dot means a file name, and only
+  `content: true` types travel through the seed)
+
 ## 2026-11-12 (module type and target location driven by the provider again)
 
 In the original design a module's type was **defined dynamically by its parent's `provides`**, and install
