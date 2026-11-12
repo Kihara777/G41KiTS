@@ -1831,17 +1831,17 @@ MAP
     if [ "$bad" -eq 0 ]; then echo "键名映射 $n 项通过"; return 0; fi
     echo "键名映射失败 $bad 项"; return 1
   fi
-  echo "=== 1/4 镜像存在性 ==="
+  echo "=== 1/5 镜像存在性 ==="
   kits_images --verify
   case $? in 0) ;; 2) unverified=$((unverified+1));; *) failed=$((failed+1));; esac
 
   echo
-  echo "=== 2/4 内容比进程新（drift）==="
+  echo "=== 2/5 内容比进程新（drift）==="
   k8s_drift
   case $? in 0) ;; 2) unverified=$((unverified+1));; *) failed=$((failed+1));; esac
 
   echo
-  echo "=== 3/4 内容种子与仓库逐键一致 ==="
+  echo "=== 3/5 内容种子与仓库逐键一致 ==="
   if ! command -v kubectl >/dev/null 2>&1; then
     echo "  没能验到：找不到 kubectl"; unverified=$((unverified+1))
   else
@@ -1871,7 +1871,7 @@ MAP
   fi
 
   echo
-  echo "=== 4/4 api 源码与仓库一致 ==="
+  echo "=== 4/5 api 源码与仓库一致 ==="
   if command -v kubectl >/dev/null 2>&1 && [ -f kits/redis/store/server.js ]; then
     local cm_sha local_sha
     cm_sha=$(kubectl get cm g41-api-src -n g41 -o jsonpath='{.data.server\.js}' 2>/dev/null | sha256sum | awk '{print $1}')
@@ -1887,6 +1887,36 @@ MAP
   fi
 
   echo
+  echo "=== 5/5 站点可访问性 ==="
+  # 前四项查的是「仓库与集群是否一致」，它们全绿而站点挂掉是完全可能的
+  # （nginx 挂了、证书过期、upstream 没起来）。所以必须有一条真的发请求。
+  local dom=""
+  [ -f .env ] && dom=$(grep '^G41_DOMAIN=' .env 2>/dev/null | cut -d= -f2- | tr -d '"')
+  if [ -z "$dom" ]; then
+    echo "  没能验到：.env 里没有 G41_DOMAIN"; unverified=$((unverified+1))
+  elif ! command -v curl >/dev/null 2>&1; then
+    echo "  没能验到：找不到 curl"; unverified=$((unverified+1))
+  else
+    local p code urls_ok=0 urls_bad=0
+    for p in "/" "/data/tiles"; do
+      # curl 失败时自己就会输出 000，不能再 `|| echo 000` —— 那会拼成 000000。
+      code=$(curl -s -k -o /dev/null -w '%{http_code}' --max-time 10 "https://$dom$p" 2>/dev/null || true)
+      [ -n "$code" ] || code="000"
+      if [ "$code" = "200" ]; then
+        urls_ok=$((urls_ok+1))
+      else
+        echo "  ⚠ https://$dom$p → $code（期望 200）"
+        urls_bad=$((urls_bad+1))
+      fi
+    done
+    if [ "$urls_bad" -eq 0 ]; then
+      echo "  $urls_ok 个端点返回 200"
+    else
+      failed=$((failed+1))
+    fi
+  fi
+
+  echo
   if [ "$failed" -gt 0 ]; then
     echo "体检：**失败 $failed 项**（其中没能验到 $unverified 项）"
     return 1
@@ -1895,7 +1925,7 @@ MAP
     echo "体检：没有失败，但 **$unverified 项没能验到** —— 这不是通过"
     return 2
   fi
-  echo "体检：四项全部通过"
+  echo "体检：五项全部通过"
   return 0
 }
 
