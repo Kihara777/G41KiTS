@@ -1515,13 +1515,15 @@ kits_content() {
   awk -F'\t' '!seen[$1]++' "$mapent" > "$mapent.first" && mv "$mapent.first" "$mapent"
 
   local mapfile; mapfile=$(mktemp)
-  jq -R -s '
-    split("\n") | map(select(length > 0)) | map(split("\t"))
-    | map({type: .[0], dir: .[1], file: .[2], ext: .[3], shape: .[4]})
-    | group_by(.type) | map(.[0])
-    | map({key: .type, value: {dir: .dir, file: .file, ext: .ext, shape: .shape}})
-    | from_entries
-  ' < "$mapent" > "$mapfile" 2>/dev/null || { echo "ERROR: 生成 _map.json 失败"; rm -f "$plan" "$mapent" "$mapfile"; return 1; }
+  # 直接用 seed_map_json 的产物（2026-11-12 第二次修）：
+  # 这里原先自己另生成一份，而那一份**没有把 `.rd/data` 归一化成空目录**，
+  # 于是 data 型内容落到 `/tmp/g41-seed/.rd/data/home/…`；readDir 会过滤点开头的目录，
+  # 装载时看不见 → 过期键清理把 `data:home/*` 全删了 → 前端 /data/home/status 拿到 404 的 HTML。
+  # 两份映射 = 两个真相，而这个错误的代价是**首页直接报错**。
+  seed_map_json > "$mapfile" 2>/dev/null || { echo "ERROR: 生成 _map.json 失败"; rm -f "$plan" "$mapent" "$mapfile"; return 1; }
+  if [ ! -s "$mapfile" ]; then
+    echo "ERROR: 映射为空"; rm -f "$plan" "$mapent" "$mapfile"; return 1
+  fi
 
   # 体积按实际要发的键算（不是按文件名扫）
   while IFS=$'\t' read -r t cf _; do
